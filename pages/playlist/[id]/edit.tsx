@@ -1,0 +1,181 @@
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/router';
+import Head from 'next/head';
+import useSWR from 'swr';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { Loader2 } from 'lucide-react';
+import { withAuth } from '@/utils/withAuth';
+import { fetcher } from '@/lib/fetcher';
+import api from '@/lib/axios';
+import { PageLoading } from '@/components/ui/Spinner';
+import type { Playlist, PlaylistCategory } from '@/types';
+
+const editPlaylistSchema = z.object({
+  name: z.string().min(1, 'Nama playlist wajib diisi'),
+  description: z.string().optional(),
+  cover_image: z.string().url('URL tidak valid').optional().or(z.literal('')),
+  id_playlist_category: z.string().optional(),
+});
+
+type EditPlaylistForm = z.infer<typeof editPlaylistSchema>;
+
+function EditPlaylistPage() {
+  const router = useRouter();
+  const { id } = router.query;
+  const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const { data: playlist, isLoading } = useSWR<Playlist>(
+    id ? `/playlists/${id}` : null,
+    fetcher
+  );
+
+  const { data: categories } = useSWR<PlaylistCategory[]>(
+    '/playlist-categories',
+    fetcher
+  );
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<EditPlaylistForm>({
+    resolver: zodResolver(editPlaylistSchema),
+  });
+
+  useEffect(() => {
+    if (playlist) {
+      reset({
+        name: playlist.name,
+        description: playlist.description || '',
+        cover_image: playlist.cover_image || '',
+        id_playlist_category: playlist.id_playlist_category || '',
+      });
+    }
+  }, [playlist, reset]);
+
+  const onSubmit = async (data: EditPlaylistForm) => {
+    setIsSubmitting(true);
+    setError('');
+
+    try {
+      await api.put(`/playlists/${id}`, {
+        ...data,
+        cover_image: data.cover_image || undefined,
+        id_playlist_category: data.id_playlist_category || undefined,
+      });
+      router.push(`/playlist/${id}`);
+    } catch (err: any) {
+      setError('Failed to update playlist. Please try again.');
+      console.error(err);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (isLoading) return <PageLoading />;
+
+  return (
+    <>
+      <Head>
+        <title>Edit Playlist — Spotify Clone</title>
+      </Head>
+
+      <div className="max-w-2xl mx-auto px-6 py-8">
+        <h1 className="text-3xl font-bold text-white mb-8">Edit Playlist</h1>
+
+        {error && (
+          <div className="bg-red-500/20 border border-red-500/30 text-red-300 px-4 py-3 rounded-lg mb-6 text-sm">
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          {/* Name */}
+          <div>
+            <label className="block text-sm font-semibold text-white mb-2">
+              Name *
+            </label>
+            <input
+              {...register('name')}
+              type="text"
+              className="w-full bg-spotify-hover border border-spotify-border rounded-md px-4 py-3 text-white focus:outline-none focus:border-spotify-green focus:ring-1 focus:ring-spotify-green transition-all"
+            />
+            {errors.name && (
+              <p className="mt-1 text-xs text-red-400">{errors.name.message}</p>
+            )}
+          </div>
+
+          {/* Description */}
+          <div>
+            <label className="block text-sm font-semibold text-white mb-2">
+              Description
+            </label>
+            <textarea
+              {...register('description')}
+              rows={3}
+              className="w-full bg-spotify-hover border border-spotify-border rounded-md px-4 py-3 text-white focus:outline-none focus:border-spotify-green focus:ring-1 focus:ring-spotify-green transition-all resize-none"
+            />
+          </div>
+
+          {/* Cover Image */}
+          <div>
+            <label className="block text-sm font-semibold text-white mb-2">
+              Cover Image URL
+            </label>
+            <input
+              {...register('cover_image')}
+              type="url"
+              placeholder="https://example.com/cover.jpg"
+              className="w-full bg-spotify-hover border border-spotify-border rounded-md px-4 py-3 text-white placeholder:text-spotify-muted/60 focus:outline-none focus:border-spotify-green focus:ring-1 focus:ring-spotify-green transition-all"
+            />
+          </div>
+
+          {/* Category */}
+          {categories && categories.length > 0 && (
+            <div>
+              <label className="block text-sm font-semibold text-white mb-2">
+                Category
+              </label>
+              <select
+                {...register('id_playlist_category')}
+                className="w-full bg-spotify-hover border border-spotify-border rounded-md px-4 py-3 text-white focus:outline-none focus:border-spotify-green focus:ring-1 focus:ring-spotify-green transition-all"
+              >
+                <option value="">Select a category</option>
+                {categories.map((cat) => (
+                  <option key={cat.id_playlist_category} value={cat.id_playlist_category}>
+                    {cat.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {/* Buttons */}
+          <div className="flex gap-4 pt-4">
+            <button
+              type="button"
+              onClick={() => router.back()}
+              className="btn-outline text-sm py-2.5 px-8"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="btn-spotify text-sm py-2.5 px-8 flex items-center gap-2 disabled:opacity-50"
+            >
+              {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
+              {isSubmitting ? 'Saving...' : 'Save Changes'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </>
+  );
+}
+
+export default withAuth(EditPlaylistPage);

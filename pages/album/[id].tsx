@@ -1,0 +1,116 @@
+import { useRouter } from 'next/router';
+import Head from 'next/head';
+import useSWR from 'swr';
+import { Play, Music2 } from 'lucide-react';
+import { fetcher } from '@/lib/fetcher';
+import { withAuth } from '@/utils/withAuth';
+import { usePlayerStore } from '@/stores/usePlayerStore';
+import SongList from '@/components/song/SongList';
+import { PageLoading } from '@/components/ui/Spinner';
+import { formatDate } from '@/utils/formatDuration';
+import type { Album } from '@/types';
+
+function AlbumDetailPage() {
+  const router = useRouter();
+  const { id } = router.query;
+  const playSong = usePlayerStore((s) => s.playSong);
+
+  const { data: album, isLoading } = useSWR<Album>(
+    id ? `/albums/${id}` : null,
+    fetcher
+  );
+
+  if (isLoading || !album) return <PageLoading />;
+
+  const artistNames = album.artists?.map((a) => a.name).join(', ') || 'Unknown Artist';
+  const songCount = album.songs?.length || 0;
+
+  const handlePlayAll = () => {
+    if (album.songs && album.songs.length > 0) {
+      playSong(album.songs[0], album.songs);
+    }
+  };
+
+  return (
+    <>
+      <Head>
+        <title>{album.title} — Spotify Clone</title>
+      </Head>
+
+      <div className="-mt-[60px]">
+        {/* Banner */}
+        <div
+          className="relative flex items-end gap-6 px-8 pt-20 pb-8"
+          style={{
+            background: 'linear-gradient(transparent 0, rgba(0,0,0,.5) 100%), linear-gradient(135deg, #1a365d 0%, #2d1b69 50%, #1a365d 100%)',
+            minHeight: '340px',
+          }}
+        >
+          {/* Album Cover */}
+          <div className="w-56 h-56 shrink-0 rounded-md overflow-hidden shadow-2xl shadow-black/50">
+            {album.cover_image ? (
+              <img
+                src={album.cover_image}
+                alt={album.title}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full bg-spotify-card flex items-center justify-center">
+                <Music2 className="w-16 h-16 text-spotify-muted" />
+              </div>
+            )}
+          </div>
+
+          {/* Album Info */}
+          <div className="flex flex-col justify-end">
+            <p className="text-sm font-bold uppercase text-white/80 mb-1">Album</p>
+            <h1 className="text-5xl font-black text-white mb-4 leading-tight">
+              {album.title}
+            </h1>
+            <div className="flex items-center gap-1 text-sm text-white/80">
+              <span className="font-bold text-white">{artistNames}</span>
+              {album.release && (
+                <>
+                  <span className="mx-1">•</span>
+                  <span>{new Date(album.release).getFullYear()}</span>
+                </>
+              )}
+              <span className="mx-1">•</span>
+              <span>{songCount} songs</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Controls + Track List */}
+        <div className="relative">
+          <div
+            className="absolute inset-0 h-60"
+            style={{
+              background: 'linear-gradient(rgba(0,0,0,.6), #121212)',
+            }}
+          />
+
+          <div className="relative z-10 px-8 py-6">
+            {/* Play Button */}
+            <div className="flex items-center gap-6 mb-6">
+              <button
+                onClick={handlePlayAll}
+                className="w-14 h-14 bg-spotify-green rounded-full flex items-center justify-center hover:scale-110 hover:bg-spotify-green-bright transition-all shadow-lg"
+                aria-label="Play all"
+              >
+                <Play className="w-6 h-6 text-black fill-current ml-0.5" />
+              </button>
+            </div>
+
+            {/* Songs */}
+            {album.songs && album.songs.length > 0 && (
+              <SongList songs={album.songs} showAlbum={false} />
+            )}
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+export default withAuth(AlbumDetailPage);
