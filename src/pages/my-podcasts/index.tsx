@@ -23,7 +23,7 @@ function MyPodcastsPage() {
     if (!confirm('Hapus podcast ini? Semua episode juga akan terhapus.')) return;
     setDeletingId(podcastId);
     try {
-      await api.delete(`/podcasts/${podcastId}`);
+      await api.post(`/podcasts/${podcastId}`, { _method: 'DELETE' });
       mutate('/podcasts');
     } catch (e) {
       console.error('Failed to delete podcast', e);

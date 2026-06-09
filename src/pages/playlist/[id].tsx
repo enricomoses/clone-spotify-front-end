@@ -92,7 +92,7 @@ export default function PlaylistDetailPage() {
 
   const handleRemoveSong = async (songId: string) => {
     try {
-      await api.delete(`/playlists/${id}/songs/${songId}`);
+      await api.post(`/playlists/${id}/songs/${songId}`, { _method: 'DELETE' });
       mutate(`/playlists/${id}`);
     } catch (e) {
       console.error('Failed to remove song', e);

@@ -73,9 +73,9 @@ export default function ArtistProfilePage() {
     requireAuth(async () => {
       if (!user) return;
       try {
-        await api.delete(
-          `/users/${user.id_user}/unfollow-artist/${artist.id_artist}`
-        );
+        await api.post(`/users/${user.id_user}/unfollow-artist/${artist.id_artist}`, {
+          _method: 'DELETE',
+        });
       } catch (e) {
         console.error('Failed to unfollow artist', e);
       }

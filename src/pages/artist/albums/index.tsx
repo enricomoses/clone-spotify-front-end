@@ -29,7 +29,9 @@ function ArtistAlbumsPage() {
     setIsDeleting(true);
 
     try {
-      await api.delete(`/albums/${deleteTarget.id_album}`);
+      await api.post(`/albums/${deleteTarget.id_album}`, {
+        _method: 'DELETE',
+      });
       mutate('/albums');
       setDeleteTarget(null);
     } catch (err) {

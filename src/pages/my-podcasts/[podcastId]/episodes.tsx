@@ -72,7 +72,7 @@ function PodcastEpisodesPage() {
     if (!confirm('Hapus episode ini?')) return;
     setDeletingId(episodeId);
     try {
-      await api.delete(`/episodes/${episodeId}`);
+      await api.post(`/episodes/${episodeId}`, { _method: 'DELETE' });
       mutate(`/podcasts/${podcastId}`);
     } catch (e) {
       console.error('Failed to delete episode', e);

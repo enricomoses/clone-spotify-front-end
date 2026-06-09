@@ -33,7 +33,7 @@ function ArtistSongsPage() {
     setIsDeleting(true);
 
     try {
-      await api.delete(`/songs/${deleteTarget.id_song}`);
+      await api.post(`/songs/${deleteTarget.id_song}`, { _method: 'DELETE' });
       mutate('/songs');
       setDeleteTarget(null);
     } catch (err) {

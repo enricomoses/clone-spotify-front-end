@@ -27,7 +27,9 @@ export default function LikeButton({
       setIsLoading(true);
       try {
         if (isLiked) {
-          await api.delete(`/users/${user.id_user}/unlike-song/${songId}`);
+          await api.post(`/users/${user.id_user}/unlike-song/${songId}`, {
+            _method: 'DELETE',
+          });
           setIsLiked(false);
         } else {
           await api.post(`/users/${user.id_user}/like-song`, { song_id: songId });

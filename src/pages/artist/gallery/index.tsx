@@ -51,8 +51,9 @@ function ArtistGalleryPage() {
     setIsDeleting(true);
 
     try {
-      await api.delete(
-        `/artists/${artist.id_artist}/gallery/${deleteTarget.id_gallery}`
+      await api.post(
+        `/artists/${artist.id_artist}/gallery/${deleteTarget.id_gallery}`,
+        { _method: 'DELETE' },
       );
       mutate(`/artists/${artist.id_artist}/gallery`);
       setDeleteTarget(null);
