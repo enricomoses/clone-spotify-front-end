@@ -11,12 +11,12 @@ export interface User {
   gender?: string;
   country?: string;
   profile_picture?: string;
-  followedPlaylists?: Playlist[];
+  followed_playlists?: Playlist[];
   following?: User[];
   followers?: User[];
-  followedArtists?: Artist[];
-  followedPodcasts?: Podcast[];
-  likedSongs?: Song[];
+  followed_artists?: Artist[];
+  followed_podcasts?: Podcast[];
+  liked_songs?: Song[];
   created_at?: string;
   updated_at?: string;
 }

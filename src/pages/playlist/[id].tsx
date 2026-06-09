@@ -51,7 +51,7 @@ export default function PlaylistDetailPage() {
 
   // Check if user follows this playlist
   const isFollowing =
-    user?.followedPlaylists?.some(
+    user?.followed_playlists?.some(
       (p) => p.id_playlist === playlist.id_playlist,
     ) || false;
 
@@ -80,8 +80,9 @@ export default function PlaylistDetailPage() {
     requireAuth(async () => {
       if (!user) return;
       try {
-        await api.delete(
+        await api.post(
           `/users/${user.id_user}/unfollow-playlist/${playlist.id_playlist}`,
+          { _method: 'DELETE' },
         );
       } catch (e) {
         console.error('Failed to unfollow playlist', e);
