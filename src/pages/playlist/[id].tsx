@@ -1,21 +1,25 @@
 import { useRouter } from 'next/router';
 import Head from 'next/head';
-import useSWR from 'swr';
-import { Play, Music2, Clock, MoreHorizontal } from 'lucide-react';
+import useSWR, { mutate } from 'swr';
+import { Play, Music2, MoreHorizontal, Plus, Trash2, UserPlus } from 'lucide-react';
 import { fetcher } from '@/lib/fetcher';
-import { withAuth } from '@/utils/withAuth';
+import { useRequireAuth } from '@/hooks/useRequireAuth';
 import { usePlayerStore } from '@/stores/usePlayerStore';
 import { useAuthStore } from '@/stores/useAuthStore';
 import SongList from '@/components/song/SongList';
+import FollowButton from '@/components/social/FollowButton';
 import ShareButton from '@/components/social/ShareButton';
 import { PageLoading } from '@/components/ui/Spinner';
 import type { Playlist } from '@/types';
+import api from '@/lib/axios';
+import { useState } from 'react';
 
-function PlaylistDetailPage() {
+export default function PlaylistDetailPage() {
   const router = useRouter();
   const { id } = router.query;
   const playSong = usePlayerStore((s) => s.playSong);
-  const user = useAuthStore((s) => s.user);
+  const { requireAuth, user } = useRequireAuth();
+  const [showAddSongModal, setShowAddSongModal] = useState(false);
 
   const { data: playlist, isLoading } = useSWR<Playlist>(
     id ? `/playlists/${id}` : null,
@@ -25,11 +29,62 @@ function PlaylistDetailPage() {
   if (isLoading || !playlist) return <PageLoading />;
 
   const songCount = playlist.songs?.length || 0;
-  const isOwner = playlist.id_user === user?.id_user;
+
+  // Determine owner from collaborators with role 'Owner'
+  const owner = playlist.collaborators?.find((c) => c.role === 'Owner');
+  const ownerName = owner?.name || owner?.user?.name || playlist.owner?.name || 'User';
+
+  // Check if current user is Owner or Editor
+  const userRole = user
+    ? playlist.collaborators?.find((c) => c.id_user === user.id_user)?.role
+    : null;
+  const canEdit = userRole === 'Owner' || userRole === 'Editor';
+
+  // Check if user follows this playlist
+  const isFollowing = user?.followedPlaylists?.some(
+    (p) => p.id_playlist === playlist.id_playlist
+  ) || false;
 
   const handlePlayAll = () => {
-    if (playlist.songs && playlist.songs.length > 0) {
-      playSong(playlist.songs[0], playlist.songs);
+    requireAuth(() => {
+      if (playlist.songs && playlist.songs.length > 0) {
+        playSong(playlist.songs[0], playlist.songs);
+      }
+    });
+  };
+
+  const handleFollow = () => {
+    requireAuth(async () => {
+      if (!user) return;
+      try {
+        await api.post(`/users/${user.id_user}/follow-playlist`, {
+          playlist_id: playlist.id_playlist,
+        });
+      } catch (e) {
+        console.error('Failed to follow playlist', e);
+      }
+    });
+  };
+
+  const handleUnfollow = () => {
+    requireAuth(async () => {
+      if (!user) return;
+      try {
+        await api.delete(
+          `/users/${user.id_user}/unfollow-playlist/${playlist.id_playlist}`
+        );
+      } catch (e) {
+        console.error('Failed to unfollow playlist', e);
+      }
+    });
+  };
+
+  const handleRemoveSong = async (songId: string) => {
+    try {
+      await api.delete(`/playlists/${id}/songs/${songId}`);
+      mutate(`/playlists/${id}`);
+    } catch (e) {
+      console.error('Failed to remove song', e);
     }
   };
 
@@ -37,6 +92,7 @@ function PlaylistDetailPage() {
     <>
       <Head>
         <title>{playlist.name} — Spotify Clone</title>
+        <meta name="description" content={playlist.description || `Playlist ${playlist.name}`} />
       </Head>
 
       <div className="-mt-[60px]">
@@ -78,9 +134,7 @@ function PlaylistDetailPage() {
               </p>
             )}
             <div className="flex items-center gap-1 text-sm text-white/80">
-              <span className="font-bold text-white">
-                {playlist.owner?.name || 'User'}
-              </span>
+              <span className="font-bold text-white">{ownerName}</span>
               {playlist.category && (
                 <>
                   <span className="mx-1">•</span>
@@ -113,12 +167,22 @@ function PlaylistDetailPage() {
                 <Play className="w-6 h-6 text-black fill-current ml-0.5" />
               </button>
 
+              {/* Follow button (if not owner) */}
+              {userRole !== 'Owner' && (
+                <FollowButton
+                  isFollowing={isFollowing}
+                  onFollow={handleFollow}
+                  onUnfollow={handleUnfollow}
+                  size="sm"
+                />
+              )}
+
               <ShareButton
                 url={typeof window !== 'undefined' ? window.location.href : ''}
                 title={playlist.name}
               />
 
-              {isOwner && (
+              {canEdit && (
                 <button
                   onClick={() => router.push(`/playlist/${id}/edit`)}
                   className="text-spotify-muted hover:text-white transition-colors"
@@ -139,10 +203,16 @@ function PlaylistDetailPage() {
                   {playlist.collaborators.map((c) => (
                     <span
                       key={c.id_user}
-                      className="px-3 py-1 bg-white/10 rounded-full text-xs text-white"
+                      className="px-3 py-1 bg-white/10 rounded-full text-xs text-white flex items-center gap-1.5"
                     >
-                      {c.user?.name || c.id_user}{' '}
-                      <span className="text-spotify-muted">({c.role})</span>
+                      <UserPlus className="w-3 h-3 text-spotify-muted" />
+                      {c.name || c.user?.name || c.id_user}{' '}
+                      <span className={`font-semibold ${
+                        c.role === 'Owner' ? 'text-spotify-green' :
+                        c.role === 'Editor' ? 'text-blue-400' : 'text-spotify-muted'
+                      }`}>
+                        {c.role}
+                      </span>
                     </span>
                   ))}
                 </div>
@@ -169,5 +239,3 @@ function PlaylistDetailPage() {
     </>
   );
 }
-
-export default withAuth(PlaylistDetailPage);

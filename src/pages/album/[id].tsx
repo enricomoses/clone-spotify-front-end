@@ -1,19 +1,21 @@
 import { useRouter } from 'next/router';
 import Head from 'next/head';
+import Link from 'next/link';
 import useSWR from 'swr';
 import { Play, Music2 } from 'lucide-react';
 import { fetcher } from '@/lib/fetcher';
-import { withAuth } from '@/utils/withAuth';
+import { useRequireAuth } from '@/hooks/useRequireAuth';
 import { usePlayerStore } from '@/stores/usePlayerStore';
 import SongList from '@/components/song/SongList';
+import ShareButton from '@/components/social/ShareButton';
 import { PageLoading } from '@/components/ui/Spinner';
-import { formatDate } from '@/utils/formatDuration';
 import type { Album } from '@/types';
 
-function AlbumDetailPage() {
+export default function AlbumDetailPage() {
   const router = useRouter();
   const { id } = router.query;
   const playSong = usePlayerStore((s) => s.playSong);
+  const { requireAuth } = useRequireAuth();
 
   const { data: album, isLoading } = useSWR<Album>(
     id ? `/albums/${id}` : null,
@@ -22,19 +24,21 @@ function AlbumDetailPage() {
 
   if (isLoading || !album) return <PageLoading />;
 
-  const artistNames = album.artists?.map((a) => a.name).join(', ') || 'Unknown Artist';
   const songCount = album.songs?.length || 0;
 
   const handlePlayAll = () => {
-    if (album.songs && album.songs.length > 0) {
-      playSong(album.songs[0], album.songs);
-    }
+    requireAuth(() => {
+      if (album.songs && album.songs.length > 0) {
+        playSong(album.songs[0], album.songs);
+      }
+    });
   };
 
   return (
     <>
       <Head>
         <title>{album.title} — Spotify Clone</title>
+        <meta name="description" content={`Album ${album.title} by ${album.artists?.map(a => a.name).join(', ')}`} />
       </Head>
 
       <div className="-mt-[60px]">
@@ -67,8 +71,23 @@ function AlbumDetailPage() {
             <h1 className="text-5xl font-black text-white mb-4 leading-tight">
               {album.title}
             </h1>
-            <div className="flex items-center gap-1 text-sm text-white/80">
-              <span className="font-bold text-white">{artistNames}</span>
+            <div className="flex items-center gap-1 text-sm text-white/80 flex-wrap">
+              {/* Many-to-many artists */}
+              {album.artists && album.artists.length > 0 ? (
+                album.artists.map((artist, idx) => (
+                  <span key={artist.id_artist}>
+                    <Link
+                      href={`/artist/${artist.id_artist}`}
+                      className="font-bold text-white hover:underline"
+                    >
+                      {artist.name}
+                    </Link>
+                    {idx < album.artists!.length - 1 && <span>, </span>}
+                  </span>
+                ))
+              ) : (
+                <span className="font-bold text-white">Unknown Artist</span>
+              )}
               {album.release && (
                 <>
                   <span className="mx-1">•</span>
@@ -91,7 +110,7 @@ function AlbumDetailPage() {
           />
 
           <div className="relative z-10 px-8 py-6">
-            {/* Play Button */}
+            {/* Controls */}
             <div className="flex items-center gap-6 mb-6">
               <button
                 onClick={handlePlayAll}
@@ -100,6 +119,10 @@ function AlbumDetailPage() {
               >
                 <Play className="w-6 h-6 text-black fill-current ml-0.5" />
               </button>
+              <ShareButton
+                url={typeof window !== 'undefined' ? window.location.href : ''}
+                title={album.title}
+              />
             </div>
 
             {/* Songs */}
@@ -112,5 +135,3 @@ function AlbumDetailPage() {
     </>
   );
 }
-
-export default withAuth(AlbumDetailPage);

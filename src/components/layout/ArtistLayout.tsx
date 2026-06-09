@@ -10,6 +10,7 @@ import {
   UserCircle,
   LogOut,
   Music2,
+  Calendar,
 } from 'lucide-react';
 import { useArtistStore } from '@/stores/useArtistStore';
 import { cn } from '@/lib/utils';
@@ -22,6 +23,7 @@ const artistNavItems = [
   { href: '/artist/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/artist/songs', label: 'Songs', icon: Music },
   { href: '/artist/albums', label: 'Albums', icon: Disc3 },
+  { href: '/artist/concerts', label: 'Concerts', icon: Calendar },
   { href: '/artist/analytics', label: 'Analytics', icon: BarChart3 },
   { href: '/artist/gallery', label: 'Gallery', icon: Image },
   { href: '/artist/profile/edit', label: 'Edit Profile', icon: UserCircle },

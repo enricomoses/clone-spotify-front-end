@@ -1,30 +1,32 @@
-import { useState, useEffect } from 'react';
 import Head from 'next/head';
-import { Sparkles } from 'lucide-react';
-import { withAuth } from '@/utils/withAuth';
-import { getDiscoverWeekly, getWeekLabel } from '@/utils/discoverWeekly';
+import useSWR from 'swr';
+import { Sparkles, Play } from 'lucide-react';
+import { fetcher } from '@/lib/fetcher';
+import { useRequireAuth } from '@/hooks/useRequireAuth';
 import SongList from '@/components/song/SongList';
 import { PageLoading } from '@/components/ui/Spinner';
 import { usePlayerStore } from '@/stores/usePlayerStore';
+import { getWeekLabel } from '@/utils/discoverWeekly';
 import type { Song } from '@/types';
 
-function DiscoverWeeklyPage() {
-  const [songs, setSongs] = useState<Song[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+export default function DiscoverWeeklyPage() {
+  const { requireAuth } = useRequireAuth();
   const playSong = usePlayerStore((s) => s.playSong);
 
-  useEffect(() => {
-    getDiscoverWeekly()
-      .then(setSongs)
-      .finally(() => setIsLoading(false));
-  }, []);
+  const { data: songs, isLoading } = useSWR<Song[]>(
+    '/songs/discover-weekly',
+    fetcher
+  );
 
   if (isLoading) return <PageLoading />;
+
+  const songList = songs || [];
 
   return (
     <>
       <Head>
         <title>Discover Weekly — Spotify Clone</title>
+        <meta name="description" content="Top 50 lagu minggu ini berdasarkan streaming trends" />
       </Head>
 
       <div className="-mt-[60px]">
@@ -55,7 +57,7 @@ function DiscoverWeeklyPage() {
               trends. Updated every Monday.
             </p>
             <p className="text-xs text-white/50 mt-2">
-              Week of {getWeekLabel()} • {songs.length} songs
+              Week of {getWeekLabel()} • {songList.length} songs
             </p>
           </div>
         </div>
@@ -73,21 +75,20 @@ function DiscoverWeeklyPage() {
             {/* Play All Button */}
             <div className="flex items-center gap-6 mb-6">
               <button
-                onClick={() => songs.length > 0 && playSong(songs[0], songs)}
+                onClick={() =>
+                  requireAuth(() => {
+                    if (songList.length > 0) playSong(songList[0], songList);
+                  })
+                }
                 className="w-14 h-14 bg-spotify-green rounded-full flex items-center justify-center hover:scale-110 hover:bg-spotify-green-bright transition-all shadow-lg"
                 aria-label="Play all"
               >
-                <svg
-                  className="w-6 h-6 text-black fill-current ml-0.5"
-                  viewBox="0 0 24 24"
-                >
-                  <path d="M8 5v14l11-7z" />
-                </svg>
+                <Play className="w-6 h-6 text-black fill-current ml-0.5" />
               </button>
             </div>
 
-            {songs.length > 0 ? (
-              <SongList songs={songs} showAlbum={true} />
+            {songList.length > 0 ? (
+              <SongList songs={songList} showAlbum={true} />
             ) : (
               <div className="flex flex-col items-center justify-center min-h-[30vh]">
                 <Sparkles className="w-16 h-16 text-spotify-muted/30 mb-4" />
@@ -105,5 +106,3 @@ function DiscoverWeeklyPage() {
     </>
   );
 }
-
-export default withAuth(DiscoverWeeklyPage);

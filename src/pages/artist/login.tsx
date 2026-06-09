@@ -35,23 +35,30 @@ export default function ArtistLoginPage() {
     setError('');
 
     try {
-      const response = await api.get('/artists');
-      const artists = response.data.data || response.data;
+      // Server-side auth: POST /login with role "artist"
+      const response = await api.post('/login', {
+        email: data.email,
+        password: data.password,
+        role: 'artist',
+      });
 
-      const matchedArtist = artists.find(
-        (a: any) => a.email === data.email && a.password === data.password
-      );
+      const artistData = response.data.data || response.data.artist || response.data;
+      const token = response.data.access_token || response.data.token;
 
-      if (matchedArtist) {
-        const { password, ...artistWithoutPassword } = matchedArtist;
-        setArtist(artistWithoutPassword);
-        router.push('/artist/dashboard');
-      } else {
-        setError('Email atau password salah');
+      if (token) {
+        localStorage.setItem('token', token);
       }
+
+      // setArtist will also set the artist-session cookie
+      setArtist(artistData);
+      router.push('/artist/dashboard');
     } catch (err: any) {
-      setError('Terjadi kesalahan. Pastikan server berjalan.');
-      console.error(err);
+      if (err.response && err.response.status === 401) {
+        setError('Email atau password salah');
+      } else {
+        setError('Terjadi kesalahan. Pastikan server berjalan.');
+        console.error(err);
+      }
     } finally {
       setIsLoading(false);
     }

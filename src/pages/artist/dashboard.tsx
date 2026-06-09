@@ -1,6 +1,6 @@
 import Head from 'next/head';
 import useSWR from 'swr';
-import { Music, Disc3, TrendingUp, BarChart3, Play } from 'lucide-react';
+import { Music, Disc3, TrendingUp, BarChart3, Play, Calendar } from 'lucide-react';
 import { withArtistAuth } from '@/utils/withArtistAuth';
 import { useArtistStore } from '@/stores/useArtistStore';
 import { fetcher } from '@/lib/fetcher';
@@ -20,7 +20,7 @@ function ArtistDashboardPage() {
   const { data: allAlbums } = useSWR<Album[]>('/albums', fetcher);
   const { data: allHistory, isLoading: historyLoading } = useSWR<
     StreamingHistory[]
-  >('/streaming-history', fetcher);
+  >('/song-streaming', fetcher);
 
   const isLoading = songsLoading || historyLoading;
 
@@ -211,7 +211,7 @@ function ArtistDashboardPage() {
         </div>
 
         {/* Quick Links */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <Link
             href="/artist/songs"
             className="bg-spotify-card/30 border border-spotify-border/20 rounded-xl p-5 hover:bg-spotify-card/60 transition-colors group"
@@ -242,6 +242,17 @@ function ArtistDashboardPage() {
             <h3 className="font-bold text-white mb-1">View Analytics</h3>
             <p className="text-xs text-spotify-muted">
               Deep dive into your streaming data
+            </p>
+          </Link>
+
+          <Link
+            href="/artist/concerts"
+            className="bg-spotify-card/30 border border-spotify-border/20 rounded-xl p-5 hover:bg-spotify-card/60 transition-colors group"
+          >
+            <Calendar className="w-6 h-6 text-green-400 mb-3 group-hover:scale-110 transition-transform" />
+            <h3 className="font-bold text-white mb-1">Manage Concerts</h3>
+            <p className="text-xs text-spotify-muted">
+              Create and manage your live events
             </p>
           </Link>
         </div>

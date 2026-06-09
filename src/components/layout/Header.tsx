@@ -1,5 +1,6 @@
 import { useRouter } from 'next/router';
-import { ChevronLeft, ChevronRight, User } from 'lucide-react';
+import Link from 'next/link';
+import { ChevronLeft, ChevronRight, User, LogIn } from 'lucide-react';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useState, useRef, useEffect } from 'react';
 
@@ -41,9 +42,9 @@ export default function Header() {
         </button>
       </div>
 
-      {/* Right Side — User Menu */}
+      {/* Right Side */}
       <div className="relative" ref={menuRef}>
-        {user && (
+        {user ? (
           <>
             <button
               onClick={() => setShowMenu(!showMenu)}
@@ -82,6 +83,7 @@ export default function Header() {
                 <button
                   onClick={() => {
                     logout();
+                    router.push('/home');
                     setShowMenu(false);
                   }}
                   className="w-full text-left px-4 py-2.5 text-sm text-spotify-muted hover:text-white hover:bg-spotify-hover transition-colors"
@@ -91,6 +93,22 @@ export default function Header() {
               </div>
             )}
           </>
+        ) : (
+          <div className="flex items-center gap-3">
+            <Link
+              href="/register"
+              className="text-sm font-bold text-spotify-muted hover:text-white transition-colors"
+            >
+              Sign up
+            </Link>
+            <Link
+              href="/login"
+              className="flex items-center gap-2 px-6 py-2 bg-white text-black text-sm font-bold rounded-full hover:scale-105 transition-transform"
+            >
+              <LogIn className="w-4 h-4" />
+              Log in
+            </Link>
+          </div>
         )}
       </div>
     </header>

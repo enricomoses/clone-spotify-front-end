@@ -7,7 +7,6 @@ export interface User {
   id_user: string;
   name: string;
   email: string;
-  password?: string;
   birthday?: string;
   gender?: string;
   country?: string;
@@ -15,6 +14,8 @@ export interface User {
   followedPlaylists?: Playlist[];
   following?: User[];
   followers?: User[];
+  followedArtists?: Artist[];
+  followedPodcasts?: Podcast[];
   likedSongs?: Song[];
   created_at?: string;
   updated_at?: string;
@@ -31,10 +32,10 @@ export interface Artist {
   x?: string;
   bio?: string;
   profile_picture?: string;
-  albums?: Album[];
-  songs?: Song[];
-  gallery?: ArtistGallery[];
-  concerts?: Concert[];
+  albums?: Album[];       // Many-to-Many via artist_album
+  songs?: Song[];         // Many-to-Many via song_artist
+  concerts?: Concert[];   // Many-to-Many via artist_concert
+  galleries?: ArtistGallery[];
   created_at?: string;
   updated_at?: string;
 }
@@ -44,8 +45,8 @@ export interface Album {
   title: string;
   release: string;
   cover_image: string;
-  artists?: Artist[];
-  songs?: Song[];
+  artists?: Artist[];     // Many-to-Many via artist_album
+  songs?: Song[];         // One-to-Many
   created_at?: string;
   updated_at?: string;
 }
@@ -53,13 +54,34 @@ export interface Album {
 export interface Song {
   id_song: string;
   title: string;
-  duration: number; // in seconds
+  duration: number;       // in seconds
   id_album?: string;
+  audio_url: string;      // REQUIRED — for Howler.js
   album?: Album;
-  artists?: Artist[];
-  audio_url?: string;
+  artists?: Artist[];     // Many-to-Many via song_artist
+  playlists?: Playlist[];
+  streaming_histories_count?: number; // from withCount in Discover Weekly
   created_at?: string;
   updated_at?: string;
+}
+
+export interface Concert {
+  id_concert: string;
+  location: string;
+  location_url?: string;
+  event_at: string;       // datetime
+  ticket_url: string;
+  artists?: Artist[];     // Many-to-Many via artist_concert
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface ArtistGallery {
+  id_gallery: string;
+  images_url: string;      // DB column: images_url (NOT image_url)
+  description_pict?: string;
+  uploaded_at: string;
+  id_artist: string;
 }
 
 export interface Playlist {
@@ -80,15 +102,19 @@ export interface Playlist {
 export interface PlaylistCollaborator {
   id_playlist: string;
   id_user: string;
-  role: 'editor' | 'viewer';
+  role: 'Owner' | 'Editor' | 'Viewer';
+  // Nested user fields
+  name?: string;
+  email?: string;
+  profile_picture?: string;
   user?: User;
 }
 
 export interface PlaylistCategory {
   id_playlist_category: string;
   name: string;
-  cover_image: string;
-  icon: string;
+  cover_image?: string;
+  icon?: string;
 }
 
 export interface Podcast {
@@ -101,6 +127,7 @@ export interface Podcast {
   category?: PodcastCategory;
   creator?: User;
   episodes?: Episode[];
+  followers?: User[];
   created_at?: string;
   updated_at?: string;
 }
@@ -108,8 +135,8 @@ export interface Podcast {
 export interface PodcastCategory {
   id_podcast_category: string;
   name: string;
-  cover_image: string;
-  icon: string;
+  cover_image?: string;
+  icon?: string;
 }
 
 export interface Episode {
@@ -117,7 +144,7 @@ export interface Episode {
   title: string;
   description?: string;
   published_at: string;
-  duration: number;
+  duration: number;         // in seconds
   audio_url: string;
   video_url?: string;
   thumbnail_image?: string;
@@ -127,31 +154,28 @@ export interface Episode {
   updated_at?: string;
 }
 
-export interface StreamingHistory {
+export interface SongStreamingHistory {
   id_stream: string;
   played_at: string;
-  play_duration?: number;
+  play_duration?: number;   // null when starting, filled on pause/end
   id_user: string;
   id_song: string;
   user?: User;
   song?: Song;
 }
 
-export interface Concert {
-  id_concert: string;
-  location: string;
-  location_url?: string;
-  event_at: string;
-  ticket_url: string;
+export interface EpisodeStreamingHistory {
+  id_stream: string;
+  played_at: string;
+  play_duration?: number;
+  id_user: string;
+  id_episode: string;
+  user?: User;
+  episode?: Episode;
 }
 
-export interface ArtistGallery {
-  id_gallery: string;
-  image_url: string;
-  description_pict?: string;
-  uploaded_at: string;
-  id_artist: string;
-}
+// Legacy alias for backward compatibility
+export type StreamingHistory = SongStreamingHistory;
 
 // ========================================
 // Utility types

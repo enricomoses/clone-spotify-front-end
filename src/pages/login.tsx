@@ -39,21 +39,25 @@ export default function LoginPage() {
       const response = await api.post('/login', {
         email: data.email,
         password: data.password,
+        role: 'user',
       });
 
-      // Mengambil data user dan token dari response backend Laravel kita
-      const { user, access_token } = response.data;
+      // Mengambil data user dari response backend Laravel
+      const userData = response.data.data || response.data.user || response.data;
+      const token = response.data.access_token || response.data.token;
 
       // Menyimpan token ke localStorage agar bisa digunakan untuk request API selanjutnya
-      if (access_token) {
-        localStorage.setItem('token', access_token);
+      if (token) {
+        localStorage.setItem('token', token);
       }
 
       // Memasukkan data user ke dalam state management (Zustand)
-      setUser(user);
+      setUser(userData);
 
-      // Arahkan ke halaman beranda
-      router.push('/home');
+      // Cek redirect setelah login (dari guest mode)
+      const redirectTo = sessionStorage.getItem('redirectAfterLogin');
+      sessionStorage.removeItem('redirectAfterLogin');
+      router.push(redirectTo || '/home');
     } catch (err: any) {
       // Menangkap error 401 Unauthorized (Email/Password salah) dari Laravel
       if (err.response && err.response.status === 401) {

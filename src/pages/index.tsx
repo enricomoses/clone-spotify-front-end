@@ -1,19 +1,14 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { useAuthStore } from '@/stores/useAuthStore';
 import Head from 'next/head';
 
 export default function LandingPage() {
   const router = useRouter();
-  const user = useAuthStore((s) => s.user);
 
   useEffect(() => {
-    if (user) {
-      router.replace('/home');
-    } else {
-      router.replace('/login');
-    }
-  }, [user, router]);
+    // Always redirect to home — guest browsing is allowed
+    router.replace('/home');
+  }, [router]);
 
   return (
     <>

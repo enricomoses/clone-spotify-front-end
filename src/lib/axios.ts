@@ -14,16 +14,12 @@ api.interceptors.request.use(
   (config) => {
     if (typeof window !== 'undefined') {
       try {
-        const authStorage = localStorage.getItem('auth-storage');
-        if (authStorage) {
-          const parsed = JSON.parse(authStorage);
-          const token = parsed?.state?.user?.token;
-          if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
-          }
+        const token = localStorage.getItem('token');
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
         }
       } catch {
-        // Silently fail if localStorage parsing fails
+        // Silently fail if localStorage access fails
       }
     }
     return config;
@@ -31,15 +27,14 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Response interceptor — handle 401
+// Response interceptor — handle errors
+// NOTE: No auto-redirect on 401 since guest browsing is allowed
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401 && typeof window !== 'undefined') {
-      // Only redirect if not already on login page
-      if (!window.location.pathname.includes('/login')) {
-        window.location.href = '/login';
-      }
+    // Log errors in development
+    if (process.env.NODE_ENV === 'development' && error.response) {
+      console.warn(`API ${error.response.status}: ${error.config?.url}`);
     }
     return Promise.reject(error);
   }

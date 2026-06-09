@@ -29,7 +29,7 @@ export default function GalleryGrid({ photos, onDelete, canManage = false }: Gal
             onClick={() => setLightboxPhoto(photo)}
           >
             <img
-              src={photo.image_url}
+              src={photo.images_url}
               alt={photo.description_pict || 'Gallery photo'}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               loading="lazy"
@@ -70,7 +70,7 @@ export default function GalleryGrid({ photos, onDelete, canManage = false }: Gal
             <X className="w-8 h-8" />
           </button>
           <img
-            src={lightboxPhoto.image_url}
+            src={lightboxPhoto.images_url}
             alt={lightboxPhoto.description_pict || 'Gallery photo'}
             className="max-w-full max-h-[85vh] object-contain rounded-lg animate-fade-in"
           />

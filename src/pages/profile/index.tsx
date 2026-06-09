@@ -1,16 +1,25 @@
 import Head from 'next/head';
+import { useEffect } from 'react';
+import { useRouter } from 'next/router';
 import useSWR from 'swr';
 import Link from 'next/link';
 import { User, Music2, ListMusic, Users } from 'lucide-react';
 import { fetcher } from '@/lib/fetcher';
-import { withAuth } from '@/utils/withAuth';
 import { useAuthStore } from '@/stores/useAuthStore';
 import PlaylistCard from '@/components/playlist/PlaylistCard';
 import { PageLoading } from '@/components/ui/Spinner';
 import type { User as UserType, Playlist } from '@/types';
 
 function ProfilePage() {
+  const router = useRouter();
   const currentUser = useAuthStore((s) => s.user);
+
+  // Redirect if not logged in
+  useEffect(() => {
+    if (!currentUser) {
+      router.replace('/login');
+    }
+  }, [currentUser, router]);
 
   const { data: userData, isLoading } = useSWR<UserType>(
     currentUser ? `/users/${currentUser.id_user}` : null,
@@ -157,4 +166,4 @@ function ProfilePage() {
   );
 }
 
-export default withAuth(ProfilePage);
+export default ProfilePage;

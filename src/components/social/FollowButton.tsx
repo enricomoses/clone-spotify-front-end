@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { UserPlus, UserCheck } from 'lucide-react';
+import { useRequireAuth } from '@/hooks/useRequireAuth';
 import { cn } from '@/lib/utils';
 
 interface FollowButtonProps {
@@ -19,14 +20,17 @@ export default function FollowButton({
 }: FollowButtonProps) {
   const [isFollowing, setIsFollowing] = useState(initialFollowing);
   const [isHovered, setIsHovered] = useState(false);
+  const { requireAuth } = useRequireAuth();
 
   const handleClick = () => {
-    if (isFollowing) {
-      onUnfollow?.();
-    } else {
-      onFollow?.();
-    }
-    setIsFollowing(!isFollowing);
+    requireAuth(() => {
+      if (isFollowing) {
+        onUnfollow?.();
+      } else {
+        onFollow?.();
+      }
+      setIsFollowing(!isFollowing);
+    });
   };
 
   return (

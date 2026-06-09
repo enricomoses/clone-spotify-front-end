@@ -2,12 +2,16 @@ import { ReactNode } from 'react';
 import Sidebar from './Sidebar';
 import Header from './Header';
 import PlayerBar from '@/components/player/PlayerBar';
+import GuestBanner from '@/components/ui/GuestBanner';
+import { useAuthStore } from '@/stores/useAuthStore';
 
 interface MainLayoutProps {
   children: ReactNode;
 }
 
 export default function MainLayout({ children }: MainLayoutProps) {
+  const user = useAuthStore((s) => s.user);
+
   return (
     <div className="flex h-screen bg-black text-white overflow-hidden">
       {/* Sidebar */}
@@ -23,6 +27,9 @@ export default function MainLayout({ children }: MainLayoutProps) {
           {children}
         </main>
       </div>
+
+      {/* Guest Banner (above player bar) */}
+      {!user && <GuestBanner />}
 
       {/* Bottom Player Bar */}
       <PlayerBar />

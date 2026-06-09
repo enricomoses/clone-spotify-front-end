@@ -1,4 +1,5 @@
 import { usePlayerStore } from '@/stores/usePlayerStore';
+import { useAuthStore } from '@/stores/useAuthStore';
 import { formatDuration } from '@/utils/formatDuration';
 import {
   Play,
@@ -17,6 +18,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useRef, useState, useCallback, useEffect } from 'react';
+import api from '@/lib/axios';
 
 export default function PlayerBar() {
   const {
@@ -38,10 +40,87 @@ export default function PlayerBar() {
     isQueueOpen,
   } = usePlayerStore();
 
+  const user = useAuthStore((s) => s.user);
+
   const [isDragging, setIsDragging] = useState(false);
   const [dragTime, setDragTime] = useState(0);
   const progressRef = useRef<HTMLDivElement>(null);
   const volumeRef = useRef<HTMLDivElement>(null);
+
+  // Streaming history tracking
+  const [streamId, setStreamId] = useState<string | null>(null);
+  const [trackStartTime, setTrackStartTime] = useState<number>(0);
+  const prevSongRef = useRef<string | null>(null);
+
+  // Flush stream duration to backend
+  const flushStreamDuration = useCallback(async () => {
+    if (!streamId || !user) return;
+    const elapsed = Math.floor((Date.now() - trackStartTime) / 1000);
+    if (elapsed >= 3) {
+      try {
+        await api.put(`/song-streaming/${streamId}`, {
+          play_duration: elapsed,
+        });
+      } catch (e) {
+        console.error('Failed to update stream duration', e);
+      }
+    }
+    setStreamId(null);
+  }, [streamId, trackStartTime, user]);
+
+  // Track song changes for streaming history
+  useEffect(() => {
+    const currentId = currentSong?.id_song || null;
+    if (currentId !== prevSongRef.current && currentId && isPlaying && user) {
+      // Flush previous stream
+      if (streamId) {
+        flushStreamDuration();
+      }
+
+      // Start new stream
+      const startStream = async () => {
+        try {
+          const res = await api.post('/song-streaming', {
+            id_user: user.id_user,
+            id_song: currentId,
+          });
+          setStreamId(res.data.data.id_stream);
+          setTrackStartTime(Date.now());
+        } catch (e) {
+          console.error('Failed to record stream start', e);
+        }
+      };
+      startStream();
+    }
+    prevSongRef.current = currentId;
+  }, [currentSong?.id_song, isPlaying]);
+
+  // Flush on pause
+  useEffect(() => {
+    if (!isPlaying && streamId) {
+      flushStreamDuration();
+    }
+  }, [isPlaying]);
+
+  // Cleanup on window close
+  useEffect(() => {
+    const handleUnload = () => {
+      if (streamId && user) {
+        const elapsed = Math.floor((Date.now() - trackStartTime) / 1000);
+        if (elapsed >= 3) {
+          // Use sendBeacon for reliable delivery on unload
+          const data = JSON.stringify({ play_duration: elapsed });
+          const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api';
+          navigator.sendBeacon(
+            `${baseUrl}/song-streaming/${streamId}`,
+            new Blob([data], { type: 'application/json' })
+          );
+        }
+      }
+    };
+    window.addEventListener('beforeunload', handleUnload);
+    return () => window.removeEventListener('beforeunload', handleUnload);
+  }, [streamId, trackStartTime, user]);
 
   // Progress bar interaction
   const handleProgressClick = useCallback(
@@ -134,7 +213,10 @@ export default function PlayerBar() {
           </button>
 
           <button
-            onClick={prevSong}
+            onClick={() => {
+              flushStreamDuration();
+              prevSong();
+            }}
             className="text-spotify-muted hover:text-white transition-colors p-1"
             aria-label="Previous"
           >
@@ -154,7 +236,10 @@ export default function PlayerBar() {
           </button>
 
           <button
-            onClick={nextSong}
+            onClick={() => {
+              flushStreamDuration();
+              nextSong();
+            }}
             className="text-spotify-muted hover:text-white transition-colors p-1"
             aria-label="Next"
           >
