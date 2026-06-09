@@ -52,7 +52,7 @@ export default function ArtistProfilePage() {
   };
 
   // Check if current user follows this artist
-  const isFollowing = user?.followedArtists?.some(
+  const isFollowing = user?.followed_artists?.some(
     (a) => a.id_artist === artist.id_artist
   ) || false;
 

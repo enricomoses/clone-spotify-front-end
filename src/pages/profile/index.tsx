@@ -148,13 +148,13 @@ function ProfilePage() {
           )}
 
           {/* Followed Playlists */}
-          {user.followedPlaylists && user.followedPlaylists.length > 0 && (
+          {user.followed_playlists && user.followed_playlists.length > 0 && (
             <section className="mb-10">
               <h2 className="text-2xl font-bold text-white mb-5">
                 Followed Playlists
               </h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-                {user.followedPlaylists.map((playlist) => (
+                {user.followed_playlists.map((playlist) => (
                   <PlaylistCard key={playlist.id_playlist} playlist={playlist} />
                 ))}
               </div>

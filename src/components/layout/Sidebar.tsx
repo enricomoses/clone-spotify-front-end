@@ -154,8 +154,8 @@ export default function Sidebar() {
               Playlists
             </p>
             <div className="space-y-0.5">
-              {user.followedPlaylists && user.followedPlaylists.length > 0 ? (
-                user.followedPlaylists.map((playlist) => (
+              {user.followed_playlists && user.followed_playlists.length > 0 ? (
+                user.followed_playlists.map((playlist) => (
                   <Link
                     key={playlist.id_playlist}
                     href={`/playlist/${playlist.id_playlist}`}
