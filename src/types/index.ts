@@ -78,7 +78,7 @@ export interface Concert {
 
 export interface ArtistGallery {
   id_gallery: string;
-  images_url: string; // DB column: images_url (NOT image_url)
+  image_url: string;
   description_pict?: string;
   uploaded_at: string;
   id_artist: string;

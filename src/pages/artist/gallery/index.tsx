@@ -10,6 +10,7 @@ import GalleryGrid from '@/components/artist-portal/GalleryGrid';
 import { PageLoading } from '@/components/ui/Spinner';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import type { ArtistGallery } from '@/types';
+import ImageUpload from '@/components/ui/ImageUpload';
 
 function ArtistGalleryPage() {
   const artist = useArtistStore((s) => s.artist);
@@ -17,6 +18,8 @@ function ArtistGalleryPage() {
     artist ? `/artists/${artist.id_artist}/gallery` : null,
     fetcher
   );
+
+  console.log(gallery)
 
   const [showAddForm, setShowAddForm] = useState(false);
   const [imageUrl, setImageUrl] = useState('');
@@ -51,6 +54,17 @@ function ArtistGalleryPage() {
     setIsDeleting(true);
 
     try {
+      if (deleteTarget.image_url) {
+        try {
+          await api.post('/media/delete', {
+            image_url: deleteTarget.image_url,
+            _method: 'DELETE',
+          });
+        } catch (cloudinaryErr) {
+          console.warn('Failed to delete image from Cloudinary:', cloudinaryErr);
+        }
+      }
+
       await api.post(
         `/artists/${artist.id_artist}/gallery/${deleteTarget.id_gallery}`,
         { _method: 'DELETE' },
@@ -102,14 +116,12 @@ function ArtistGalleryPage() {
             <div className="space-y-4">
               <div>
                 <label className="block text-xs font-semibold text-spotify-muted mb-1.5">
-                  Image URL *
+                  Image
                 </label>
-                <input
-                  type="url"
+                <ImageUpload
                   value={imageUrl}
-                  onChange={(e) => setImageUrl(e.target.value)}
-                  placeholder="https://example.com/photo.jpg"
-                  className="w-full bg-spotify-hover border border-spotify-border rounded-md px-4 py-2.5 text-sm text-white placeholder:text-spotify-muted/60 focus:outline-none focus:border-spotify-green focus:ring-1 focus:ring-spotify-green transition-all"
+                  onChange={setImageUrl}
+                  folder="gallery"
                 />
               </div>
               <div>

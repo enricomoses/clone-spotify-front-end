@@ -23,6 +23,34 @@ function MyPodcastsPage() {
     if (!confirm('Hapus podcast ini? Semua episode juga akan terhapus.')) return;
     setDeletingId(podcastId);
     try {
+      const podcast = myPodcasts.find((p) => p.id_podcast === podcastId);
+      if (podcast) {
+        if (podcast.cover_image) {
+          try {
+            await api.post('/media/delete', {
+              image_url: podcast.cover_image,
+              _method: 'DELETE',
+            });
+          } catch (err) {
+            console.warn('Failed to delete podcast cover image from Cloudinary:', err);
+          }
+        }
+        if (podcast.episodes && podcast.episodes.length > 0) {
+          for (const ep of podcast.episodes) {
+            if (ep.thumbnail_image) {
+              try {
+                await api.post('/media/delete', {
+                  image_url: ep.thumbnail_image,
+                  _method: 'DELETE',
+                });
+              } catch (err) {
+                console.warn('Failed to delete episode thumbnail from Cloudinary:', err);
+              }
+            }
+          }
+        }
+      }
+
       await api.post(`/podcasts/${podcastId}`, { _method: 'DELETE' });
       mutate('/podcasts');
     } catch (e) {

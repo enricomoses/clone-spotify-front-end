@@ -325,7 +325,7 @@ export default function ArtistProfilePage() {
                         className="aspect-square rounded-lg overflow-hidden bg-spotify-card group relative"
                       >
                         <img
-                          src={photo.images_url}
+                          src={photo.image_url}
                           alt={photo.description_pict || 'Gallery photo'}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         />

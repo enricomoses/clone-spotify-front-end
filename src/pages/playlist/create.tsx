@@ -11,6 +11,7 @@ import { useAuthStore } from '@/stores/useAuthStore';
 import { fetcher } from '@/lib/fetcher';
 import api from '@/lib/axios';
 import type { PlaylistCategory } from '@/types';
+import ImageUpload from '@/components/ui/ImageUpload';
 
 const createPlaylistSchema = z.object({
   name: z.string().min(1, 'Nama playlist wajib diisi'),
@@ -35,10 +36,14 @@ function CreatePlaylistPage() {
   const {
     register,
     handleSubmit,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm<CreatePlaylistForm>({
     resolver: zodResolver(createPlaylistSchema),
   });
+
+  const coverImage = watch('cover_image');
 
   const onSubmit = async (data: CreatePlaylistForm) => {
     setIsSubmitting(true);
@@ -81,8 +86,12 @@ function CreatePlaylistPage() {
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <div className="flex gap-6">
             {/* Cover Preview */}
-            <div className="w-48 h-48 shrink-0 bg-spotify-card rounded-lg flex items-center justify-center shadow-xl">
-              <Music2 className="w-12 h-12 text-spotify-muted" />
+            <div className="w-48 h-48 shrink-0 bg-spotify-card rounded-lg overflow-hidden flex items-center justify-center shadow-xl">
+              {coverImage ? (
+                <img src={coverImage} alt="Cover Preview" className="w-full h-full object-cover" />
+              ) : (
+                <Music2 className="w-12 h-12 text-spotify-muted" />
+              )}
             </div>
 
             <div className="flex-1 space-y-4">
@@ -119,16 +128,16 @@ function CreatePlaylistPage() {
             </div>
           </div>
 
-          {/* Cover Image URL */}
+          {/* Cover Image Upload */}
           <div>
             <label className="block text-sm font-semibold text-white mb-2">
-              Cover Image URL
+              Cover Image
             </label>
-            <input
-              {...register('cover_image')}
-              type="url"
-              placeholder="https://example.com/cover.jpg"
-              className="w-full bg-spotify-hover border border-spotify-border rounded-md px-4 py-3 text-white placeholder:text-spotify-muted/60 focus:outline-none focus:border-spotify-green focus:ring-1 focus:ring-spotify-green transition-all"
+            <input type="hidden" {...register('cover_image')} />
+            <ImageUpload
+              value={coverImage}
+              onChange={(url) => setValue('cover_image', url, { shouldValidate: true })}
+              folder="playlists"
             />
             {errors.cover_image && (
               <p className="mt-1 text-xs text-red-400">

@@ -13,6 +13,7 @@ import { formatDuration, formatDate } from '@/utils/formatDuration';
 import type { Podcast, Episode } from '@/types';
 import api from '@/lib/axios';
 import Link from 'next/link';
+import ImageUpload from '@/components/ui/ImageUpload';
 
 const episodeSchema = z.object({
   title: z.string().min(1, 'Judul wajib diisi'),
@@ -43,10 +44,14 @@ function PodcastEpisodesPage() {
     register,
     handleSubmit,
     reset,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm<EpisodeForm>({
     resolver: zodResolver(episodeSchema),
   });
+
+  const thumbnailImage = watch('thumbnail_image');
 
   const onSubmit = async (data: EpisodeForm) => {
     setIsSubmitting(true);
@@ -72,6 +77,18 @@ function PodcastEpisodesPage() {
     if (!confirm('Hapus episode ini?')) return;
     setDeletingId(episodeId);
     try {
+      const episode = episodes.find((e) => e.id_episode === episodeId);
+      if (episode && episode.thumbnail_image) {
+        try {
+          await api.post('/media/delete', {
+            image_url: episode.thumbnail_image,
+            _method: 'DELETE',
+          });
+        } catch (cloudinaryErr) {
+          console.warn('Failed to delete episode thumbnail from Cloudinary:', cloudinaryErr);
+        }
+      }
+
       await api.post(`/episodes/${episodeId}`, { _method: 'DELETE' });
       mutate(`/podcasts/${podcastId}`);
     } catch (e) {
@@ -184,9 +201,13 @@ function PodcastEpisodesPage() {
                     className="w-full bg-spotify-hover border border-spotify-border rounded-md px-4 py-2.5 text-sm text-white placeholder:text-spotify-muted/60 focus:outline-none focus:border-spotify-green transition-all" />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-white mb-1.5">Thumbnail URL</label>
-                  <input {...register('thumbnail_image')} type="url" placeholder="https://... (opsional)"
-                    className="w-full bg-spotify-hover border border-spotify-border rounded-md px-4 py-2.5 text-sm text-white placeholder:text-spotify-muted/60 focus:outline-none focus:border-spotify-green transition-all" />
+                  <label className="block text-sm font-semibold text-white mb-1.5">Thumbnail Image</label>
+                  <input type="hidden" {...register('thumbnail_image')} />
+                  <ImageUpload
+                    value={thumbnailImage}
+                    onChange={(url) => setValue('thumbnail_image', url, { shouldValidate: true })}
+                    folder="episodes"
+                  />
                 </div>
               </div>
 

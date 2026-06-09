@@ -8,6 +8,7 @@ import { Loader2, UserCircle } from 'lucide-react';
 import { withArtistAuth } from '@/utils/withArtistAuth';
 import { useArtistStore } from '@/stores/useArtistStore';
 import api from '@/lib/axios';
+import ImageUpload from '@/components/ui/ImageUpload';
 
 const editProfileSchema = z.object({
   name: z.string().min(1, 'Nama wajib diisi'),
@@ -33,10 +34,14 @@ function EditArtistProfilePage() {
     register,
     handleSubmit,
     reset,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm<EditProfileForm>({
     resolver: zodResolver(editProfileSchema),
   });
+
+  const profilePicture = watch('profile_picture');
 
   useEffect(() => {
     if (artist) {
@@ -105,30 +110,20 @@ function EditArtistProfilePage() {
         )}
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-          {/* Profile Picture Preview */}
-          <div className="flex items-center gap-5 mb-2">
-            <div className="w-20 h-20 rounded-full bg-spotify-card overflow-hidden flex items-center justify-center">
-              {artist?.profile_picture ? (
-                <img
-                  src={artist.profile_picture}
-                  alt={artist.name}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <UserCircle className="w-10 h-10 text-spotify-muted" />
-              )}
-            </div>
-            <div className="flex-1">
-              <label className="block text-sm font-semibold text-white mb-2">
-                Profile Picture URL
-              </label>
-              <input
-                {...register('profile_picture')}
-                type="url"
-                placeholder="https://example.com/photo.jpg"
-                className="w-full bg-spotify-hover border border-spotify-border rounded-md px-4 py-2.5 text-sm text-white placeholder:text-spotify-muted/60 focus:outline-none focus:border-spotify-green focus:ring-1 focus:ring-spotify-green transition-all"
-              />
-            </div>
+          {/* Profile Picture Upload */}
+          <div className="space-y-2">
+            <label className="block text-sm font-semibold text-white mb-2">
+              Profile Picture
+            </label>
+            <input type="hidden" {...register('profile_picture')} />
+            <ImageUpload
+              value={profilePicture}
+              onChange={(url) => setValue('profile_picture', url, { shouldValidate: true })}
+              folder="avatars"
+            />
+            {errors.profile_picture && (
+              <p className="mt-1 text-xs text-red-400">{errors.profile_picture.message}</p>
+            )}
           </div>
 
           {/* Name */}

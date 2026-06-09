@@ -11,6 +11,7 @@ import { fetcher } from '@/lib/fetcher';
 import api from '@/lib/axios';
 import { PageLoading } from '@/components/ui/Spinner';
 import type { Playlist, PlaylistCategory } from '@/types';
+import ImageUpload from '@/components/ui/ImageUpload';
 
 const editPlaylistSchema = z.object({
   name: z.string().min(1, 'Nama playlist wajib diisi'),
@@ -41,10 +42,14 @@ function EditPlaylistPage() {
     register,
     handleSubmit,
     reset,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm<EditPlaylistForm>({
     resolver: zodResolver(editPlaylistSchema),
   });
+
+  const coverImage = watch('cover_image');
 
   useEffect(() => {
     if (playlist) {
@@ -122,17 +127,20 @@ function EditPlaylistPage() {
             />
           </div>
 
-          {/* Cover Image */}
+          {/* Cover Image Upload */}
           <div>
             <label className="block text-sm font-semibold text-white mb-2">
-              Cover Image URL
+              Cover Image
             </label>
-            <input
-              {...register('cover_image')}
-              type="url"
-              placeholder="https://example.com/cover.jpg"
-              className="w-full bg-spotify-hover border border-spotify-border rounded-md px-4 py-3 text-white placeholder:text-spotify-muted/60 focus:outline-none focus:border-spotify-green focus:ring-1 focus:ring-spotify-green transition-all"
+            <input type="hidden" {...register('cover_image')} />
+            <ImageUpload
+              value={coverImage}
+              onChange={(url) => setValue('cover_image', url, { shouldValidate: true })}
+              folder="playlists"
             />
+            {errors.cover_image && (
+              <p className="mt-1 text-xs text-red-400">{errors.cover_image.message}</p>
+            )}
           </div>
 
           {/* Category */}

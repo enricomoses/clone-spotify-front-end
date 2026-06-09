@@ -11,6 +11,7 @@ import { useAuthStore } from '@/stores/useAuthStore';
 import { fetcher } from '@/lib/fetcher';
 import api from '@/lib/axios';
 import type { PodcastCategory } from '@/types';
+import ImageUpload from '@/components/ui/ImageUpload';
 
 const createPodcastSchema = z.object({
   name: z.string().min(1, 'Nama podcast wajib diisi'),
@@ -35,10 +36,14 @@ function CreatePodcastPage() {
   const {
     register,
     handleSubmit,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm<CreatePodcastForm>({
     resolver: zodResolver(createPodcastSchema),
   });
+
+  const coverImage = watch('cover_image');
 
   const onSubmit = async (data: CreatePodcastForm) => {
     setIsSubmitting(true);
@@ -108,16 +113,16 @@ function CreatePodcastPage() {
             />
           </div>
 
-          {/* Cover Image URL */}
+          {/* Cover Image Upload */}
           <div>
             <label className="block text-sm font-semibold text-white mb-2">
-              Cover Image URL
+              Cover Image
             </label>
-            <input
-              {...register('cover_image')}
-              type="url"
-              placeholder="https://example.com/cover.jpg"
-              className="w-full bg-spotify-hover border border-spotify-border rounded-md px-4 py-3 text-white placeholder:text-spotify-muted/60 focus:outline-none focus:border-spotify-green focus:ring-1 focus:ring-spotify-green transition-all"
+            <input type="hidden" {...register('cover_image')} />
+            <ImageUpload
+              value={coverImage}
+              onChange={(url) => setValue('cover_image', url, { shouldValidate: true })}
+              folder="podcasts"
             />
             {errors.cover_image && (
               <p className="mt-1 text-xs text-red-400">

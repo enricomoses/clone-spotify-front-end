@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { Loader2 } from 'lucide-react';
 import { withAuth } from '@/utils/withAuth';
 import api from '@/lib/axios';
+import ImageUpload from '@/components/ui/ImageUpload';
 
 const createEpisodeSchema = z.object({
   title: z.string().min(1, 'Judul episode wajib diisi'),
@@ -29,6 +30,8 @@ function CreateEpisodePage() {
   const {
     register,
     handleSubmit,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm<CreateEpisodeForm>({
     resolver: zodResolver(createEpisodeSchema),
@@ -36,6 +39,8 @@ function CreateEpisodePage() {
       published_at: new Date().toISOString().split('T')[0],
     },
   });
+
+  const thumbnailImage = watch('thumbnail_image');
 
   const onSubmit = async (data: CreateEpisodeForm) => {
     setIsSubmitting(true);
@@ -173,16 +178,16 @@ function CreateEpisodePage() {
             />
           </div>
 
-          {/* Thumbnail */}
+          {/* Thumbnail Image Upload */}
           <div>
             <label className="block text-sm font-semibold text-white mb-2">
-              Thumbnail URL (optional)
+              Thumbnail Image (optional)
             </label>
-            <input
-              {...register('thumbnail_image')}
-              type="url"
-              placeholder="https://example.com/thumb.jpg"
-              className="w-full bg-spotify-hover border border-spotify-border rounded-md px-4 py-3 text-white placeholder:text-spotify-muted/60 focus:outline-none focus:border-spotify-green focus:ring-1 focus:ring-spotify-green transition-all"
+            <input type="hidden" {...register('thumbnail_image')} />
+            <ImageUpload
+              value={thumbnailImage}
+              onChange={(url) => setValue('thumbnail_image', url, { shouldValidate: true })}
+              folder="episodes"
             />
           </div>
 

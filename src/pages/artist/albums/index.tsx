@@ -29,6 +29,17 @@ function ArtistAlbumsPage() {
     setIsDeleting(true);
 
     try {
+      if (deleteTarget.cover_image) {
+        try {
+          await api.post('/media/delete', {
+            image_url: deleteTarget.cover_image,
+            _method: 'DELETE',
+          });
+        } catch (cloudinaryErr) {
+          console.warn('Failed to delete album cover from Cloudinary:', cloudinaryErr);
+        }
+      }
+
       await api.post(`/albums/${deleteTarget.id_album}`, {
         _method: 'DELETE',
       });
