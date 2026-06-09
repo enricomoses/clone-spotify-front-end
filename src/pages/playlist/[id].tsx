@@ -1,7 +1,14 @@
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import useSWR, { mutate } from 'swr';
-import { Play, Music2, MoreHorizontal, Plus, Trash2, UserPlus } from 'lucide-react';
+import {
+  Play,
+  Music2,
+  MoreHorizontal,
+  Plus,
+  Trash2,
+  UserPlus,
+} from 'lucide-react';
 import { fetcher } from '@/lib/fetcher';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
 import { usePlayerStore } from '@/stores/usePlayerStore';
@@ -23,7 +30,7 @@ export default function PlaylistDetailPage() {
 
   const { data: playlist, isLoading } = useSWR<Playlist>(
     id ? `/playlists/${id}` : null,
-    fetcher
+    fetcher,
   );
 
   if (isLoading || !playlist) return <PageLoading />;
@@ -31,19 +38,22 @@ export default function PlaylistDetailPage() {
   const songCount = playlist.songs?.length || 0;
 
   // Determine owner from collaborators with role 'Owner'
-  const owner = playlist.collaborators?.find((c) => c.role === 'Owner');
-  const ownerName = owner?.name || owner?.user?.name || playlist.owner?.name || 'User';
+  const owner = playlist.collaborators?.find((c) => c.pivot?.role === 'Owner');
+  const ownerName =
+    owner?.name || owner?.user?.name || playlist.owner?.name || 'User';
 
   // Check if current user is Owner or Editor
   const userRole = user
-    ? playlist.collaborators?.find((c) => c.id_user === user.id_user)?.role
+    ? playlist.collaborators?.find((c) => c.id_user === user.id_user)?.pivot
+        ?.role
     : null;
   const canEdit = userRole === 'Owner' || userRole === 'Editor';
 
   // Check if user follows this playlist
-  const isFollowing = user?.followedPlaylists?.some(
-    (p) => p.id_playlist === playlist.id_playlist
-  ) || false;
+  const isFollowing =
+    user?.followedPlaylists?.some(
+      (p) => p.id_playlist === playlist.id_playlist,
+    ) || false;
 
   const handlePlayAll = () => {
     requireAuth(() => {
@@ -71,7 +81,7 @@ export default function PlaylistDetailPage() {
       if (!user) return;
       try {
         await api.delete(
-          `/users/${user.id_user}/unfollow-playlist/${playlist.id_playlist}`
+          `/users/${user.id_user}/unfollow-playlist/${playlist.id_playlist}`,
         );
       } catch (e) {
         console.error('Failed to unfollow playlist', e);
@@ -92,7 +102,10 @@ export default function PlaylistDetailPage() {
     <>
       <Head>
         <title>{playlist.name} — Spotify Clone</title>
-        <meta name="description" content={playlist.description || `Playlist ${playlist.name}`} />
+        <meta
+          name="description"
+          content={playlist.description || `Playlist ${playlist.name}`}
+        />
       </Head>
 
       <div className="-mt-[60px]">
@@ -207,11 +220,16 @@ export default function PlaylistDetailPage() {
                     >
                       <UserPlus className="w-3 h-3 text-spotify-muted" />
                       {c.name || c.user?.name || c.id_user}{' '}
-                      <span className={`font-semibold ${
-                        c.role === 'Owner' ? 'text-spotify-green' :
-                        c.role === 'Editor' ? 'text-blue-400' : 'text-spotify-muted'
-                      }`}>
-                        {c.role}
+                      <span
+                        className={`font-semibold ${
+                          c.pivot?.role === 'Owner'
+                            ? 'text-spotify-green'
+                            : c.pivot?.role === 'Editor'
+                              ? 'text-blue-400'
+                              : 'text-spotify-muted'
+                        }`}
+                      >
+                        {c.pivot?.role}
                       </span>
                     </span>
                   ))}
