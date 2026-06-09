@@ -58,8 +58,9 @@ export default function PlayerBar() {
     const elapsed = Math.floor((Date.now() - trackStartTime) / 1000);
     if (elapsed >= 3) {
       try {
-        await api.put(`/song-streaming/${streamId}`, {
+        await api.post(`/song-streaming/${streamId}`, {
           play_duration: elapsed,
+          _method: 'PUT',
         });
       } catch (e) {
         console.error('Failed to update stream duration', e);

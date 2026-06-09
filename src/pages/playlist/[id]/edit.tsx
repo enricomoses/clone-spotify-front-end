@@ -62,10 +62,11 @@ function EditPlaylistPage() {
     setError('');
 
     try {
-      await api.put(`/playlists/${id}`, {
+      await api.post(`/playlists/${id}`, {
         ...data,
         cover_image: data.cover_image || undefined,
         id_playlist_category: data.id_playlist_category || undefined,
+        _method: 'PUT',
       });
       router.push(`/playlist/${id}`);
     } catch (err: any) {

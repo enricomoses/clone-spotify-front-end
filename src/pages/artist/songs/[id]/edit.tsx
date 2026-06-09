@@ -68,11 +68,12 @@ function EditSongPage() {
     setError('');
 
     try {
-      await api.put(`/songs/${id}`, {
+      await api.post(`/songs/${id}`, {
         title: data.title,
         duration: data.duration,
         id_album: data.id_album || undefined,
         audio_url: data.audio_url || undefined,
+        _method: 'PUT',
       });
       router.push('/artist/songs');
     } catch (err: any) {

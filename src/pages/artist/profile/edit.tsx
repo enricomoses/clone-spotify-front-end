@@ -67,9 +67,10 @@ function EditArtistProfilePage() {
         facebook: data.facebook || undefined,
         x: data.x || undefined,
         wikipedia: data.wikipedia || undefined,
+        _method: 'PUT',
       };
 
-      const response = await api.put(`/artists/${artist.id_artist}`, payload);
+      const response = await api.post(`/artists/${artist.id_artist}`, payload);
       const updatedArtist = response.data.data || response.data;
       setArtist({ ...artist, ...updatedArtist });
       setSuccess('Profile updated successfully!');

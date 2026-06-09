@@ -55,9 +55,10 @@ function EditAlbumPage() {
     setError('');
 
     try {
-      await api.put(`/albums/${id}`, {
+      await api.post(`/albums/${id}`, {
         ...data,
         cover_image: data.cover_image || undefined,
+        _method: 'PUT',
       });
       router.push('/artist/albums');
     } catch (err: any) {
