@@ -39,7 +39,6 @@ export default function LoginPage() {
       const response = await api.post('/login', {
         email: data.email,
         password: data.password,
-        role: 'user',
       });
 
       // Mengambil data user dari response backend Laravel

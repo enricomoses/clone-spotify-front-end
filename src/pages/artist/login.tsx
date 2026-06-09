@@ -36,10 +36,9 @@ export default function ArtistLoginPage() {
 
     try {
       // Server-side auth: POST /login with role "artist"
-      const response = await api.post('/login', {
+      const response = await api.post('/login/artist', {
         email: data.email,
         password: data.password,
-        role: 'artist',
       });
 
       const artistData = response.data.data || response.data.artist || response.data;
