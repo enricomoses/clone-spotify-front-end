@@ -5,7 +5,7 @@ import Head from 'next/head';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Music2, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { useArtistStore } from '@/stores/useArtistStore';
 import api from '@/lib/axios';
 
@@ -73,9 +73,7 @@ export default function ArtistLoginPage() {
         {/* Logo */}
         <div className="flex flex-col items-center gap-1 mb-10">
           <div className="flex items-center gap-2">
-            <div className="w-10 h-10 bg-spotify-green rounded-full flex items-center justify-center">
-              <Music2 className="w-6 h-6 text-black" />
-            </div>
+            <img src="/general/logo.svg" className="w-10 h-10 shrink-0" alt="Spotify Logo" />
             <span className="text-2xl font-bold text-white tracking-tight">
               Spotify
             </span>

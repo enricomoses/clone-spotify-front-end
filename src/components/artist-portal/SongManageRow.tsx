@@ -1,4 +1,4 @@
-import { Trash2, Edit, Play, Music2 } from 'lucide-react';
+import { Trash2, Edit, Play, Music } from 'lucide-react';
 import { formatDuration } from '@/utils/formatDuration';
 import type { Song } from '@/types';
 import Link from 'next/link';
@@ -28,7 +28,7 @@ export default function SongManageRow({ song, index, onDelete }: SongManageRowPr
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
-              <Music2 className="w-4 h-4 text-spotify-muted" />
+              <Music className="w-4 h-4 text-spotify-muted" />
             </div>
           )}
         </div>

@@ -1,6 +1,6 @@
 import Head from 'next/head';
 import useSWR from 'swr';
-import { Calendar, MapPin, ExternalLink, Music2 } from 'lucide-react';
+import { Calendar, MapPin, ExternalLink, Music } from 'lucide-react';
 import { fetcher } from '@/lib/fetcher';
 import { PageLoading } from '@/components/ui/Spinner';
 import { formatDate } from '@/utils/formatDuration';
@@ -131,7 +131,7 @@ export default function ConcertsPage() {
 
         {allConcerts.length === 0 && (
           <div className="flex flex-col items-center justify-center min-h-[40vh]">
-            <Music2 className="w-16 h-16 text-spotify-muted/30 mb-4" />
+            <Music className="w-16 h-16 text-spotify-muted/30 mb-4" />
             <h2 className="text-xl font-bold text-white mb-2">No concerts yet</h2>
             <p className="text-sm text-spotify-muted">
               Check back later for upcoming concerts and events.

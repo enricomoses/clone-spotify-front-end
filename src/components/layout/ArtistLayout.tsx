@@ -9,7 +9,6 @@ import {
   Image,
   UserCircle,
   LogOut,
-  Music2,
   Calendar,
 } from 'lucide-react';
 import { useArtistStore } from '@/stores/useArtistStore';
@@ -41,9 +40,7 @@ export default function ArtistLayout({ children }: ArtistLayoutProps) {
         {/* Logo */}
         <div className="px-6 pt-6 pb-6">
           <Link href="/artist/dashboard" className="flex items-center gap-2 group">
-            <div className="w-8 h-8 bg-spotify-green rounded-full flex items-center justify-center group-hover:bg-spotify-green-bright transition-colors">
-              <Music2 className="w-5 h-5 text-black" />
-            </div>
+            <img src="/general/logo.svg" className="w-8 h-8 shrink-0" alt="Spotify Logo" />
             <div className="flex flex-col">
               <span className="text-base font-bold text-white leading-tight">
                 Spotify

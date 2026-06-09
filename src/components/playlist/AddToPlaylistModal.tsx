@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import useSWR from 'swr';
-import { X, Plus, Loader2, Music2, Check } from 'lucide-react';
+import { X, Plus, Loader2, Music, Check } from 'lucide-react';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
 import { fetcher } from '@/lib/fetcher';
 import type { Playlist } from '@/types';
@@ -32,7 +32,7 @@ export default function AddToPlaylistModal({
     return p.collaborators?.some(
       (c) =>
         c.id_user === user?.id_user &&
-        (c.role === 'Owner' || c.role === 'Editor')
+        (c.pivot?.role === 'Owner' || c.pivot?.role === 'Editor')
     );
   }) || [];
 
@@ -88,7 +88,7 @@ export default function AddToPlaylistModal({
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
-                        <Music2 className="w-4 h-4 text-spotify-muted" />
+                        <Music className="w-4 h-4 text-spotify-muted" />
                       </div>
                     )}
                   </div>

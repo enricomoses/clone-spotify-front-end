@@ -14,7 +14,7 @@ import {
   Volume1,
   ListMusic,
   Heart,
-  Music2,
+  Music,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useRef, useState, useCallback, useEffect } from 'react';
@@ -176,7 +176,7 @@ export default function PlayerBar() {
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
-              <Music2 className="w-6 h-6 text-spotify-muted" />
+              <Music className="w-6 h-6 text-spotify-muted" />
             </div>
           )}
         </div>

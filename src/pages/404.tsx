@@ -1,6 +1,6 @@
 import Head from 'next/head';
 import Link from 'next/link';
-import { Music2, Home, ArrowLeft } from 'lucide-react';
+import { Music, Home, ArrowLeft } from 'lucide-react';
 
 export default function Custom404() {
   return (
@@ -12,9 +12,7 @@ export default function Custom404() {
       <div className="min-h-screen bg-spotify-black flex flex-col items-center justify-center px-4 text-center">
         {/* Logo */}
         <div className="flex items-center gap-2 mb-10">
-          <div className="w-10 h-10 bg-spotify-green rounded-full flex items-center justify-center">
-            <Music2 className="w-6 h-6 text-black" />
-          </div>
+          <img src="/general/logo.svg" className="w-10 h-10 shrink-0" alt="Spotify Logo" />
           <span className="text-2xl font-bold text-white tracking-tight">
             Spotify
           </span>
@@ -27,7 +25,7 @@ export default function Custom404() {
           </div>
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="w-20 h-20 rounded-full bg-spotify-card flex items-center justify-center animate-bounce-subtle">
-              <Music2 className="w-10 h-10 text-spotify-muted" />
+              <Music className="w-10 h-10 text-spotify-muted" />
             </div>
           </div>
         </div>

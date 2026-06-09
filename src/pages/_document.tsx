@@ -16,7 +16,7 @@ export default function Document() {
         />
         <meta name="description" content="Spotify Clone — Music Streaming Platform" />
         <meta name="theme-color" content="#121212" />
-        <link rel="icon" href="/favicon.ico" />
+        <link rel="icon" href="/general/logo.svg" type="image/svg+xml" />
       </Head>
       <body className="bg-spotify-black">
         <Main />

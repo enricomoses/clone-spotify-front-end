@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/router';
 import useSWR from 'swr';
 import Link from 'next/link';
-import { User, Music2, ListMusic, Users } from 'lucide-react';
+import { User, ListMusic, Users } from 'lucide-react';
 import { fetcher } from '@/lib/fetcher';
 import { useAuthStore } from '@/stores/useAuthStore';
 import PlaylistCard from '@/components/playlist/PlaylistCard';

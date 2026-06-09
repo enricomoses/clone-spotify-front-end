@@ -3,7 +3,7 @@ import Head from 'next/head';
 import useSWR, { mutate } from 'swr';
 import {
   Play,
-  Music2,
+  Music,
   MoreHorizontal,
   Plus,
   Trash2,
@@ -129,7 +129,7 @@ export default function PlaylistDetailPage() {
               />
             ) : (
               <div className="w-full h-full bg-gradient-to-br from-spotify-card to-spotify-hover flex items-center justify-center">
-                <Music2 className="w-16 h-16 text-spotify-muted" />
+                <Music className="w-16 h-16 text-spotify-muted" />
               </div>
             )}
           </div>
@@ -243,7 +243,7 @@ export default function PlaylistDetailPage() {
               <SongList songs={playlist.songs} showAlbum={true} />
             ) : (
               <div className="flex flex-col items-center justify-center min-h-[30vh]">
-                <Music2 className="w-16 h-16 text-spotify-muted/30 mb-4" />
+                <Music className="w-16 h-16 text-spotify-muted/30 mb-4" />
                 <h2 className="text-xl font-bold text-white mb-2">
                   This playlist is empty
                 </h2>

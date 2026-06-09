@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { useState } from 'react';
-import { Play, Music2, ListPlus } from 'lucide-react';
+import { Play, Music, ListPlus } from 'lucide-react';
 import { usePlayerStore } from '@/stores/usePlayerStore';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
 import { useAuthStore } from '@/stores/useAuthStore';
@@ -31,7 +31,7 @@ export default function SongRow({
   const isActive = currentSong?.id_song === song.id_song;
   const [showPlaylistModal, setShowPlaylistModal] = useState(false);
 
-  const isLiked = user?.likedSongs?.some((s) => s.id_song === song.id_song) || false;
+  const isLiked = user?.liked_songs?.some((s) => s.id_song === song.id_song) || false;
 
   const handlePlay = () => {
     requireAuth(() => {
@@ -60,7 +60,7 @@ export default function SongRow({
               'group-hover:hidden'
             )}
           >
-            {showIndex ? index + 1 : <Music2 className="w-4 h-4" />}
+            {showIndex ? index + 1 : <Music className="w-4 h-4" />}
           </span>
           <button
             onClick={handlePlay}
@@ -84,7 +84,7 @@ export default function SongRow({
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center">
-                <Music2 className="w-4 h-4 text-spotify-muted" />
+                <Music className="w-4 h-4 text-spotify-muted" />
               </div>
             )}
           </div>

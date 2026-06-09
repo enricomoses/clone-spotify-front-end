@@ -5,7 +5,7 @@ import useSWR from 'swr';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Music2, Loader2 } from 'lucide-react';
+import { Music, Loader2 } from 'lucide-react';
 import { withAuth } from '@/utils/withAuth';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { fetcher } from '@/lib/fetcher';
@@ -90,7 +90,7 @@ function CreatePlaylistPage() {
               {coverImage ? (
                 <img src={coverImage} alt="Cover Preview" className="w-full h-full object-cover" />
               ) : (
-                <Music2 className="w-12 h-12 text-spotify-muted" />
+                <Music className="w-12 h-12 text-spotify-muted" />
               )}
             </div>
 

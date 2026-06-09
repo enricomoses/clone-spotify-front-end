@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Play, Music2 } from 'lucide-react';
+import { Play, Music } from 'lucide-react';
 import { usePlayerStore } from '@/stores/usePlayerStore';
 import type { Playlist } from '@/types';
 
@@ -34,7 +34,7 @@ export default function PlaylistCard({ playlist }: PlaylistCardProps) {
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-indigo-600 to-purple-800">
-              <Music2 className="w-12 h-12 text-white/60" />
+              <Music className="w-12 h-12 text-white/60" />
             </div>
           )}
         </div>

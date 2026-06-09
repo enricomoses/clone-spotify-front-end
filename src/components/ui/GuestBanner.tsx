@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import Link from 'next/link';
-import { X, Music2 } from 'lucide-react';
+import { X } from 'lucide-react';
 
 export default function GuestBanner() {
   const [isDismissed, setIsDismissed] = useState(false);
@@ -11,7 +11,7 @@ export default function GuestBanner() {
     <div className="fixed bottom-[90px] left-0 right-0 z-20 bg-gradient-to-r from-[#af2896] to-[#509bf5] px-4 py-3">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Music2 className="w-6 h-6 text-white shrink-0" />
+          <img src="/general/logo.svg" className="w-6 h-6 shrink-0" alt="Logo" />
           <div>
             <p className="text-sm font-bold text-white">
               Preview of Spotify Clone

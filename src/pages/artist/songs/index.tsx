@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import useSWR, { mutate } from 'swr';
-import { Plus, Music2 } from 'lucide-react';
+import { Plus, Music } from 'lucide-react';
 import { withArtistAuth } from '@/utils/withArtistAuth';
 import { useArtistStore } from '@/stores/useArtistStore';
 import { fetcher } from '@/lib/fetcher';
@@ -92,7 +92,7 @@ function ArtistSongsPage() {
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center min-h-[40vh]">
-            <Music2 className="w-16 h-16 text-spotify-muted/30 mb-4" />
+            <Music className="w-16 h-16 text-spotify-muted/30 mb-4" />
             <h2 className="text-xl font-bold text-white mb-2">No songs yet</h2>
             <p className="text-sm text-spotify-muted mb-4">
               Start by adding your first song.

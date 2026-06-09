@@ -2,7 +2,7 @@ import { useRouter } from 'next/router';
 import Head from 'next/head';
 import Link from 'next/link';
 import useSWR from 'swr';
-import { Play, Music2 } from 'lucide-react';
+import { Play, Music } from 'lucide-react';
 import { fetcher } from '@/lib/fetcher';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
 import { usePlayerStore } from '@/stores/usePlayerStore';
@@ -60,7 +60,7 @@ export default function AlbumDetailPage() {
               />
             ) : (
               <div className="w-full h-full bg-spotify-card flex items-center justify-center">
-                <Music2 className="w-16 h-16 text-spotify-muted" />
+                <Music className="w-16 h-16 text-spotify-muted" />
               </div>
             )}
           </div>

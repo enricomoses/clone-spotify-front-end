@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Play, Music2 } from 'lucide-react';
+import { Play, Music } from 'lucide-react';
 import { usePlayerStore } from '@/stores/usePlayerStore';
 import type { Song } from '@/types';
 
@@ -39,7 +39,7 @@ export default function SongCard({ song, queue }: SongCardProps) {
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
-              <Music2 className="w-12 h-12 text-spotify-muted" />
+              <Music className="w-12 h-12 text-spotify-muted" />
             </div>
           )}
         </div>
