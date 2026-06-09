@@ -1,4 +1,4 @@
-import { useEffect, type ComponentType } from 'react';
+import { useEffect, useState, type ComponentType } from 'react';
 import { useRouter } from 'next/router';
 import { useAuthStore } from '@/stores/useAuthStore';
 
@@ -10,14 +10,33 @@ export function withAuth<P extends object>(Component: ComponentType<P>) {
   return function ProtectedPage(props: P) {
     const user = useAuthStore((s) => s.user);
     const router = useRouter();
+    const [hydrated, setHydrated] = useState(false);
 
     useEffect(() => {
-      if (!user) {
+      const checkHydration = () => {
+        if (useAuthStore.persist.hasHydrated()) {
+          setHydrated(true);
+        } else {
+          const unsub = useAuthStore.persist.onFinishHydration(() => {
+            setHydrated(true);
+          });
+          return unsub;
+        }
+      };
+
+      const unsub = checkHydration();
+      return () => {
+        if (unsub) unsub();
+      };
+    }, []);
+
+    useEffect(() => {
+      if (hydrated && !user) {
         router.replace('/login');
       }
-    }, [user, router]);
+    }, [hydrated, user, router]);
 
-    if (!user) {
+    if (!hydrated || !user) {
       return (
         <div className="flex h-screen items-center justify-center bg-spotify-black">
           <div className="h-8 w-8 animate-spin rounded-full border-2 border-spotify-green border-t-transparent" />
