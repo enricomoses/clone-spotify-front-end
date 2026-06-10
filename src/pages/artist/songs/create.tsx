@@ -55,6 +55,7 @@ function CreateSongPage() {
         duration: data.duration,
         id_album: data.id_album || undefined,
         audio_url: data.audio_url || undefined,
+        artist_ids: artist ? [artist.id_artist] : [],
       };
 
       await api.post('/songs', payload);

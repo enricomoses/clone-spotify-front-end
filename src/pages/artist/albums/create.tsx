@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Loader2 } from 'lucide-react';
 import { withArtistAuth } from '@/utils/withArtistAuth';
+import { useArtistStore } from '@/stores/useArtistStore';
 import api from '@/lib/axios';
 import ImageUpload from '@/components/ui/ImageUpload';
 
@@ -19,6 +20,7 @@ type CreateAlbumForm = z.infer<typeof createAlbumSchema>;
 
 function CreateAlbumPage() {
   const router = useRouter();
+  const artist = useArtistStore((s) => s.artist);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -42,6 +44,7 @@ function CreateAlbumPage() {
       await api.post('/albums', {
         ...data,
         cover_image: data.cover_image || undefined,
+        artist_ids: artist ? [artist.id_artist] : [],
       });
       router.push('/artist/albums');
     } catch (err: any) {
