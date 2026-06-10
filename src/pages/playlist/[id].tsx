@@ -28,6 +28,8 @@ export default function PlaylistDetailPage() {
   const { requireAuth, user } = useRequireAuth();
   const [showAddSongModal, setShowAddSongModal] = useState(false);
 
+  const refreshUser = useAuthStore((s) => s.refreshUser);
+
   const { data: playlist, isLoading } = useSWR<Playlist>(
     id ? `/playlists/${id}` : null,
     fetcher,
@@ -63,32 +65,33 @@ export default function PlaylistDetailPage() {
     });
   };
 
-  const handleFollow = () => {
-    requireAuth(async () => {
-      if (!user) return;
-      try {
-        await api.post(`/users/${user.id_user}/follow-playlist`, {
-          playlist_id: playlist.id_playlist,
-        });
-      } catch (e) {
-        console.error('Failed to follow playlist', e);
-      }
-    });
+  const handleFollow = async () => {
+    if (!user) return;
+    try {
+      await api.post(`/users/${user.id_user}/follow-playlist`, {
+        playlist_id: playlist.id_playlist,
+      });
+      await refreshUser();
+    } catch (e) {
+      console.error('Failed to follow playlist', e);
+      throw e;
+    }
   };
 
-  const handleUnfollow = () => {
-    requireAuth(async () => {
-      if (!user) return;
-      try {
-        await api.post(
-          `/users/${user.id_user}/unfollow-playlist/${playlist.id_playlist}`,
-          { _method: 'DELETE' },
-        );
-      } catch (e) {
-        console.error('Failed to unfollow playlist', e);
-      }
-    });
+  const handleUnfollow = async () => {
+    if (!user) return;
+    try {
+      await api.post(
+        `/users/${user.id_user}/unfollow-playlist/${playlist.id_playlist}`,
+        { _method: 'DELETE' },
+      );
+      await refreshUser();
+    } catch (e) {
+      console.error('Failed to unfollow playlist', e);
+      throw e;
+    }
   };
+
 
   const handleRemoveSong = async (songId: string) => {
     try {
@@ -184,6 +187,7 @@ export default function PlaylistDetailPage() {
               {/* Follow button (if not owner) */}
               {userRole !== 'Owner' && (
                 <FollowButton
+                  key={`${playlist.id_playlist}-${isFollowing}`}
                   isFollowing={isFollowing}
                   onFollow={handleFollow}
                   onUnfollow={handleUnfollow}

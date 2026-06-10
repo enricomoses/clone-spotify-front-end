@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { User } from '@/types';
+import api from '@/lib/axios';
 
 const SESSION_DURATION_MS = 2 * 60 * 60 * 1000; // 2 hours
 
@@ -12,6 +13,7 @@ interface AuthState {
   isAuthenticated: () => boolean;
   checkSessionExpiry: () => void;
   refreshSession: () => void;
+  refreshUser: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -56,6 +58,18 @@ export const useAuthStore = create<AuthState>()(
 
       refreshSession: () =>
         set({ sessionExpiresAt: Date.now() + SESSION_DURATION_MS }),
+
+      refreshUser: async () => {
+        const { user } = get();
+        if (!user) return;
+        try {
+          const response = await api.get(`/users/${user.id_user}`);
+          const userData = response.data.data ?? response.data;
+          set({ user: userData });
+        } catch (e) {
+          console.error('Failed to refresh user profile', e);
+        }
+      },
     }),
     {
       name: 'auth-storage',

@@ -1,12 +1,13 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { UserPlus, UserCheck } from 'lucide-react';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
 import { cn } from '@/lib/utils';
+import Spinner from '@/components/ui/Spinner';
 
 interface FollowButtonProps {
   isFollowing?: boolean;
-  onFollow?: () => void;
-  onUnfollow?: () => void;
+  onFollow?: () => void | Promise<void>;
+  onUnfollow?: () => void | Promise<void>;
   size?: 'sm' | 'md';
   className?: string;
 }
@@ -20,16 +21,28 @@ export default function FollowButton({
 }: FollowButtonProps) {
   const [isFollowing, setIsFollowing] = useState(initialFollowing);
   const [isHovered, setIsHovered] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const { requireAuth } = useRequireAuth();
 
+  useEffect(() => {
+    setIsFollowing(initialFollowing);
+  }, [initialFollowing]);
+
   const handleClick = () => {
-    requireAuth(() => {
-      if (isFollowing) {
-        onUnfollow?.();
-      } else {
-        onFollow?.();
+    requireAuth(async () => {
+      setIsLoading(true);
+      try {
+        if (isFollowing) {
+          await onUnfollow?.();
+        } else {
+          await onFollow?.();
+        }
+        setIsFollowing(!isFollowing);
+      } catch (e) {
+        console.error('Failed to update follow status', e);
+      } finally {
+        setIsLoading(false);
       }
-      setIsFollowing(!isFollowing);
     });
   };
 
@@ -38,10 +51,11 @@ export default function FollowButton({
       onClick={handleClick}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      disabled={isLoading}
       className={cn(
-        'font-bold rounded-full transition-all duration-200 flex items-center gap-2',
+        'font-bold rounded-full transition-all duration-200 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed',
         isFollowing
-          ? isHovered
+          ? isHovered && !isLoading
             ? 'border border-red-400/50 text-red-400 hover:bg-red-400/10'
             : 'border border-spotify-green text-spotify-green hover:bg-spotify-green/10'
           : 'border border-white/30 text-white hover:border-white hover:scale-105',
@@ -50,21 +64,33 @@ export default function FollowButton({
       )}
       aria-label={isFollowing ? 'Unfollow' : 'Follow'}
     >
+      {isLoading ? (
+        <Spinner size="sm" className="w-4 h-4 border-current border-t-transparent animate-spin" />
+      ) : isFollowing ? (
+        isHovered ? (
+          <UserPlus className="w-4 h-4" />
+        ) : (
+          <UserCheck className="w-4 h-4" />
+        )
+      ) : (
+        <UserPlus className="w-4 h-4" />
+      )}
       {isFollowing ? (
         <>
-          {isHovered ? (
-            <UserPlus className="w-4 h-4" />
+          {isLoading ? (
+            'Unfollowing...'
+          ) : isHovered ? (
+            'Unfollow'
           ) : (
-            <UserCheck className="w-4 h-4" />
+            'Following'
           )}
-          {isHovered ? 'Unfollow' : 'Following'}
         </>
       ) : (
         <>
-          <UserPlus className="w-4 h-4" />
-          Follow
+          {isLoading ? 'Following...' : 'Follow'}
         </>
       )}
     </button>
   );
 }
+
