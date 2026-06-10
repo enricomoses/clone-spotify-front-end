@@ -10,11 +10,13 @@ import { PageLoading } from '@/components/ui/Spinner';
 import type { Podcast } from '@/types';
 import Link from 'next/link';
 import { useAuthStore } from '@/stores/useAuthStore';
+import api from '@/lib/axios';
 
 function PodcastDetailPage() {
   const router = useRouter();
   const { id } = router.query;
   const user = useAuthStore((s) => s.user);
+  const refreshUser = useAuthStore((s) => s.refreshUser);
 
   const { data: podcast, isLoading } = useSWR<Podcast>(
     id ? `/podcasts/${id}` : null,
@@ -24,6 +26,37 @@ function PodcastDetailPage() {
   if (isLoading || !podcast) return <PageLoading />;
 
   const isCreator = podcast.id_user === user?.id_user;
+
+  const isFollowing =
+    user?.followed_podcasts?.some((p) => p.id_podcast === podcast.id_podcast) ||
+    false;
+
+  const handleFollow = async () => {
+    if (!user) return;
+    try {
+      await api.post(`/users/${user.id_user}/follow-podcast`, {
+        podcast_id: podcast.id_podcast,
+      });
+      await refreshUser();
+    } catch (e) {
+      console.error('Failed to follow podcast', e);
+      throw e;
+    }
+  };
+
+  const handleUnfollow = async () => {
+    if (!user) return;
+    try {
+      await api.post(
+        `/users/${user.id_user}/unfollow-podcast/${podcast.id_podcast}`,
+        { _method: 'DELETE' }
+      );
+      await refreshUser();
+    } catch (e) {
+      console.error('Failed to unfollow podcast', e);
+      throw e;
+    }
+  };
 
   return (
     <>
@@ -97,7 +130,13 @@ function PodcastDetailPage() {
           <div className="relative z-10 px-8 py-6">
             {/* Actions */}
             <div className="flex items-center gap-4 mb-8">
-              <FollowButton size="md" />
+              <FollowButton
+                key={`${podcast.id_podcast}-${isFollowing}`}
+                isFollowing={isFollowing}
+                onFollow={handleFollow}
+                onUnfollow={handleUnfollow}
+                size="md"
+              />
               {isCreator && (
                 <Link
                   href={`/podcast/${id}/episode/create`}
