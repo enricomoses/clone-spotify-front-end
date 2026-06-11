@@ -10,14 +10,14 @@ const nextConfig = {
       'i.scdn.co',
       'misc.scdn.co',
     ],
+    remotePatterns: [
+      {
+        hostname: 'res.cloudinary.com',
+        protocol: 'https',
+      },
+    ],
     unoptimized: true,
   },
-  remotePatterns: [
-    {
-      hostname: 'res.cloudinary.com',
-      protocol: 'https',
-    },
-  ],
 };
 
 module.exports = nextConfig;
