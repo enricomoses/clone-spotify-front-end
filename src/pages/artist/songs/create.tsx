@@ -10,7 +10,8 @@ import { withArtistAuth } from '@/utils/withArtistAuth';
 import { useArtistStore } from '@/stores/useArtistStore';
 import { fetcher } from '@/lib/fetcher';
 import api from '@/lib/axios';
-import type { Album } from '@/types';
+import type { Album, Artist } from '@/types';
+import ArtistAutocomplete from '@/components/ui/ArtistAutocomplete';
 
 const createSongSchema = z.object({
   title: z.string().min(1, 'Judul lagu wajib diisi'),
@@ -26,6 +27,11 @@ function CreateSongPage() {
   const artist = useArtistStore((s) => s.artist);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Collaborating artists state — start with current artist
+  const [collabArtists, setCollabArtists] = useState<Artist[]>(() =>
+    artist ? [artist] : []
+  );
 
   const { data: allAlbums } = useSWR<Album[]>('/albums', fetcher);
 
@@ -45,6 +51,14 @@ function CreateSongPage() {
     resolver: zodResolver(createSongSchema),
   });
 
+  const handleAddArtist = (a: Artist) => {
+    setCollabArtists((prev) => [...prev, a]);
+  };
+
+  const handleRemoveArtist = (artistId: string) => {
+    setCollabArtists((prev) => prev.filter((a) => a.id_artist !== artistId));
+  };
+
   const onSubmit = async (data: CreateSongForm) => {
     setIsSubmitting(true);
     setError('');
@@ -55,7 +69,7 @@ function CreateSongPage() {
         duration: data.duration,
         id_album: data.id_album || undefined,
         audio_url: data.audio_url || undefined,
-        artist_ids: artist ? [artist.id_artist] : [],
+        artist_ids: collabArtists.map((a) => a.id_artist),
       };
 
       await api.post('/songs', payload);
@@ -154,6 +168,16 @@ function CreateSongPage() {
               </p>
             )}
           </div>
+
+          {/* Collaborating Artists */}
+          <ArtistAutocomplete
+            selectedArtists={collabArtists}
+            onAdd={handleAddArtist}
+            onRemove={handleRemoveArtist}
+            lockedArtistId={artist?.id_artist}
+            label="Collaborating Artists"
+            placeholder="Search artists to collaborate..."
+          />
 
           {/* Buttons */}
           <div className="flex gap-4 pt-4">

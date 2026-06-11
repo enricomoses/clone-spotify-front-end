@@ -11,7 +11,8 @@ import { useArtistStore } from '@/stores/useArtistStore';
 import { fetcher } from '@/lib/fetcher';
 import api from '@/lib/axios';
 import { PageLoading } from '@/components/ui/Spinner';
-import type { Song, Album } from '@/types';
+import type { Song, Album, Artist } from '@/types';
+import ArtistAutocomplete from '@/components/ui/ArtistAutocomplete';
 
 const editSongSchema = z.object({
   title: z.string().min(1, 'Judul lagu wajib diisi'),
@@ -28,6 +29,9 @@ function EditSongPage() {
   const artist = useArtistStore((s) => s.artist);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Collaborating artists state
+  const [collabArtists, setCollabArtists] = useState<Artist[]>([]);
 
   const { data: song, isLoading } = useSWR<Song>(
     id ? `/songs/${id}` : null,
@@ -52,6 +56,7 @@ function EditSongPage() {
     resolver: zodResolver(editSongSchema),
   });
 
+  // Pre-fill form and collaborating artists when song data loads
   useEffect(() => {
     if (song) {
       reset({
@@ -60,8 +65,22 @@ function EditSongPage() {
         id_album: song.id_album || '',
         audio_url: song.audio_url || '',
       });
+      // Pre-fill collab artists from song's existing artists
+      if (song.artists && song.artists.length > 0) {
+        setCollabArtists(song.artists);
+      } else if (artist) {
+        setCollabArtists([artist]);
+      }
     }
-  }, [song, reset]);
+  }, [song, reset, artist]);
+
+  const handleAddArtist = (a: Artist) => {
+    setCollabArtists((prev) => [...prev, a]);
+  };
+
+  const handleRemoveArtist = (artistId: string) => {
+    setCollabArtists((prev) => prev.filter((a) => a.id_artist !== artistId));
+  };
 
   const onSubmit = async (data: EditSongForm) => {
     setIsSubmitting(true);
@@ -73,6 +92,7 @@ function EditSongPage() {
         duration: data.duration,
         id_album: data.id_album || undefined,
         audio_url: data.audio_url || undefined,
+        artist_ids: collabArtists.map((a) => a.id_artist),
         _method: 'PUT',
       });
       router.push('/artist/songs');
@@ -129,7 +149,9 @@ function EditSongPage() {
               className="w-full bg-spotify-hover border border-spotify-border rounded-md px-4 py-3 text-white focus:outline-none focus:border-spotify-green focus:ring-1 focus:ring-spotify-green transition-all"
             />
             {errors.duration && (
-              <p className="mt-1 text-xs text-red-400">{errors.duration.message}</p>
+              <p className="mt-1 text-xs text-red-400">
+                {errors.duration.message}
+              </p>
             )}
           </div>
 
@@ -163,6 +185,16 @@ function EditSongPage() {
               className="w-full bg-spotify-hover border border-spotify-border rounded-md px-4 py-3 text-white placeholder:text-spotify-muted/60 focus:outline-none focus:border-spotify-green focus:ring-1 focus:ring-spotify-green transition-all"
             />
           </div>
+
+          {/* Collaborating Artists */}
+          <ArtistAutocomplete
+            selectedArtists={collabArtists}
+            onAdd={handleAddArtist}
+            onRemove={handleRemoveArtist}
+            lockedArtistId={artist?.id_artist}
+            label="Collaborating Artists"
+            placeholder="Search artists to collaborate..."
+          />
 
           {/* Buttons */}
           <div className="flex gap-4 pt-4">

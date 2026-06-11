@@ -9,6 +9,8 @@ import { withArtistAuth } from '@/utils/withArtistAuth';
 import { useArtistStore } from '@/stores/useArtistStore';
 import api from '@/lib/axios';
 import ImageUpload from '@/components/ui/ImageUpload';
+import ArtistAutocomplete from '@/components/ui/ArtistAutocomplete';
+import type { Artist } from '@/types';
 
 const createAlbumSchema = z.object({
   title: z.string().min(1, 'Judul album wajib diisi'),
@@ -24,6 +26,11 @@ function CreateAlbumPage() {
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Collaborating artists state — start with current artist
+  const [collabArtists, setCollabArtists] = useState<Artist[]>(() =>
+    artist ? [artist] : []
+  );
+
   const {
     register,
     handleSubmit,
@@ -36,6 +43,14 @@ function CreateAlbumPage() {
 
   const coverImage = watch('cover_image');
 
+  const handleAddArtist = (a: Artist) => {
+    setCollabArtists((prev) => [...prev, a]);
+  };
+
+  const handleRemoveArtist = (artistId: string) => {
+    setCollabArtists((prev) => prev.filter((a) => a.id_artist !== artistId));
+  };
+
   const onSubmit = async (data: CreateAlbumForm) => {
     setIsSubmitting(true);
     setError('');
@@ -44,7 +59,7 @@ function CreateAlbumPage() {
       await api.post('/albums', {
         ...data,
         cover_image: data.cover_image || undefined,
-        artist_ids: artist ? [artist.id_artist] : [],
+        artist_ids: collabArtists.map((a) => a.id_artist),
       });
       router.push('/artist/albums');
     } catch (err: any) {
@@ -117,6 +132,16 @@ function CreateAlbumPage() {
               <p className="mt-1 text-xs text-red-400">{errors.cover_image.message}</p>
             )}
           </div>
+
+          {/* Collaborating Artists */}
+          <ArtistAutocomplete
+            selectedArtists={collabArtists}
+            onAdd={handleAddArtist}
+            onRemove={handleRemoveArtist}
+            lockedArtistId={artist?.id_artist}
+            label="Collaborating Artists"
+            placeholder="Search artists to collaborate..."
+          />
 
           {/* Buttons */}
           <div className="flex gap-4 pt-4">

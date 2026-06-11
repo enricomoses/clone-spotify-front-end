@@ -20,6 +20,9 @@ import { PageLoading } from '@/components/ui/Spinner';
 import type { Playlist } from '@/types';
 import api from '@/lib/axios';
 import { useState } from 'react';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
+import AddSongToPlaylistModal from '@/components/playlist/AddSongToPlaylistModal';
+import AddCollaboratorModal from '@/components/playlist/AddCollaboratorModal';
 
 export default function PlaylistDetailPage() {
   const router = useRouter();
@@ -27,6 +30,10 @@ export default function PlaylistDetailPage() {
   const playSong = usePlayerStore((s) => s.playSong);
   const { requireAuth, user } = useRequireAuth();
   const [showAddSongModal, setShowAddSongModal] = useState(false);
+  const [showCollaboratorModal, setShowCollaboratorModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [removingSongId, setRemovingSongId] = useState<string | null>(null);
 
   const refreshUser = useAuthStore((s) => s.refreshUser);
 
@@ -50,6 +57,7 @@ export default function PlaylistDetailPage() {
         ?.role
     : null;
   const canEdit = userRole === 'Owner' || userRole === 'Editor';
+  const isOwner = userRole === 'Owner';
 
   // Check if user follows this playlist
   const isFollowing =
@@ -92,13 +100,37 @@ export default function PlaylistDetailPage() {
     }
   };
 
-
   const handleRemoveSong = async (songId: string) => {
+    if (!user) return;
+    setRemovingSongId(songId);
     try {
-      await api.post(`/playlists/${id}/songs/${songId}`, { _method: 'DELETE' });
+      await api.post(`/playlists/${id}/songs/${songId}`, {
+        _method: 'DELETE',
+        id_user: user.id_user,
+      });
       mutate(`/playlists/${id}`);
     } catch (e) {
       console.error('Failed to remove song', e);
+    } finally {
+      setRemovingSongId(null);
+    }
+  };
+
+  const handleDeletePlaylist = async () => {
+    if (!user) return;
+    setIsDeleting(true);
+    try {
+      await api.post(`/playlists/${id}?id_user=${user.id_user}`, {
+        _method: 'DELETE',
+      });
+      await refreshUser();
+      router.push('/home');
+    } catch (e) {
+      console.error('Failed to delete playlist', e);
+      alert('Gagal menghapus playlist. Silakan coba lagi.');
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteModal(false);
     }
   };
 
@@ -175,7 +207,7 @@ export default function PlaylistDetailPage() {
 
           <div className="relative z-10 px-8 py-6">
             {/* Controls */}
-            <div className="flex items-center gap-6 mb-6">
+            <div className="flex items-center gap-4 mb-6">
               <button
                 onClick={handlePlayAll}
                 className="w-14 h-14 bg-spotify-green rounded-full flex items-center justify-center hover:scale-110 hover:bg-spotify-green-bright transition-all shadow-lg"
@@ -200,13 +232,49 @@ export default function PlaylistDetailPage() {
                 title={playlist.name}
               />
 
+              {/* Add Song button */}
+              {canEdit && (
+                <button
+                  onClick={() => setShowAddSongModal(true)}
+                  className="flex items-center gap-1.5 px-4 py-2 bg-white/10 hover:bg-white/20 text-white text-xs font-semibold rounded-full transition-colors"
+                  title="Add Songs"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add Songs
+                </button>
+              )}
+
+              {/* Manage Collaborators button */}
+              {isOwner && (
+                <button
+                  onClick={() => setShowCollaboratorModal(true)}
+                  className="flex items-center gap-1.5 px-4 py-2 bg-white/10 hover:bg-white/20 text-white text-xs font-semibold rounded-full transition-colors"
+                  title="Manage Collaborators"
+                >
+                  <UserPlus className="w-4 h-4" />
+                  Collaborators
+                </button>
+              )}
+
               {canEdit && (
                 <button
                   onClick={() => router.push(`/playlist/${id}/edit`)}
                   className="text-spotify-muted hover:text-white transition-colors"
                   aria-label="More options"
+                  title="Edit Playlist"
                 >
                   <MoreHorizontal className="w-6 h-6" />
+                </button>
+              )}
+
+              {isOwner && (
+                <button
+                  onClick={() => setShowDeleteModal(true)}
+                  className="text-spotify-muted hover:text-red-500 transition-colors"
+                  aria-label="Delete playlist"
+                  title="Delete Playlist"
+                >
+                  <Trash2 className="w-6 h-6" />
                 </button>
               )}
             </div>
@@ -244,21 +312,107 @@ export default function PlaylistDetailPage() {
 
             {/* Songs */}
             {playlist.songs && playlist.songs.length > 0 ? (
-              <SongList songs={playlist.songs} showAlbum={true} />
+              <div>
+                <SongList songs={playlist.songs} showAlbum={true} />
+                {/* Remove song buttons */}
+                {canEdit && (
+                  <div className="mt-4 space-y-1">
+                    <p className="text-xs uppercase font-semibold text-spotify-muted tracking-wider mb-2">
+                      Manage Songs
+                    </p>
+                    {playlist.songs.map((song) => (
+                      <div
+                        key={song.id_song}
+                        className="flex items-center justify-between px-3 py-2 rounded-md hover:bg-white/5 transition-colors group"
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-8 h-8 rounded bg-spotify-hover overflow-hidden shrink-0">
+                            {song.album?.cover_image ? (
+                              <img
+                                src={song.album.cover_image}
+                                alt={song.title}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center">
+                                <Music className="w-3.5 h-3.5 text-spotify-muted" />
+                              </div>
+                            )}
+                          </div>
+                          <span className="text-sm text-white truncate">
+                            {song.title}
+                          </span>
+                          <span className="text-xs text-spotify-muted truncate">
+                            {song.artists?.map((a) => a.name).join(', ')}
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => handleRemoveSong(song.id_song)}
+                          disabled={removingSongId === song.id_song}
+                          className="p-1.5 text-spotify-muted hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
+                          title="Remove from playlist"
+                        >
+                          {removingSongId === song.id_song ? (
+                            <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin inline-block" />
+                          ) : (
+                            <Trash2 className="w-4 h-4" />
+                          )}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             ) : (
               <div className="flex flex-col items-center justify-center min-h-[30vh]">
                 <Music className="w-16 h-16 text-spotify-muted/30 mb-4" />
                 <h2 className="text-xl font-bold text-white mb-2">
                   This playlist is empty
                 </h2>
-                <p className="text-sm text-spotify-muted">
+                <p className="text-sm text-spotify-muted mb-4">
                   Search for songs to add to this playlist.
                 </p>
+                {canEdit && (
+                  <button
+                    onClick={() => setShowAddSongModal(true)}
+                    className="flex items-center gap-2 px-6 py-2.5 bg-spotify-green text-black text-sm font-bold rounded-full hover:bg-spotify-green-bright transition-colors"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Add Songs
+                  </button>
+                )}
               </div>
             )}
           </div>
         </div>
       </div>
+
+      {/* Modals */}
+      <ConfirmDialog
+        open={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={handleDeletePlaylist}
+        title="Hapus Playlist"
+        description={`Apakah Anda yakin ingin menghapus playlist "${playlist.name}"? Tindakan ini tidak dapat dibatalkan.`}
+        confirmLabel={isDeleting ? 'Menghapus...' : 'Hapus'}
+        variant="danger"
+      />
+
+      <AddSongToPlaylistModal
+        playlistId={playlist.id_playlist}
+        existingSongIds={playlist.songs?.map((s) => s.id_song) || []}
+        isOpen={showAddSongModal}
+        onClose={() => setShowAddSongModal(false)}
+      />
+
+      {playlist.collaborators && (
+        <AddCollaboratorModal
+          playlistId={playlist.id_playlist}
+          collaborators={playlist.collaborators}
+          isOpen={showCollaboratorModal}
+          onClose={() => setShowCollaboratorModal(false)}
+        />
+      )}
     </>
   );
 }

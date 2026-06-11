@@ -39,7 +39,7 @@ export default function AddToPlaylistModal({
   const handleAdd = async (playlistId: string) => {
     setAddingTo(playlistId);
     try {
-      await api.post(`/playlists/${playlistId}/songs`, { song_id: songId });
+      await api.post(`/playlists/${playlistId}/songs`, { song_id: songId, id_user: user?.id_user });
       setAddedTo((prev) => new Set(prev).add(playlistId));
     } catch (e) {
       console.error('Failed to add song to playlist', e);

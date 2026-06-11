@@ -11,14 +11,16 @@ import {
   Trash2,
   Loader2,
   ExternalLink,
+  Music2,
 } from 'lucide-react';
 import { fetcher } from '@/lib/fetcher';
 import { withArtistAuth } from '@/utils/withArtistAuth';
 import { useArtistStore } from '@/stores/useArtistStore';
 import { PageLoading } from '@/components/ui/Spinner';
 import { formatDate } from '@/utils/formatDuration';
-import type { Concert } from '@/types';
+import type { Concert, Artist } from '@/types';
 import api from '@/lib/axios';
+import ArtistAutocomplete from '@/components/ui/ArtistAutocomplete';
 
 const concertSchema = z.object({
   location: z.string().min(1, 'Lokasi wajib diisi'),
@@ -36,6 +38,11 @@ function ArtistConcertsPage() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [error, setError] = useState('');
 
+  // Collaborating artists for concert creation
+  const [collabArtists, setCollabArtists] = useState<Artist[]>(() =>
+    artist ? [artist] : []
+  );
+
   const { data: concerts, isLoading } = useSWR<Concert[]>(
     artist ? `/artists/${artist.id_artist}/concerts` : null,
     fetcher,
@@ -50,6 +57,14 @@ function ArtistConcertsPage() {
     resolver: zodResolver(concertSchema),
   });
 
+  const handleAddArtist = (a: Artist) => {
+    setCollabArtists((prev) => [...prev, a]);
+  };
+
+  const handleRemoveArtist = (artistId: string) => {
+    setCollabArtists((prev) => prev.filter((a) => a.id_artist !== artistId));
+  };
+
   const onSubmit = async (data: ConcertForm) => {
     if (!artist) return;
     setIsSubmitting(true);
@@ -58,10 +73,11 @@ function ArtistConcertsPage() {
       await api.post('/concerts', {
         ...data,
         location_url: data.location_url || null,
-        artist_ids: [artist.id_artist],
+        artist_ids: collabArtists.map((a) => a.id_artist),
       });
       mutate(`/artists/${artist.id_artist}/concerts`);
       reset();
+      setCollabArtists(artist ? [artist] : []);
       setShowForm(false);
     } catch (err: any) {
       setError('Gagal membuat konser. Coba lagi.');
@@ -186,6 +202,17 @@ function ArtistConcertsPage() {
                   )}
                 </div>
               </div>
+
+              {/* Collaborating Artists */}
+              <ArtistAutocomplete
+                selectedArtists={collabArtists}
+                onAdd={handleAddArtist}
+                onRemove={handleRemoveArtist}
+                lockedArtistId={artist?.id_artist}
+                label="Performing Artists"
+                placeholder="Search artists to add to concert..."
+              />
+
               <button
                 type="submit"
                 disabled={isSubmitting}
@@ -209,46 +236,77 @@ function ArtistConcertsPage() {
               {upcoming.map((concert) => (
                 <div
                   key={concert.id_concert}
-                  className="flex items-center justify-between bg-spotify-card/50 border border-spotify-border/20 rounded-lg p-4 hover:bg-spotify-card transition-colors"
+                  className="bg-spotify-card/50 border border-spotify-border/20 rounded-lg p-4 hover:bg-spotify-card transition-colors"
                 >
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-lg bg-spotify-green/20 flex items-center justify-center">
-                      <MapPin className="w-5 h-5 text-spotify-green" />
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-lg bg-spotify-green/20 flex items-center justify-center">
+                        <MapPin className="w-5 h-5 text-spotify-green" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-white">
+                          {concert.location}
+                        </p>
+                        <p className="text-xs text-spotify-muted">
+                          {formatDate(concert.event_at)}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-sm font-medium text-white">
-                        {concert.location}
-                      </p>
-                      <p className="text-xs text-spotify-muted">
-                        {formatDate(concert.event_at)}
-                      </p>
+                    <div className="flex items-center gap-2">
+                      <span className="px-2 py-0.5 bg-spotify-green/20 text-spotify-green text-[10px] font-bold rounded-full">
+                        Upcoming
+                      </span>
+                      <a
+                        href={concert.ticket_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-2 text-spotify-muted hover:text-white transition-colors"
+                        title="Ticket URL"
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                      </a>
+                      <button
+                        onClick={() => handleDelete(concert.id_concert)}
+                        disabled={deletingId === concert.id_concert}
+                        className="p-2 text-spotify-muted hover:text-red-400 transition-colors"
+                      >
+                        {deletingId === concert.id_concert ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Trash2 className="w-4 h-4" />
+                        )}
+                      </button>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="px-2 py-0.5 bg-spotify-green/20 text-spotify-green text-[10px] font-bold rounded-full">
-                      Upcoming
-                    </span>
-                    <a
-                      href={concert.ticket_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="p-2 text-spotify-muted hover:text-white transition-colors"
-                      title="Ticket URL"
-                    >
-                      <ExternalLink className="w-4 h-4" />
-                    </a>
-                    <button
-                      onClick={() => handleDelete(concert.id_concert)}
-                      disabled={deletingId === concert.id_concert}
-                      className="p-2 text-spotify-muted hover:text-red-400 transition-colors"
-                    >
-                      {deletingId === concert.id_concert ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <Trash2 className="w-4 h-4" />
-                      )}
-                    </button>
-                  </div>
+                  {/* Collaborating Artists */}
+                  {concert.artists && concert.artists.length > 0 && (
+                    <div className="mt-3 flex items-center gap-2 flex-wrap">
+                      <span className="text-[10px] uppercase font-semibold text-spotify-muted tracking-wider">
+                        Artists:
+                      </span>
+                      {concert.artists.map((a) => (
+                        <span
+                          key={a.id_artist}
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-white/10 rounded-full text-xs text-white"
+                        >
+                          <span className="w-4 h-4 rounded-full overflow-hidden bg-spotify-hover shrink-0">
+                            {a.profile_picture ? (
+                              <img
+                                src={a.profile_picture}
+                                alt={a.name}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <span className="w-full h-full flex items-center justify-center">
+                                <Music2 className="w-2.5 h-2.5 text-spotify-muted" />
+                              </span>
+                            )}
+                          </span>
+                          {a.name}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -265,20 +323,38 @@ function ArtistConcertsPage() {
               {past.map((concert) => (
                 <div
                   key={concert.id_concert}
-                  className="flex items-center justify-between bg-spotify-card/30 rounded-lg p-4"
+                  className="bg-spotify-card/30 rounded-lg p-4"
                 >
-                  <div className="flex items-center gap-4">
-                    <Calendar className="w-5 h-5 text-spotify-muted" />
-                    <div>
-                      <p className="text-sm text-white">{concert.location}</p>
-                      <p className="text-xs text-spotify-muted">
-                        {formatDate(concert.event_at)}
-                      </p>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <Calendar className="w-5 h-5 text-spotify-muted" />
+                      <div>
+                        <p className="text-sm text-white">{concert.location}</p>
+                        <p className="text-xs text-spotify-muted">
+                          {formatDate(concert.event_at)}
+                        </p>
+                      </div>
                     </div>
+                    <span className="px-2 py-0.5 bg-white/5 text-spotify-muted text-[10px] font-bold rounded-full">
+                      Ended
+                    </span>
                   </div>
-                  <span className="px-2 py-0.5 bg-white/5 text-spotify-muted text-[10px] font-bold rounded-full">
-                    Ended
-                  </span>
+                  {/* Collaborating Artists */}
+                  {concert.artists && concert.artists.length > 0 && (
+                    <div className="mt-2 flex items-center gap-2 flex-wrap">
+                      <span className="text-[10px] uppercase font-semibold text-spotify-muted tracking-wider">
+                        Artists:
+                      </span>
+                      {concert.artists.map((a) => (
+                        <span
+                          key={a.id_artist}
+                          className="inline-flex items-center gap-1 px-2 py-0.5 bg-white/5 rounded-full text-[11px] text-spotify-muted"
+                        >
+                          {a.name}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

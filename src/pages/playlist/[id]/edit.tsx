@@ -5,13 +5,15 @@ import useSWR from 'swr';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Trash2 } from 'lucide-react';
 import { withAuth } from '@/utils/withAuth';
 import { fetcher } from '@/lib/fetcher';
 import api from '@/lib/axios';
 import { PageLoading } from '@/components/ui/Spinner';
 import type { Playlist, PlaylistCategory } from '@/types';
 import ImageUpload from '@/components/ui/ImageUpload';
+import { useAuthStore } from '@/stores/useAuthStore';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 
 const editPlaylistSchema = z.object({
   name: z.string().min(1, 'Nama playlist wajib diisi'),
@@ -27,6 +29,10 @@ function EditPlaylistPage() {
   const { id } = router.query;
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const { user, refreshUser } = useAuthStore();
 
   const { data: playlist, isLoading } = useSWR<Playlist>(
     id ? `/playlists/${id}` : null,
@@ -37,6 +43,28 @@ function EditPlaylistPage() {
     '/playlist-categories',
     fetcher
   );
+
+  // Check if current user is Owner
+  const userRole = user && playlist
+    ? playlist.collaborators?.find((c) => c.id_user === user.id_user)?.pivot?.role
+    : null;
+  const isOwner = userRole === 'Owner' || (playlist && user && playlist.id_user === user.id_user);
+
+  const handleDeletePlaylist = async () => {
+    setIsDeleting(true);
+    setError('');
+    try {
+      await api.post(`/playlists/${id}`, { _method: 'DELETE' });
+      await refreshUser();
+      router.push('/home');
+    } catch (err) {
+      console.error('Failed to delete playlist:', err);
+      setError('Gagal menghapus playlist. Silakan coba lagi.');
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteModal(false);
+    }
+  };
 
   const {
     register,
@@ -164,25 +192,50 @@ function EditPlaylistPage() {
           )}
 
           {/* Buttons */}
-          <div className="flex gap-4 pt-4">
-            <button
-              type="button"
-              onClick={() => router.back()}
-              className="btn-outline text-sm py-2.5 px-8"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="btn-spotify text-sm py-2.5 px-8 flex items-center gap-2 disabled:opacity-50"
-            >
-              {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
-              {isSubmitting ? 'Saving...' : 'Save Changes'}
-            </button>
+          <div className="flex justify-between items-center pt-4">
+            <div className="flex gap-4">
+              <button
+                type="button"
+                onClick={() => router.back()}
+                className="btn-outline text-sm py-2.5 px-8"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="btn-spotify text-sm py-2.5 px-8 flex items-center gap-2 disabled:opacity-50"
+              >
+                {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
+                {isSubmitting ? 'Saving...' : 'Save Changes'}
+              </button>
+            </div>
+
+            {isOwner && (
+              <button
+                type="button"
+                onClick={() => setShowDeleteModal(true)}
+                className="px-5 py-2.5 text-red-500 hover:text-white hover:bg-red-600 border border-red-500 hover:border-transparent rounded-full font-bold text-sm transition-all flex items-center gap-2"
+              >
+                <Trash2 className="w-4 h-4" />
+                Hapus Playlist
+              </button>
+            )}
           </div>
         </form>
       </div>
+
+      {playlist && (
+        <ConfirmDialog
+          open={showDeleteModal}
+          onClose={() => setShowDeleteModal(false)}
+          onConfirm={handleDeletePlaylist}
+          title="Hapus Playlist"
+          description={`Apakah Anda yakin ingin menghapus playlist "${playlist.name}"? Tindakan ini tidak dapat dibatalkan.`}
+          confirmLabel={isDeleting ? 'Menghapus...' : 'Hapus'}
+          variant="danger"
+        />
+      )}
     </>
   );
 }

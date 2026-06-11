@@ -7,11 +7,13 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Loader2 } from 'lucide-react';
 import { withArtistAuth } from '@/utils/withArtistAuth';
+import { useArtistStore } from '@/stores/useArtistStore';
 import { fetcher } from '@/lib/fetcher';
 import api from '@/lib/axios';
 import { PageLoading } from '@/components/ui/Spinner';
-import type { Album } from '@/types';
+import type { Album, Artist } from '@/types';
 import ImageUpload from '@/components/ui/ImageUpload';
+import ArtistAutocomplete from '@/components/ui/ArtistAutocomplete';
 
 const editAlbumSchema = z.object({
   title: z.string().min(1, 'Judul album wajib diisi'),
@@ -24,8 +26,12 @@ type EditAlbumForm = z.infer<typeof editAlbumSchema>;
 function EditAlbumPage() {
   const router = useRouter();
   const { id } = router.query;
+  const artist = useArtistStore((s) => s.artist);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Collaborating artists state
+  const [collabArtists, setCollabArtists] = useState<Artist[]>([]);
 
   const { data: album, isLoading } = useSWR<Album>(
     id ? `/albums/${id}` : null,
@@ -45,6 +51,7 @@ function EditAlbumPage() {
 
   const coverImage = watch('cover_image');
 
+  // Pre-fill form and collaborating artists when album data loads
   useEffect(() => {
     if (album) {
       reset({
@@ -52,8 +59,22 @@ function EditAlbumPage() {
         release: album.release ? album.release.split('T')[0] : '',
         cover_image: album.cover_image || '',
       });
+      // Pre-fill collab artists from album's existing artists
+      if (album.artists && album.artists.length > 0) {
+        setCollabArtists(album.artists);
+      } else if (artist) {
+        setCollabArtists([artist]);
+      }
     }
-  }, [album, reset]);
+  }, [album, reset, artist]);
+
+  const handleAddArtist = (a: Artist) => {
+    setCollabArtists((prev) => [...prev, a]);
+  };
+
+  const handleRemoveArtist = (artistId: string) => {
+    setCollabArtists((prev) => prev.filter((a) => a.id_artist !== artistId));
+  };
 
   const onSubmit = async (data: EditAlbumForm) => {
     setIsSubmitting(true);
@@ -63,6 +84,7 @@ function EditAlbumPage() {
       await api.post(`/albums/${id}`, {
         ...data,
         cover_image: data.cover_image || undefined,
+        artist_ids: collabArtists.map((a) => a.id_artist),
         _method: 'PUT',
       });
       router.push('/artist/albums');
@@ -137,6 +159,16 @@ function EditAlbumPage() {
               <p className="mt-1 text-xs text-red-400">{errors.cover_image.message}</p>
             )}
           </div>
+
+          {/* Collaborating Artists */}
+          <ArtistAutocomplete
+            selectedArtists={collabArtists}
+            onAdd={handleAddArtist}
+            onRemove={handleRemoveArtist}
+            lockedArtistId={artist?.id_artist}
+            label="Collaborating Artists"
+            placeholder="Search artists to collaborate..."
+          />
 
           {/* Buttons */}
           <div className="flex gap-4 pt-4">
