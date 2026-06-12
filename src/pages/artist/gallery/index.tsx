@@ -16,10 +16,10 @@ function ArtistGalleryPage() {
   const artist = useArtistStore((s) => s.artist);
   const { data: gallery, isLoading } = useSWR<ArtistGallery[]>(
     artist ? `/artists/${artist.id_artist}/gallery` : null,
-    fetcher
+    fetcher,
   );
 
-  console.log(gallery)
+  console.log(gallery);
 
   const [showAddForm, setShowAddForm] = useState(false);
   const [imageUrl, setImageUrl] = useState('');
@@ -61,7 +61,10 @@ function ArtistGalleryPage() {
             _method: 'DELETE',
           });
         } catch (cloudinaryErr) {
-          console.warn('Failed to delete image from Cloudinary:', cloudinaryErr);
+          console.warn(
+            'Failed to delete image from Cloudinary:',
+            cloudinaryErr,
+          );
         }
       }
 
@@ -110,9 +113,7 @@ function ArtistGalleryPage() {
         {/* Add Form */}
         {showAddForm && (
           <div className="bg-spotify-card/40 border border-spotify-border/20 rounded-xl p-6 mb-6 animate-slide-up">
-            <h3 className="text-sm font-bold text-white mb-4">
-              Add New Photo
-            </h3>
+            <h3 className="text-sm font-bold text-white mb-4">Add New Photo</h3>
             <div className="space-y-4">
               <div>
                 <label className="block text-xs font-semibold text-spotify-muted mb-1.5">
@@ -166,9 +167,7 @@ function ArtistGalleryPage() {
         ) : (
           <div className="flex flex-col items-center justify-center min-h-[40vh]">
             <ImageIcon className="w-16 h-16 text-spotify-muted/30 mb-4" />
-            <h2 className="text-xl font-bold text-white mb-2">
-              No photos yet
-            </h2>
+            <h2 className="text-xl font-bold text-white mb-2">No photos yet</h2>
             <p className="text-sm text-spotify-muted mb-4">
               Add photos to showcase your artistry.
             </p>
