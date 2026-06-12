@@ -20,7 +20,8 @@ import {
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
 import { cn } from '@/lib/utils';
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
+import { useUIStore } from '@/stores/useUIStore';
 
 const mainNavItems = [
   { href: '/home', label: 'Home', icon: Home },
@@ -35,21 +36,15 @@ export default function Sidebar() {
   const logout = useAuthStore((s) => s.logout);
   const { requireAuth } = useRequireAuth();
 
-  // Collapse state with localStorage persistence
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const isCollapsed = useUIStore((s) => s.isSidebarCollapsed);
+  const setSidebarCollapsed = useUIStore((s) => s.setSidebarCollapsed);
 
   useEffect(() => {
     const saved = localStorage.getItem('sidebar-collapsed');
-    if (saved === 'true') setIsCollapsed(true);
-  }, []);
-
-  const toggleCollapse = () => {
-    setIsCollapsed((prev) => {
-      const next = !prev;
-      localStorage.setItem('sidebar-collapsed', String(next));
-      return next;
-    });
-  };
+    if (saved === 'true') {
+      setSidebarCollapsed(true);
+    }
+  }, [setSidebarCollapsed]);
 
   return (
     <aside
@@ -58,19 +53,7 @@ export default function Sidebar() {
         isCollapsed ? 'w-[72px]' : 'w-[280px]'
       )}
     >
-      {/* Collapse Toggle */}
-      <button
-        onClick={toggleCollapse}
-        className="absolute -right-3 top-7 z-10 w-6 h-6 bg-spotify-card border border-spotify-border rounded-full flex items-center justify-center text-spotify-muted hover:text-white hover:bg-spotify-hover transition-colors shadow-lg"
-        aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-        title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-      >
-        {isCollapsed ? (
-          <ChevronRight className="w-3.5 h-3.5" />
-        ) : (
-          <ChevronLeft className="w-3.5 h-3.5" />
-        )}
-      </button>
+
 
       {/* Logo */}
       <div className={cn('pt-6 pb-4', isCollapsed ? 'px-4 flex justify-center' : 'px-6')}>

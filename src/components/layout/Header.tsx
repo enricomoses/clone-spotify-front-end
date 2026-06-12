@@ -1,8 +1,9 @@
 import { useRouter } from 'next/router';
 import Link from 'next/link';
-import { ChevronLeft, ChevronRight, User, LogIn } from 'lucide-react';
+import { ChevronLeft, ChevronRight, User, LogIn, Sidebar } from 'lucide-react';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useState, useRef, useEffect } from 'react';
+import { useUIStore } from '@/stores/useUIStore';
 
 export default function Header() {
   const router = useRouter();
@@ -10,6 +11,9 @@ export default function Header() {
   const logout = useAuthStore((s) => s.logout);
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  
+  const isCollapsed = useUIStore((s) => s.isSidebarCollapsed);
+  const toggleCollapse = useUIStore((s) => s.toggleSidebarCollapsed);
 
   // Close dropdown on click outside
   useEffect(() => {
@@ -26,6 +30,14 @@ export default function Header() {
     <header className="sticky top-0 z-20 flex items-center justify-between px-6 py-3 bg-spotify-black/80 backdrop-blur-md">
       {/* History Navigation */}
       <div className="flex items-center gap-2">
+        <button
+          onClick={toggleCollapse}
+          className="hidden lg:flex w-8 h-8 items-center justify-center text-spotify-muted hover:text-white transition-colors"
+          aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        >
+          <Sidebar className="w-5 h-5" />
+        </button>
         <button
           onClick={() => router.back()}
           className="w-8 h-8 rounded-full bg-black/60 flex items-center justify-center text-white hover:bg-black/80 transition-colors"
