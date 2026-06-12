@@ -8,7 +8,7 @@ import { useArtistStore } from '@/stores/useArtistStore';
 import { fetcher } from '@/lib/fetcher';
 import api from '@/lib/axios';
 import SongManageRow from '@/components/artist-portal/SongManageRow';
-import { GridSkeleton } from '@/components/ui/SkeletonCard';
+import { ArtistSongsSkeleton } from '@/components/ui/SkeletonCard';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import type { Song } from '@/types';
 import { useToastStore } from '@/components/ui/Toast';
@@ -47,7 +47,7 @@ function ArtistSongsPage() {
     }
   };
 
-  if (isLoading) return <GridSkeleton count={6} />;
+  if (isLoading) return <ArtistSongsSkeleton />;
 
   return (
     <>
