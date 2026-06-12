@@ -45,7 +45,7 @@ export default function SongRow({
         className={cn(
           'group grid items-center gap-4 px-4 py-2 rounded-md hover:bg-white/10 transition-colors cursor-pointer',
           showAlbum
-            ? 'grid-cols-[16px_minmax(120px,4fr)_minmax(120px,2fr)_auto_minmax(40px,1fr)]'
+            ? 'grid-cols-[16px_minmax(120px,6fr)_auto_minmax(40px,1fr)] md:grid-cols-[16px_minmax(120px,4fr)_minmax(120px,2fr)_auto_minmax(40px,1fr)]'
             : 'grid-cols-[16px_minmax(120px,6fr)_auto_minmax(40px,1fr)]',
           isActive && 'bg-white/5'
         )}
@@ -107,7 +107,7 @@ export default function SongRow({
 
         {/* Album */}
         {showAlbum && (
-          <div className="min-w-0">
+          <div className="min-w-0 hidden md:block">
             {song.album && (
               <Link
                 href={`/album/${song.album.id_album}`}
