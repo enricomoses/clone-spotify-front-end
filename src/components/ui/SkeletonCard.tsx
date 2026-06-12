@@ -533,4 +533,32 @@ export function ArtistAnalyticsSkeleton() {
   );
 }
 
+// Artist gallery page skeleton
+export function ArtistGallerySkeleton() {
+  return (
+    <div>
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <Skeleton className="h-8 w-48 mb-2" />
+          <Skeleton className="h-4 w-16" />
+        </div>
+        <Skeleton className="h-10 w-32 rounded-full" />
+      </div>
+
+      {/* Gallery Grid */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div
+            key={i}
+            className="aspect-square rounded-lg overflow-hidden bg-spotify-card/40 animate-pulse"
+          >
+            <Skeleton className="w-full h-full" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default Skeleton;

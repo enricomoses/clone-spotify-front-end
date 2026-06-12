@@ -7,7 +7,7 @@ import { useArtistStore } from '@/stores/useArtistStore';
 import { fetcher } from '@/lib/fetcher';
 import api from '@/lib/axios';
 import GalleryGrid from '@/components/artist-portal/GalleryGrid';
-import { GridSkeleton } from '@/components/ui/SkeletonCard';
+import { ArtistGallerySkeleton } from '@/components/ui/SkeletonCard';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import type { ArtistGallery } from '@/types';
 import ImageUpload from '@/components/ui/ImageUpload';
@@ -79,7 +79,7 @@ function ArtistGalleryPage() {
     }
   };
 
-  if (isLoading) return <GridSkeleton count={6} />;
+  if (isLoading) return <ArtistGallerySkeleton />;
 
   const photos = gallery || [];
 
