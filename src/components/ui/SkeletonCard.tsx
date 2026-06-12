@@ -335,4 +335,36 @@ export function ArtistSongsSkeleton() {
   );
 }
 
+// Artist albums list page skeleton
+export function ArtistAlbumsSkeleton() {
+  return (
+    <div>
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <Skeleton className="h-8 w-40 mb-2" />
+          <Skeleton className="h-4 w-16" />
+        </div>
+        <Skeleton className="h-10 w-36 rounded-full" />
+      </div>
+
+      {/* Albums Grid */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div
+            key={i}
+            className="bg-spotify-card/40 rounded-lg p-4 animate-pulse"
+          >
+            {/* Cover */}
+            <Skeleton className="aspect-square w-full rounded-md mb-4" />
+            {/* Info */}
+            <Skeleton className="h-4 w-3/4 mb-2" />
+            <Skeleton className="h-3.5 w-1/2" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default Skeleton;
