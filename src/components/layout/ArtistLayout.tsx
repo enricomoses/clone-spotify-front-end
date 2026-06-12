@@ -47,12 +47,21 @@ export default function ArtistLayout({ children }: ArtistLayoutProps) {
   }, [setSidebarCollapsed]);
 
   return (
-    <div className="flex h-screen bg-spotify-black text-white overflow-hidden">
+    <div className="relative flex h-screen bg-spotify-black text-white overflow-hidden">
+      {/* Mobile Backdrop overlay when sidebar is expanded */}
+      {!isCollapsed && (
+        <div
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden animate-fade-in"
+          onClick={() => setSidebarCollapsed(true)}
+        />
+      )}
+
       {/* Artist Sidebar */}
       <aside
         className={cn(
           'flex flex-col bg-black h-full shrink-0 border-r border-spotify-border/30 transition-all duration-300 ease-spotify',
-          isCollapsed ? 'w-[72px]' : 'w-[260px]'
+          'fixed md:relative z-50 md:z-auto',
+          isCollapsed ? '-translate-x-full md:translate-x-0 md:w-[72px]' : 'translate-x-0 w-[260px]'
         )}
       >
         {/* Logo */}
