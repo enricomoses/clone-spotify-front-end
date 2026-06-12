@@ -50,13 +50,16 @@ function EditPlaylistPage() {
   const userRole = user && playlist
     ? playlist.collaborators?.find((c) => c.id_user === user.id_user)?.pivot?.role
     : null;
-  const isOwner = userRole === 'Owner' || (playlist && user && playlist.id_user === user.id_user);
+  const isOwner = userRole === 'Owner';
 
   const handleDeletePlaylist = async () => {
+    if (!user) return;
     setIsDeleting(true);
     setError('');
     try {
-      await api.post(`/playlists/${id}`, { _method: 'DELETE' });
+      await api.post(`/playlists/${id}?id_user=${user.id_user}`, {
+        _method: 'DELETE',
+      });
       await refreshUser();
       addToast('Playlist berhasil dihapus', 'success');
       router.push('/home');
@@ -94,12 +97,14 @@ function EditPlaylistPage() {
   }, [playlist, reset]);
 
   const onSubmit = async (data: EditPlaylistForm) => {
+    if (!user) return;
     setIsSubmitting(true);
     setError('');
 
     try {
       await api.post(`/playlists/${id}`, {
         ...data,
+        id_user: user.id_user,
         cover_image: data.cover_image || undefined,
         id_playlist_category: data.id_playlist_category || undefined,
         _method: 'PUT',
