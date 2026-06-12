@@ -51,7 +51,7 @@ export default function ArtistLayout({ children }: ArtistLayoutProps) {
       {/* Artist Sidebar */}
       <aside
         className={cn(
-          'hidden lg:flex flex-col bg-black h-full shrink-0 border-r border-spotify-border/30 transition-all duration-300 ease-spotify',
+          'flex flex-col bg-black h-full shrink-0 border-r border-spotify-border/30 transition-all duration-300 ease-spotify',
           isCollapsed ? 'w-[72px]' : 'w-[260px]'
         )}
       >
@@ -138,11 +138,11 @@ export default function ArtistLayout({ children }: ArtistLayoutProps) {
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto">
         {/* Artist Header */}
-        <div className="sticky top-0 z-20 flex items-center justify-between px-8 py-4 bg-spotify-black/90 backdrop-blur-md border-b border-spotify-border/20">
+        <div className="sticky top-0 z-20 flex items-center justify-between px-4 lg:px-8 py-4 bg-spotify-black/90 backdrop-blur-md border-b border-spotify-border/20">
           <div className="flex items-center gap-4">
             <button
               onClick={toggleCollapse}
-              className="hidden lg:flex w-8 h-8 items-center justify-center text-spotify-muted hover:text-white transition-colors"
+              className="flex w-8 h-8 items-center justify-center text-spotify-muted hover:text-white transition-colors"
               aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
               title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
             >
@@ -162,7 +162,7 @@ export default function ArtistLayout({ children }: ArtistLayoutProps) {
         </div>
 
         {/* Page Content */}
-        <div className="p-8">{children}</div>
+        <div className="p-4 lg:p-8">{children}</div>
       </main>
     </div>
   );
