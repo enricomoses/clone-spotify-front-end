@@ -10,6 +10,7 @@ import {
   ExternalLink,
   Image as ImageIcon,
 } from 'lucide-react';
+import { FaInstagram, FaFacebook, FaXTwitter, FaWikipediaW } from 'react-icons/fa6';
 import { fetcher } from '@/lib/fetcher';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
 import { usePlayerStore } from '@/stores/usePlayerStore';
@@ -179,9 +180,10 @@ export default function ArtistProfilePage() {
                     href={artist.instagram}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-xs text-white/60 hover:text-white transition-colors"
+                    className="w-9 h-9 rounded-full bg-black/40 hover:bg-black/70 flex items-center justify-center hover:scale-105 text-white/70 hover:text-white transition-all shadow-md"
+                    title="Instagram"
                   >
-                    Instagram
+                    <FaInstagram size={18} />
                   </a>
                 )}
                 {artist.facebook && (
@@ -189,9 +191,10 @@ export default function ArtistProfilePage() {
                     href={artist.facebook}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-xs text-white/60 hover:text-white transition-colors"
+                    className="w-9 h-9 rounded-full bg-black/40 hover:bg-black/70 flex items-center justify-center hover:scale-105 text-white/70 hover:text-white transition-all shadow-md"
+                    title="Facebook"
                   >
-                    Facebook
+                    <FaFacebook size={18} />
                   </a>
                 )}
                 {artist.x && (
@@ -199,9 +202,10 @@ export default function ArtistProfilePage() {
                     href={artist.x}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-xs text-white/60 hover:text-white transition-colors"
+                    className="w-9 h-9 rounded-full bg-black/40 hover:bg-black/70 flex items-center justify-center hover:scale-105 text-white/70 hover:text-white transition-all shadow-md"
+                    title="X (Twitter)"
                   >
-                    X / Twitter
+                    <FaXTwitter size={18} />
                   </a>
                 )}
                 {artist.wikipedia && (
@@ -209,9 +213,10 @@ export default function ArtistProfilePage() {
                     href={artist.wikipedia}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-xs text-white/60 hover:text-white transition-colors"
+                    className="w-9 h-9 rounded-full bg-black/40 hover:bg-black/70 flex items-center justify-center hover:scale-105 text-white/70 hover:text-white transition-all shadow-md"
+                    title="Wikipedia"
                   >
-                    Wikipedia
+                    <FaWikipediaW size={18} />
                   </a>
                 )}
               </div>
