@@ -18,7 +18,7 @@ import SongList from '@/components/song/SongList';
 import AlbumCard from '@/components/album/AlbumCard';
 import FollowButton from '@/components/social/FollowButton';
 import ShareButton from '@/components/social/ShareButton';
-import { PageLoading } from '@/components/ui/Spinner';
+import { BannerSkeleton } from '@/components/ui/SkeletonCard';
 import { formatDate } from '@/utils/formatDuration';
 import type { Artist, ArtistGallery, Concert } from '@/types';
 import { cn } from '@/lib/utils';
@@ -50,7 +50,7 @@ export default function ArtistProfilePage() {
     fetcher,
   );
 
-  if (isLoading || !artist) return <PageLoading />;
+  if (isLoading || !artist) return <BannerSkeleton />;
 
   const handlePlayAll = () => {
     requireAuth(() => {
@@ -64,10 +64,6 @@ export default function ArtistProfilePage() {
   const isFollowing =
     user?.followed_artists?.some((a) => a.id_artist === artist.id_artist) ||
     false;
-
-  console.log(user);
-  console.log(isFollowing);
-  console.log(artist);
 
   const handleFollow = async () => {
     if (!user) return;
@@ -129,17 +125,17 @@ export default function ArtistProfilePage() {
       </Head>
 
       <div className="-mt-[60px]">
-        {/* Banner */}
+        {/* Banner — responsive: stacked on mobile */}
         <div
-          className="relative flex items-end gap-6 px-8 pt-24 pb-8"
+          className="relative flex flex-col sm:flex-row items-center sm:items-end gap-4 sm:gap-6 px-4 sm:px-8 pt-20 sm:pt-24 pb-6 sm:pb-8"
           style={{
             background:
               'linear-gradient(transparent 0, rgba(0,0,0,.5) 100%), linear-gradient(135deg, #1e3a5f 0%, #0d1117 100%)',
-            minHeight: '400px',
+            minHeight: '300px',
           }}
         >
           {/* Artist Image (circular) */}
-          <div className="w-52 h-52 shrink-0 rounded-full overflow-hidden shadow-2xl shadow-black/50">
+          <div className="w-32 h-32 sm:w-44 md:w-52 sm:h-44 md:h-52 shrink-0 rounded-full overflow-hidden shadow-2xl shadow-black/50">
             {artist.profile_picture ? (
               <img
                 src={artist.profile_picture}
@@ -148,21 +144,21 @@ export default function ArtistProfilePage() {
               />
             ) : (
               <div className="w-full h-full bg-spotify-card flex items-center justify-center">
-                <User className="w-16 h-16 text-spotify-muted" />
+                <User className="w-12 sm:w-16 h-12 sm:h-16 text-spotify-muted" />
               </div>
             )}
           </div>
 
           {/* Artist Info */}
-          <div className="flex flex-col justify-end">
-            <p className="text-sm font-bold uppercase text-white/80 mb-1">
+          <div className="flex flex-col items-center sm:items-start justify-end text-center sm:text-left">
+            <p className="text-xs sm:text-sm font-bold uppercase text-white/80 mb-1">
               Artist
             </p>
-            <h1 className="text-6xl font-black text-white mb-4 leading-tight">
+            <h1 className="text-3xl sm:text-5xl md:text-6xl font-black text-white mb-2 sm:mb-4 leading-tight">
               {artist.name}
             </h1>
             {artist.bio && (
-              <p className="text-sm text-white/70 max-w-lg line-clamp-2">
+              <p className="text-xs sm:text-sm text-white/70 max-w-lg line-clamp-2">
                 {artist.bio}
               </p>
             )}
@@ -171,7 +167,7 @@ export default function ArtistProfilePage() {
               artist.facebook ||
               artist.wikipedia ||
               artist.x) && (
-              <div className="flex gap-3 mt-3">
+              <div className="flex gap-3 mt-3 flex-wrap justify-center sm:justify-start">
                 {artist.instagram && (
                   <a
                     href={artist.instagram}
@@ -226,15 +222,15 @@ export default function ArtistProfilePage() {
             }}
           />
 
-          <div className="relative z-10 px-8 py-6">
+          <div className="relative z-10 px-4 sm:px-8 py-6">
             {/* Play + Follow + Share */}
-            <div className="flex items-center gap-6 mb-6">
+            <div className="flex items-center gap-4 sm:gap-6 mb-6">
               <button
                 onClick={handlePlayAll}
-                className="w-14 h-14 bg-spotify-green rounded-full flex items-center justify-center hover:scale-110 hover:bg-spotify-green-bright transition-all shadow-lg"
+                className="w-12 h-12 sm:w-14 sm:h-14 bg-spotify-green rounded-full flex items-center justify-center hover:scale-110 hover:bg-spotify-green-bright transition-all shadow-lg"
                 aria-label="Play all"
               >
-                <Play className="w-6 h-6 text-black fill-current ml-0.5" />
+                <Play className="w-5 h-5 sm:w-6 sm:h-6 text-black fill-current ml-0.5" />
               </button>
               <FollowButton
                 key={`${artist.id_artist}-${isFollowing}`}
@@ -245,14 +241,14 @@ export default function ArtistProfilePage() {
               <ShareButton title={artist.name} />
             </div>
 
-            {/* Tabs */}
-            <div className="flex gap-1 mb-8 border-b border-spotify-border/30">
+            {/* Tabs — scrollable on mobile */}
+            <div className="flex gap-1 mb-6 sm:mb-8 border-b border-spotify-border/30 overflow-x-auto scrollbar-hidden -mx-4 px-4 sm:mx-0 sm:px-0">
               {tabs.map((tab) => (
                 <button
                   key={tab.key}
                   onClick={() => setActiveTab(tab.key)}
                   className={cn(
-                    'px-5 py-3 text-sm font-medium transition-colors relative',
+                    'px-3 sm:px-5 py-3 text-xs sm:text-sm font-medium transition-colors relative whitespace-nowrap',
                     activeTab === tab.key
                       ? 'text-white'
                       : 'text-spotify-muted hover:text-white',
@@ -260,7 +256,7 @@ export default function ArtistProfilePage() {
                 >
                   {tab.label}
                   {tab.count !== undefined && tab.count > 0 && (
-                    <span className="ml-1.5 text-xs text-spotify-muted">
+                    <span className="ml-1 sm:ml-1.5 text-[10px] sm:text-xs text-spotify-muted">
                       ({tab.count})
                     </span>
                   )}
@@ -294,7 +290,7 @@ export default function ArtistProfilePage() {
             {activeTab === 'albums' && (
               <>
                 {artist.albums && artist.albums.length > 0 ? (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
                     {artist.albums.map((album) => (
                       <AlbumCard key={album.id_album} album={album} />
                     ))}
@@ -319,11 +315,11 @@ export default function ArtistProfilePage() {
                       {upcomingConcerts.map((concert) => (
                         <div
                           key={concert.id_concert}
-                          className="flex items-center justify-between bg-spotify-card/50 rounded-lg p-4 hover:bg-spotify-card transition-colors"
+                          className="flex flex-col sm:flex-row sm:items-center justify-between bg-spotify-card/50 rounded-lg p-4 hover:bg-spotify-card transition-colors gap-3"
                         >
                           <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-lg bg-spotify-green/20 flex items-center justify-center">
-                              <Calendar className="w-5 h-5 text-spotify-green" />
+                            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-spotify-green/20 flex items-center justify-center shrink-0">
+                              <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-spotify-green" />
                             </div>
                             <div>
                               <p className="text-sm font-medium text-white flex items-center gap-2">
@@ -339,7 +335,7 @@ export default function ArtistProfilePage() {
                             href={concert.ticket_url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex items-center gap-1 px-4 py-2 bg-spotify-green text-black text-xs font-bold rounded-full hover:bg-spotify-green-bright transition-colors"
+                            className="flex items-center justify-center gap-1 px-4 py-2 bg-spotify-green text-black text-xs font-bold rounded-full hover:bg-spotify-green-bright transition-colors self-start sm:self-center"
                           >
                             Buy Tickets
                             <ExternalLink className="w-3 h-3" />
@@ -360,7 +356,7 @@ export default function ArtistProfilePage() {
                           key={concert.id_concert}
                           className="flex items-center gap-4 bg-spotify-card/30 rounded-lg p-4"
                         >
-                          <Calendar className="w-5 h-5 text-spotify-muted" />
+                          <Calendar className="w-5 h-5 text-spotify-muted shrink-0" />
                           <div>
                             <p className="text-sm text-white">
                               {concert.location}
@@ -386,7 +382,7 @@ export default function ArtistProfilePage() {
             {activeTab === 'gallery' && (
               <>
                 {galleryData.length > 0 ? (
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
                     {galleryData.map((photo) => (
                       <div
                         key={photo.id_gallery}

@@ -9,7 +9,7 @@ import ArtistCard from '@/components/artist/ArtistCard';
 import AlbumCard from '@/components/album/AlbumCard';
 import PlaylistCard from '@/components/playlist/PlaylistCard';
 import PodcastCard from '@/components/podcast/PodcastCard';
-import { PageLoading } from '@/components/ui/Spinner';
+import { GridSkeleton, SongRowSkeleton } from '@/components/ui/SkeletonCard';
 import type { Song, Artist, Album, Playlist, Podcast } from '@/types';
 import { cn } from '@/lib/utils';
 
@@ -108,7 +108,7 @@ export default function SearchPage() {
         <meta name="description" content="Search for songs, artists, albums, playlists, and podcasts" />
       </Head>
 
-      <div className="px-6 pb-8">
+      <div className="px-4 sm:px-6 pb-8">
         {/* Search Bar */}
         <div className="sticky top-0 z-10 pt-4 pb-4 bg-spotify-black">
           <div className="relative max-w-lg">
@@ -145,7 +145,18 @@ export default function SearchPage() {
           )}
         </div>
 
-        {isLoading && <PageLoading />}
+        {isLoading && (
+          <div className="space-y-8 mt-4">
+            <div>
+              <div className="h-7 w-32 bg-spotify-card/80 rounded animate-pulse mb-5" />
+              <GridSkeleton count={6} type="artist" />
+            </div>
+            <div>
+              <div className="h-7 w-24 bg-spotify-card/80 rounded animate-pulse mb-5" />
+              {Array.from({ length: 5 }).map((_, i) => <SongRowSkeleton key={i} />)}
+            </div>
+          </div>
+        )}
 
         {/* No query state */}
         {!debouncedQuery && !isLoading && (

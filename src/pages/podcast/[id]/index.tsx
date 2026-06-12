@@ -6,7 +6,7 @@ import { fetcher } from '@/lib/fetcher';
 import { withAuth } from '@/utils/withAuth';
 import FollowButton from '@/components/social/FollowButton';
 import EpisodeRow from '@/components/podcast/EpisodeRow';
-import { PageLoading } from '@/components/ui/Spinner';
+import { BannerSkeleton } from '@/components/ui/SkeletonCard';
 import type { Podcast } from '@/types';
 import Link from 'next/link';
 import { useAuthStore } from '@/stores/useAuthStore';
@@ -23,7 +23,7 @@ function PodcastDetailPage() {
     fetcher
   );
 
-  if (isLoading || !podcast) return <PageLoading />;
+  if (isLoading || !podcast) return <BannerSkeleton />;
 
   const isCreator = podcast.id_user === user?.id_user;
 
@@ -67,7 +67,7 @@ function PodcastDetailPage() {
       <div className="-mt-[60px]">
         {/* Banner */}
         <div
-          className="relative flex items-end gap-6 px-8 pt-24 pb-8"
+          className="relative flex flex-col sm:flex-row items-center sm:items-end gap-4 sm:gap-6 px-4 sm:px-8 pt-20 sm:pt-24 pb-6 sm:pb-8"
           style={{
             background:
               'linear-gradient(transparent 0, rgba(0,0,0,.5) 100%), linear-gradient(135deg, #065f46 0%, #134e4a 50%, #0f172a 100%)',
@@ -75,7 +75,7 @@ function PodcastDetailPage() {
           }}
         >
           {/* Cover */}
-          <div className="w-56 h-56 shrink-0 rounded-xl overflow-hidden shadow-2xl shadow-black/50">
+          <div className="w-36 h-36 sm:w-48 md:w-56 sm:h-48 md:h-56 shrink-0 rounded-xl overflow-hidden shadow-2xl shadow-black/50">
             {podcast.cover_image ? (
               <img
                 src={podcast.cover_image}
@@ -90,11 +90,11 @@ function PodcastDetailPage() {
           </div>
 
           {/* Info */}
-          <div className="flex flex-col justify-end">
-            <p className="text-sm font-bold uppercase text-white/80 mb-1">
+          <div className="flex flex-col items-center sm:items-start justify-end text-center sm:text-left">
+            <p className="text-xs sm:text-sm font-bold uppercase text-white/80 mb-1">
               Podcast
             </p>
-            <h1 className="text-5xl font-black text-white mb-3 leading-tight">
+            <h1 className="text-3xl sm:text-5xl font-black text-white mb-2 sm:mb-3 leading-tight">
               {podcast.name}
             </h1>
             {podcast.about && (
@@ -127,7 +127,7 @@ function PodcastDetailPage() {
             }}
           />
 
-          <div className="relative z-10 px-8 py-6">
+          <div className="relative z-10 px-4 sm:px-8 py-6">
             {/* Actions */}
             <div className="flex items-center gap-4 mb-8">
               <FollowButton

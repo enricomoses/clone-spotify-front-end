@@ -8,7 +8,7 @@ import AlbumCard from '@/components/album/AlbumCard';
 import ArtistCard from '@/components/artist/ArtistCard';
 import PlaylistCard from '@/components/playlist/PlaylistCard';
 import PodcastCard from '@/components/podcast/PodcastCard';
-import { PageLoading } from '@/components/ui/Spinner';
+import { HomePageSkeleton } from '@/components/ui/SkeletonCard';
 import type { Album, Artist, Playlist, Song, Podcast } from '@/types';
 import Link from 'next/link';
 import { Play, Sparkles } from 'lucide-react';
@@ -27,7 +27,7 @@ export default function HomePage() {
 
   const isLoading = albumsLoading || artistsLoading || playlistsLoading;
 
-  if (isLoading) return <PageLoading />;
+  if (isLoading) return <HomePageSkeleton />;
 
   // Filter user-specific data
   const userPlaylists = user && playlists
@@ -44,10 +44,10 @@ export default function HomePage() {
         <meta name="description" content="Discover new music, playlists, and podcasts on Spotify Clone" />
       </Head>
 
-      <div className="px-6 pb-8">
+      <div className="px-4 sm:px-6 pb-8">
         {/* Greeting */}
-        <div className="mb-8 pt-4">
-          <h1 className="text-3xl font-bold text-white">
+        <div className="mb-6 sm:mb-8 pt-4">
+          <h1 className="text-2xl sm:text-3xl font-bold text-white">
             {user ? getGreeting() : 'Temukan musik favoritmu'}
           </h1>
           {!user && (
@@ -59,14 +59,14 @@ export default function HomePage() {
 
         {/* Quick Play Grid — Top albums */}
         {albums && albums.length > 0 && (
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-10">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 sm:gap-3 mb-8 sm:mb-10">
             {albums.slice(0, 6).map((album) => (
               <Link
                 key={album.id_album}
                 href={`/album/${album.id_album}`}
                 className="flex items-center bg-white/10 hover:bg-white/20 rounded-md overflow-hidden transition-colors group"
               >
-                <div className="w-16 h-16 shrink-0">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 shrink-0">
                   {album.cover_image ? (
                     <img
                       src={album.cover_image}
@@ -77,7 +77,7 @@ export default function HomePage() {
                     <div className="w-full h-full bg-spotify-card" />
                   )}
                 </div>
-                <span className="px-4 text-sm font-bold text-white truncate">
+                <span className="px-3 sm:px-4 text-xs sm:text-sm font-bold text-white truncate">
                   {album.title}
                 </span>
               </Link>
@@ -87,11 +87,11 @@ export default function HomePage() {
 
         {/* Discover Weekly Preview */}
         {discoverSongs && discoverSongs.length > 0 && (
-          <section className="mb-10">
-            <div className="flex items-center justify-between mb-5">
+          <section className="mb-8 sm:mb-10">
+            <div className="flex items-center justify-between mb-4 sm:mb-5">
               <div className="flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-purple-400" />
-                <h2 className="text-2xl font-bold text-white">Discover Weekly</h2>
+                <h2 className="text-xl sm:text-2xl font-bold text-white">Discover Weekly</h2>
               </div>
               <Link
                 href="/discover-weekly"
@@ -100,11 +100,11 @@ export default function HomePage() {
                 Show all
               </Link>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
               {discoverSongs.slice(0, 5).map((song) => (
                 <div
                   key={song.id_song}
-                  className="bg-spotify-card/60 rounded-lg p-4 hover:bg-spotify-hover transition-colors group relative cursor-pointer"
+                  className="bg-spotify-card/60 rounded-lg p-3 sm:p-4 hover:bg-spotify-hover transition-colors group relative cursor-pointer"
                   onClick={() => requireAuth(() => playSong(song, discoverSongs))}
                 >
                   <div className="w-full aspect-square bg-spotify-card rounded-md overflow-hidden mb-3 relative">
@@ -140,11 +140,11 @@ export default function HomePage() {
 
         {/* Popular Artists */}
         {artists && artists.length > 0 && (
-          <section className="mb-10">
-            <div className="flex items-center justify-between mb-5">
-              <h2 className="text-2xl font-bold text-white">Popular Artists</h2>
+          <section className="mb-8 sm:mb-10">
+            <div className="flex items-center justify-between mb-4 sm:mb-5">
+              <h2 className="text-xl sm:text-2xl font-bold text-white">Popular Artists</h2>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
               {artists.slice(0, 12).map((artist) => (
                 <ArtistCard key={artist.id_artist} artist={artist} />
               ))}
@@ -154,9 +154,9 @@ export default function HomePage() {
 
         {/* Popular Albums */}
         {albums && albums.length > 0 && (
-          <section className="mb-10">
-            <div className="flex items-center justify-between mb-5">
-              <h2 className="text-2xl font-bold text-white">Popular Albums</h2>
+          <section className="mb-8 sm:mb-10">
+            <div className="flex items-center justify-between mb-4 sm:mb-5">
+              <h2 className="text-xl sm:text-2xl font-bold text-white">Popular Albums</h2>
               <Link
                 href="/search"
                 className="text-xs uppercase font-bold text-spotify-muted hover:text-white tracking-wider transition-colors"
@@ -164,7 +164,7 @@ export default function HomePage() {
                 Show all
               </Link>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
               {albums.slice(0, 12).map((album) => (
                 <AlbumCard key={album.id_album} album={album} />
               ))}
@@ -174,11 +174,11 @@ export default function HomePage() {
 
         {/* Podcasts */}
         {podcasts && podcasts.length > 0 && (
-          <section className="mb-10">
-            <div className="flex items-center justify-between mb-5">
-              <h2 className="text-2xl font-bold text-white">Popular Podcasts</h2>
+          <section className="mb-8 sm:mb-10">
+            <div className="flex items-center justify-between mb-4 sm:mb-5">
+              <h2 className="text-xl sm:text-2xl font-bold text-white">Popular Podcasts</h2>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
               {podcasts.slice(0, 6).map((podcast) => (
                 <PodcastCard key={podcast.id_podcast} podcast={podcast} />
               ))}
@@ -188,11 +188,11 @@ export default function HomePage() {
 
         {/* Featured Playlists */}
         {playlists && playlists.length > 0 && (
-          <section className="mb-10">
-            <div className="flex items-center justify-between mb-5">
-              <h2 className="text-2xl font-bold text-white">Featured Playlists</h2>
+          <section className="mb-8 sm:mb-10">
+            <div className="flex items-center justify-between mb-4 sm:mb-5">
+              <h2 className="text-xl sm:text-2xl font-bold text-white">Featured Playlists</h2>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
               {playlists.slice(0, 12).map((playlist) => (
                 <PlaylistCard key={playlist.id_playlist} playlist={playlist} />
               ))}
@@ -202,17 +202,29 @@ export default function HomePage() {
 
         {/* Logged-in user sections */}
         {user && userPlaylists.length > 0 && (
-          <section className="mb-10">
-            <div className="flex items-center justify-between mb-5">
-              <h2 className="text-2xl font-bold text-white">Playlist Anda</h2>
+          <section className="mb-8 sm:mb-10">
+            <div className="flex items-center justify-between mb-4 sm:mb-5">
+              <h2 className="text-xl sm:text-2xl font-bold text-white">Playlist Anda</h2>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
               {userPlaylists.slice(0, 6).map((playlist) => (
                 <PlaylistCard key={playlist.id_playlist} playlist={playlist} />
               ))}
             </div>
           </section>
         )}
+
+        {/* Footer */}
+        <footer className="mt-12 sm:mt-16 pt-8 border-t border-spotify-border/20">
+          <div className="text-center pb-8">
+            <p className="text-sm text-spotify-muted mb-1">
+              Enrico Moses x BasDat Group
+            </p>
+            <p className="text-xs text-spotify-muted/60">
+              © 2026 Spotify Clone 2026. All rights reserved.
+            </p>
+          </div>
+        </footer>
       </div>
     </>
   );

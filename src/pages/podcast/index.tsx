@@ -5,7 +5,7 @@ import { Radio } from 'lucide-react';
 import { fetcher } from '@/lib/fetcher';
 import { withAuth } from '@/utils/withAuth';
 import PodcastCard from '@/components/podcast/PodcastCard';
-import { PageLoading } from '@/components/ui/Spinner';
+import { GridSkeleton } from '@/components/ui/SkeletonCard';
 import type { Podcast, PodcastCategory } from '@/types';
 import Link from 'next/link';
 
@@ -17,7 +17,14 @@ function PodcastListPage() {
   );
   const [selectedCategory, setSelectedCategory] = useState<string>('');
 
-  if (isLoading) return <PageLoading />;
+  if (isLoading) return (
+    <div className="px-4 sm:px-6 pb-8">
+      <div className="mb-6 pt-4">
+        <div className="h-8 w-32 bg-spotify-card/80 rounded animate-pulse" />
+      </div>
+      <GridSkeleton count={12} />
+    </div>
+  );
 
   const filteredPodcasts = selectedCategory
     ? podcasts?.filter((p) => p.id_podcast_category === selectedCategory)
@@ -29,7 +36,7 @@ function PodcastListPage() {
         <title>Podcasts — Spotify Clone</title>
       </Head>
 
-      <div className="px-6 pb-8">
+      <div className="px-4 sm:px-6 pb-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-6 pt-4">
           <h1 className="text-3xl font-bold text-white">Podcasts</h1>

@@ -6,7 +6,7 @@ import { Mic, Plus, Edit3, Trash2, Eye, Loader2 } from 'lucide-react';
 import { fetcher } from '@/lib/fetcher';
 import { withAuth } from '@/utils/withAuth';
 import { useAuthStore } from '@/stores/useAuthStore';
-import { PageLoading } from '@/components/ui/Spinner';
+import { GridSkeleton } from '@/components/ui/SkeletonCard';
 import type { Podcast } from '@/types';
 import api from '@/lib/axios';
 
@@ -61,7 +61,7 @@ function MyPodcastsPage() {
     }
   };
 
-  if (isLoading) return <PageLoading />;
+  if (isLoading) return <GridSkeleton count={6} />;
 
   return (
     <>

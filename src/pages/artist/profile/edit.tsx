@@ -9,6 +9,7 @@ import { withArtistAuth } from '@/utils/withArtistAuth';
 import { useArtistStore } from '@/stores/useArtistStore';
 import api from '@/lib/axios';
 import ImageUpload from '@/components/ui/ImageUpload';
+import { useToastStore } from '@/components/ui/Toast';
 
 const editProfileSchema = z.object({
   name: z.string().min(1, 'Nama wajib diisi'),
@@ -27,8 +28,8 @@ function EditArtistProfilePage() {
   const artist = useArtistStore((s) => s.artist);
   const setArtist = useArtistStore((s) => s.setArtist);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const addToast = useToastStore((s) => s.addToast);
 
   const {
     register,
@@ -61,7 +62,6 @@ function EditArtistProfilePage() {
     if (!artist) return;
     setIsSubmitting(true);
     setError('');
-    setSuccess('');
 
     try {
       const payload = {
@@ -78,8 +78,7 @@ function EditArtistProfilePage() {
       const response = await api.post(`/artists/${artist.id_artist}`, payload);
       const updatedArtist = response.data.data || response.data;
       setArtist({ ...artist, ...updatedArtist });
-      setSuccess('Profile updated successfully!');
-      setTimeout(() => setSuccess(''), 3000);
+      addToast('Profile updated successfully!', 'success');
     } catch (err: any) {
       setError('Failed to update profile. Please try again.');
       console.error(err);
@@ -103,11 +102,6 @@ function EditArtistProfilePage() {
           </div>
         )}
 
-        {success && (
-          <div className="bg-spotify-green/20 border border-spotify-green/30 text-spotify-green px-4 py-3 rounded-lg mb-6 text-sm">
-            {success}
-          </div>
-        )}
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
           {/* Profile Picture Upload */}
@@ -222,7 +216,7 @@ function EditArtistProfilePage() {
               className="btn-spotify text-sm py-2.5 px-8 flex items-center gap-2 disabled:opacity-50"
             >
               {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
-              {isSubmitting ? 'Saving...' : 'Save Profile'}
+              {isSubmitting ? 'Saving' : 'Save Profile'}
             </button>
           </div>
         </form>

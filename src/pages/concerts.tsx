@@ -2,7 +2,7 @@ import Head from 'next/head';
 import useSWR from 'swr';
 import { Calendar, MapPin, ExternalLink, Music } from 'lucide-react';
 import { fetcher } from '@/lib/fetcher';
-import { PageLoading } from '@/components/ui/Spinner';
+import { GridSkeleton } from '@/components/ui/SkeletonCard';
 import { formatDate } from '@/utils/formatDuration';
 import type { Concert } from '@/types';
 import Link from 'next/link';
@@ -10,7 +10,15 @@ import Link from 'next/link';
 export default function ConcertsPage() {
   const { data: concerts, isLoading } = useSWR<Concert[]>('/concerts', fetcher);
 
-  if (isLoading) return <PageLoading />;
+  if (isLoading) return (
+    <div className="px-4 sm:px-6 pb-8">
+      <div className="mb-8 pt-4">
+        <div className="h-8 w-52 bg-spotify-card/80 rounded animate-pulse mb-2" />
+        <div className="h-4 w-64 bg-spotify-card/80 rounded animate-pulse" />
+      </div>
+      <GridSkeleton count={6} type="concert" />
+    </div>
+  );
 
   const allConcerts = concerts || [];
   const now = new Date();
@@ -30,7 +38,7 @@ export default function ConcertsPage() {
         <meta name="description" content="Discover upcoming concerts and live events" />
       </Head>
 
-      <div className="px-6 pb-8">
+      <div className="px-4 sm:px-6 pb-8">
         <div className="mb-8 pt-4">
           <h1 className="text-3xl font-bold text-white">Concerts & Events</h1>
           <p className="text-sm text-spotify-muted mt-1">

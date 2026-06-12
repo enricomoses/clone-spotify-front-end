@@ -7,7 +7,7 @@ import { withArtistAuth } from '@/utils/withArtistAuth';
 import { useArtistStore } from '@/stores/useArtistStore';
 import { fetcher } from '@/lib/fetcher';
 import api from '@/lib/axios';
-import { PageLoading } from '@/components/ui/Spinner';
+import { GridSkeleton } from '@/components/ui/SkeletonCard';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import type { Album } from '@/types';
 
@@ -53,7 +53,7 @@ function ArtistAlbumsPage() {
     }
   };
 
-  if (isLoading) return <PageLoading />;
+  if (isLoading) return <GridSkeleton count={6} />;
 
   return (
     <>

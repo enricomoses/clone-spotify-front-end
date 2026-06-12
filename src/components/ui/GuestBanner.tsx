@@ -8,38 +8,38 @@ export default function GuestBanner() {
   if (isDismissed) return null;
 
   return (
-    <div className="fixed bottom-[90px] left-0 right-0 z-20 bg-gradient-to-r from-[#af2896] to-[#509bf5] px-4 py-3">
-      <div className="max-w-7xl mx-auto flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <img src="/general/logo.svg" className="w-6 h-6 shrink-0" alt="Logo" />
-          <div>
-            <p className="text-sm font-bold text-white">
+    <div className="fixed bottom-[80px] lg:bottom-[90px] left-0 right-0 z-20 bg-gradient-to-r from-[#af2896] to-[#509bf5] px-3 sm:px-4 py-2.5 sm:py-3">
+      <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3 min-w-0">
+          <img src="/general/logo.svg" className="w-6 h-6 shrink-0 hidden sm:block" alt="Logo" />
+          <div className="min-w-0">
+            <p className="text-xs sm:text-sm font-bold text-white truncate">
               Preview of Spotify Clone
             </p>
-            <p className="text-xs text-white/80">
+            <p className="text-[10px] sm:text-xs text-white/80 hidden sm:block">
               Daftar gratis untuk menikmati fitur penuh — play lagu, like, follow, dan buat playlist.
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-3 shrink-0">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           <Link
             href="/register"
-            className="px-5 py-2 bg-white text-black text-sm font-bold rounded-full hover:scale-105 transition-transform"
+            className="px-3 sm:px-5 py-1.5 sm:py-2 bg-white text-black text-xs sm:text-sm font-bold rounded-full hover:scale-105 transition-transform whitespace-nowrap"
           >
             Daftar Gratis
           </Link>
           <Link
             href="/login"
-            className="px-5 py-2 text-white text-sm font-bold hover:underline transition-colors"
+            className="px-3 sm:px-5 py-1.5 sm:py-2 text-white text-xs sm:text-sm font-bold hover:underline transition-colors hidden sm:inline-flex"
           >
             Login
           </Link>
           <button
             onClick={() => setIsDismissed(true)}
-            className="text-white/60 hover:text-white transition-colors ml-2"
+            className="text-white/60 hover:text-white transition-colors"
             aria-label="Dismiss banner"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4 sm:w-5 sm:h-5" />
           </button>
         </div>
       </div>

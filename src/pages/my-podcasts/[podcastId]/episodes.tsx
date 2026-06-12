@@ -8,7 +8,7 @@ import { z } from 'zod';
 import { ArrowLeft, Plus, Edit3, Trash2, Loader2, Mic, Play } from 'lucide-react';
 import { fetcher } from '@/lib/fetcher';
 import { withAuth } from '@/utils/withAuth';
-import { PageLoading } from '@/components/ui/Spinner';
+import { GridSkeleton } from '@/components/ui/SkeletonCard';
 import { formatDuration, formatDate } from '@/utils/formatDuration';
 import type { Podcast, Episode } from '@/types';
 import api from '@/lib/axios';
@@ -98,7 +98,7 @@ function PodcastEpisodesPage() {
     }
   };
 
-  if (isLoading || !podcast) return <PageLoading />;
+  if (isLoading || !podcast) return <GridSkeleton count={6} />;
 
   const episodes = podcast.episodes || [];
 

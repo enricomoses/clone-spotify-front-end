@@ -10,7 +10,7 @@ import { withArtistAuth } from '@/utils/withArtistAuth';
 import { useArtistStore } from '@/stores/useArtistStore';
 import { fetcher } from '@/lib/fetcher';
 import api from '@/lib/axios';
-import { PageLoading } from '@/components/ui/Spinner';
+import { GridSkeleton } from '@/components/ui/SkeletonCard';
 import type { Song, Album, Artist } from '@/types';
 import ArtistAutocomplete from '@/components/ui/ArtistAutocomplete';
 
@@ -104,7 +104,7 @@ function EditSongPage() {
     }
   };
 
-  if (isLoading) return <PageLoading />;
+  if (isLoading) return <GridSkeleton count={6} />;
 
   return (
     <>

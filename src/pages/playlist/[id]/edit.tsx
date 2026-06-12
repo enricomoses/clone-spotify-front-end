@@ -9,11 +9,12 @@ import { Loader2, Trash2 } from 'lucide-react';
 import { withAuth } from '@/utils/withAuth';
 import { fetcher } from '@/lib/fetcher';
 import api from '@/lib/axios';
-import { PageLoading } from '@/components/ui/Spinner';
+import { GridSkeleton } from '@/components/ui/SkeletonCard';
 import type { Playlist, PlaylistCategory } from '@/types';
 import ImageUpload from '@/components/ui/ImageUpload';
 import { useAuthStore } from '@/stores/useAuthStore';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
+import { useToastStore } from '@/components/ui/Toast';
 
 const editPlaylistSchema = z.object({
   name: z.string().min(1, 'Nama playlist wajib diisi'),
@@ -33,6 +34,7 @@ function EditPlaylistPage() {
   const [isDeleting, setIsDeleting] = useState(false);
 
   const { user, refreshUser } = useAuthStore();
+  const addToast = useToastStore((s) => s.addToast);
 
   const { data: playlist, isLoading } = useSWR<Playlist>(
     id ? `/playlists/${id}` : null,
@@ -56,10 +58,11 @@ function EditPlaylistPage() {
     try {
       await api.post(`/playlists/${id}`, { _method: 'DELETE' });
       await refreshUser();
+      addToast('Playlist berhasil dihapus', 'success');
       router.push('/home');
     } catch (err) {
       console.error('Failed to delete playlist:', err);
-      setError('Gagal menghapus playlist. Silakan coba lagi.');
+      addToast('Gagal menghapus playlist. Silakan coba lagi.', 'error');
     } finally {
       setIsDeleting(false);
       setShowDeleteModal(false);
@@ -102,6 +105,7 @@ function EditPlaylistPage() {
         _method: 'PUT',
       });
       router.push(`/playlist/${id}`);
+      addToast('Playlist berhasil diperbarui', 'success');
     } catch (err: any) {
       setError('Failed to update playlist. Please try again.');
       console.error(err);
@@ -110,7 +114,16 @@ function EditPlaylistPage() {
     }
   };
 
-  if (isLoading) return <PageLoading />;
+  if (isLoading) return (
+    <div className="max-w-2xl mx-auto px-6 py-8">
+      <div className="h-8 w-40 bg-spotify-card/80 rounded animate-pulse mb-8" />
+      <div className="space-y-6">
+        <div className="h-12 bg-spotify-card/80 rounded animate-pulse" />
+        <div className="h-20 bg-spotify-card/80 rounded animate-pulse" />
+        <div className="h-12 bg-spotify-card/80 rounded animate-pulse" />
+      </div>
+    </div>
+  );
 
   return (
     <>
@@ -207,7 +220,7 @@ function EditPlaylistPage() {
                 className="btn-spotify text-sm py-2.5 px-8 flex items-center gap-2 disabled:opacity-50"
               >
                 {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
-                {isSubmitting ? 'Saving...' : 'Save Changes'}
+                {isSubmitting ? 'Saving' : 'Save Changes'}
               </button>
             </div>
 
@@ -232,8 +245,9 @@ function EditPlaylistPage() {
           onConfirm={handleDeletePlaylist}
           title="Hapus Playlist"
           description={`Apakah Anda yakin ingin menghapus playlist "${playlist.name}"? Tindakan ini tidak dapat dibatalkan.`}
-          confirmLabel={isDeleting ? 'Menghapus...' : 'Hapus'}
+          confirmLabel={isDeleting ? 'Menghapus' : 'Hapus'}
           variant="danger"
+          isLoading={isDeleting}
         />
       )}
     </>

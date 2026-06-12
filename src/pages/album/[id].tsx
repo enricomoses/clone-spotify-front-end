@@ -8,7 +8,7 @@ import { useRequireAuth } from '@/hooks/useRequireAuth';
 import { usePlayerStore } from '@/stores/usePlayerStore';
 import SongList from '@/components/song/SongList';
 import ShareButton from '@/components/social/ShareButton';
-import { PageLoading } from '@/components/ui/Spinner';
+import { BannerSkeleton } from '@/components/ui/SkeletonCard';
 import type { Album } from '@/types';
 
 export default function AlbumDetailPage() {
@@ -22,7 +22,7 @@ export default function AlbumDetailPage() {
     fetcher
   );
 
-  if (isLoading || !album) return <PageLoading />;
+  if (isLoading || !album) return <BannerSkeleton />;
 
   const songCount = album.songs?.length || 0;
 
@@ -44,14 +44,14 @@ export default function AlbumDetailPage() {
       <div className="-mt-[60px]">
         {/* Banner */}
         <div
-          className="relative flex items-end gap-6 px-8 pt-20 pb-8"
+          className="relative flex flex-col sm:flex-row items-center sm:items-end gap-4 sm:gap-6 px-4 sm:px-8 pt-20 pb-6 sm:pb-8"
           style={{
             background: 'linear-gradient(transparent 0, rgba(0,0,0,.5) 100%), linear-gradient(135deg, #1a365d 0%, #2d1b69 50%, #1a365d 100%)',
             minHeight: '340px',
           }}
         >
           {/* Album Cover */}
-          <div className="w-56 h-56 shrink-0 rounded-md overflow-hidden shadow-2xl shadow-black/50">
+          <div className="w-36 h-36 sm:w-48 md:w-56 sm:h-48 md:h-56 shrink-0 rounded-md overflow-hidden shadow-2xl shadow-black/50">
             {album.cover_image ? (
               <img
                 src={album.cover_image}
@@ -66,9 +66,9 @@ export default function AlbumDetailPage() {
           </div>
 
           {/* Album Info */}
-          <div className="flex flex-col justify-end">
-            <p className="text-sm font-bold uppercase text-white/80 mb-1">Album</p>
-            <h1 className="text-5xl font-black text-white mb-4 leading-tight">
+          <div className="flex flex-col items-center sm:items-start justify-end text-center sm:text-left">
+            <p className="text-xs sm:text-sm font-bold uppercase text-white/80 mb-1">Album</p>
+            <h1 className="text-3xl sm:text-5xl font-black text-white mb-2 sm:mb-4 leading-tight">
               {album.title}
             </h1>
             <div className="flex items-center gap-1 text-sm text-white/80 flex-wrap">
@@ -109,7 +109,7 @@ export default function AlbumDetailPage() {
             }}
           />
 
-          <div className="relative z-10 px-8 py-6">
+          <div className="relative z-10 px-4 sm:px-8 py-6">
             {/* Controls */}
             <div className="flex items-center gap-6 mb-6">
               <button

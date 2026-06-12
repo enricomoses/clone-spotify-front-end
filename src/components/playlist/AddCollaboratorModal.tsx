@@ -4,6 +4,7 @@ import { X, UserPlus, Trash2, Loader2, Shield, Edit3 } from 'lucide-react';
 import UserAutocomplete from '@/components/ui/UserAutocomplete';
 import { useAuthStore } from '@/stores/useAuthStore';
 import api from '@/lib/axios';
+import { useToastStore } from '@/components/ui/Toast';
 import type { PlaylistCollaborator, User } from '@/types';
 
 interface AddCollaboratorModalProps {
@@ -23,22 +24,20 @@ export default function AddCollaboratorModal({
   const [isAdding, setIsAdding] = useState(false);
   const [removingId, setRemovingId] = useState<string | null>(null);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const addToast = useToastStore((s) => s.addToast);
 
   const handleAddCollaborator = async (selectedUser: User) => {
     if (!user) return;
     setIsAdding(true);
     setError('');
-    setSuccess('');
 
     try {
       await api.post(`/playlists/${playlistId}/collaborators`, {
         user_id: selectedUser.id_user,
         id_user: user.id_user,
       });
-      setSuccess(`${selectedUser.name} berhasil ditambahkan sebagai Editor`);
+      addToast(`${selectedUser.name} berhasil ditambahkan sebagai Editor`, 'success');
       mutate(`/playlists/${playlistId}`);
-      setTimeout(() => setSuccess(''), 3000);
     } catch (err: any) {
       const msg = err.response?.data?.message || 'Gagal menambahkan kolaborator';
       setError(msg);
@@ -97,11 +96,6 @@ export default function AddCollaboratorModal({
           {error && (
             <div className="bg-red-500/20 border border-red-500/30 text-red-300 px-3 py-2 rounded-lg text-xs">
               {error}
-            </div>
-          )}
-          {success && (
-            <div className="bg-spotify-green/20 border border-spotify-green/30 text-spotify-green px-3 py-2 rounded-lg text-xs">
-              {success}
             </div>
           )}
 

@@ -6,7 +6,7 @@ import { fetcher } from '@/lib/fetcher';
 import { withAuth } from '@/utils/withAuth';
 import FollowButton from '@/components/social/FollowButton';
 import PlaylistCard from '@/components/playlist/PlaylistCard';
-import { PageLoading } from '@/components/ui/Spinner';
+import { ProfileSkeleton } from '@/components/ui/SkeletonCard';
 import type { User as UserType, Playlist } from '@/types';
 
 function UserProfilePage() {
@@ -20,7 +20,7 @@ function UserProfilePage() {
 
   const { data: playlists } = useSWR<Playlist[]>('/playlists', fetcher);
 
-  if (isLoading || !userData) return <PageLoading />;
+  if (isLoading || !userData) return <ProfileSkeleton />;
 
   const userPlaylists = playlists?.filter((p) => p.id_user === userData.id_user) || [];
 
@@ -33,7 +33,7 @@ function UserProfilePage() {
       <div className="-mt-[60px]">
         {/* Banner */}
         <div
-          className="relative flex items-end gap-6 px-8 pt-24 pb-8"
+          className="relative flex flex-col sm:flex-row items-center sm:items-end gap-4 sm:gap-6 px-4 sm:px-8 pt-20 sm:pt-24 pb-6 sm:pb-8"
           style={{
             background:
               'linear-gradient(transparent 0, rgba(0,0,0,.5) 100%), linear-gradient(135deg, #4338ca 0%, #1e1b4b 100%)',
@@ -41,7 +41,7 @@ function UserProfilePage() {
           }}
         >
           {/* Avatar */}
-          <div className="w-48 h-48 shrink-0 rounded-full overflow-hidden shadow-2xl shadow-black/50">
+          <div className="w-32 h-32 sm:w-44 md:w-48 sm:h-44 md:h-48 shrink-0 rounded-full overflow-hidden shadow-2xl shadow-black/50">
             {userData.profile_picture ? (
               <img
                 src={userData.profile_picture}
@@ -56,14 +56,14 @@ function UserProfilePage() {
           </div>
 
           {/* Info */}
-          <div className="flex flex-col justify-end">
-            <p className="text-sm font-bold uppercase text-white/80 mb-1">
+          <div className="flex flex-col items-center sm:items-start justify-end text-center sm:text-left">
+            <p className="text-xs sm:text-sm font-bold uppercase text-white/80 mb-1">
               Profile
             </p>
-            <h1 className="text-5xl font-black text-white mb-3 leading-tight">
+            <h1 className="text-3xl sm:text-5xl font-black text-white mb-2 sm:mb-3 leading-tight">
               {userData.name}
             </h1>
-            <div className="flex items-center gap-4 text-sm text-white/70">
+            <div className="flex items-center gap-3 sm:gap-4 text-xs sm:text-sm text-white/70 flex-wrap justify-center sm:justify-start">
               {userPlaylists.length > 0 && (
                 <span className="flex items-center gap-1">
                   <ListMusic className="w-4 h-4" />
@@ -81,7 +81,7 @@ function UserProfilePage() {
         </div>
 
         {/* Content */}
-        <div className="px-8 py-6">
+        <div className="px-4 sm:px-8 py-6">
           {/* Follow */}
           <div className="mb-8">
             <FollowButton size="md" />

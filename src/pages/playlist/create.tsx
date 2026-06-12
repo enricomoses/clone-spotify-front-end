@@ -12,6 +12,7 @@ import { fetcher } from '@/lib/fetcher';
 import api from '@/lib/axios';
 import type { PlaylistCategory } from '@/types';
 import ImageUpload from '@/components/ui/ImageUpload';
+import { useToastStore } from '@/components/ui/Toast';
 
 const createPlaylistSchema = z.object({
   name: z.string().min(1, 'Nama playlist wajib diisi'),
@@ -27,6 +28,7 @@ function CreatePlaylistPage() {
   const user = useAuthStore((s) => s.user);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const addToast = useToastStore((s) => s.addToast);
 
   const { data: categories } = useSWR<PlaylistCategory[]>(
     '/playlist-categories',
@@ -59,6 +61,7 @@ function CreatePlaylistPage() {
 
       const response = await api.post('/playlists', payload);
       const newPlaylist = response.data.data || response.data;
+      addToast('Playlist berhasil dibuat!', 'success');
       router.push(`/playlist/${newPlaylist.id_playlist}`);
     } catch (err: any) {
       setError('Failed to create playlist. Please try again.');
@@ -181,7 +184,7 @@ function CreatePlaylistPage() {
               className="btn-spotify text-sm py-2.5 px-8 flex items-center gap-2 disabled:opacity-50"
             >
               {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
-              {isSubmitting ? 'Creating...' : 'Create Playlist'}
+              {isSubmitting ? 'Creating' : 'Create Playlist'}
             </button>
           </div>
         </form>

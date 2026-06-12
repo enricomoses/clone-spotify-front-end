@@ -8,6 +8,7 @@ import {
   Plus,
   Trash2,
   UserPlus,
+  Loader2,
 } from 'lucide-react';
 import { fetcher } from '@/lib/fetcher';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
@@ -16,7 +17,8 @@ import { useAuthStore } from '@/stores/useAuthStore';
 import SongList from '@/components/song/SongList';
 import FollowButton from '@/components/social/FollowButton';
 import ShareButton from '@/components/social/ShareButton';
-import { PageLoading } from '@/components/ui/Spinner';
+import { BannerSkeleton } from '@/components/ui/SkeletonCard';
+import { useToastStore } from '@/components/ui/Toast';
 import type { Playlist } from '@/types';
 import api from '@/lib/axios';
 import { useState } from 'react';
@@ -29,6 +31,7 @@ export default function PlaylistDetailPage() {
   const { id } = router.query;
   const playSong = usePlayerStore((s) => s.playSong);
   const { requireAuth, user } = useRequireAuth();
+  const addToast = useToastStore((s) => s.addToast);
   const [showAddSongModal, setShowAddSongModal] = useState(false);
   const [showCollaboratorModal, setShowCollaboratorModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -42,7 +45,7 @@ export default function PlaylistDetailPage() {
     fetcher,
   );
 
-  if (isLoading || !playlist) return <PageLoading />;
+  if (isLoading || !playlist) return <BannerSkeleton />;
 
   const songCount = playlist.songs?.length || 0;
 
@@ -109,8 +112,10 @@ export default function PlaylistDetailPage() {
         id_user: user.id_user,
       });
       mutate(`/playlists/${id}`);
+      addToast('Lagu berhasil dihapus dari playlist', 'success');
     } catch (e) {
       console.error('Failed to remove song', e);
+      addToast('Gagal menghapus lagu', 'error');
     } finally {
       setRemovingSongId(null);
     }
@@ -124,10 +129,11 @@ export default function PlaylistDetailPage() {
         _method: 'DELETE',
       });
       await refreshUser();
+      addToast('Playlist berhasil dihapus', 'success');
       router.push('/home');
     } catch (e) {
       console.error('Failed to delete playlist', e);
-      alert('Gagal menghapus playlist. Silakan coba lagi.');
+      addToast('Gagal menghapus playlist. Silakan coba lagi.', 'error');
     } finally {
       setIsDeleting(false);
       setShowDeleteModal(false);
@@ -145,17 +151,17 @@ export default function PlaylistDetailPage() {
       </Head>
 
       <div className="-mt-[60px]">
-        {/* Banner */}
+        {/* Banner — responsive: stack on mobile */}
         <div
-          className="relative flex items-end gap-6 px-8 pt-20 pb-8"
+          className="relative flex flex-col sm:flex-row items-center sm:items-end gap-4 sm:gap-6 px-4 sm:px-8 pt-20 sm:pt-20 pb-6 sm:pb-8"
           style={{
             background:
               'linear-gradient(transparent 0, rgba(0,0,0,.5) 100%), linear-gradient(135deg, #065f46 0%, #064e3b 50%, #022c22 100%)',
-            minHeight: '340px',
+            minHeight: '280px',
           }}
         >
           {/* Cover */}
-          <div className="w-56 h-56 shrink-0 rounded-md overflow-hidden shadow-2xl shadow-black/50">
+          <div className="w-36 h-36 sm:w-48 md:w-56 sm:h-48 md:h-56 shrink-0 rounded-md overflow-hidden shadow-2xl shadow-black/50">
             {playlist.cover_image ? (
               <img
                 src={playlist.cover_image}
@@ -164,25 +170,25 @@ export default function PlaylistDetailPage() {
               />
             ) : (
               <div className="w-full h-full bg-gradient-to-br from-spotify-card to-spotify-hover flex items-center justify-center">
-                <Music className="w-16 h-16 text-spotify-muted" />
+                <Music className="w-12 sm:w-16 h-12 sm:h-16 text-spotify-muted" />
               </div>
             )}
           </div>
 
           {/* Info */}
-          <div className="flex flex-col justify-end">
-            <p className="text-sm font-bold uppercase text-white/80 mb-1">
+          <div className="flex flex-col items-center sm:items-start justify-end text-center sm:text-left">
+            <p className="text-xs sm:text-sm font-bold uppercase text-white/80 mb-1">
               Playlist
             </p>
-            <h1 className="text-5xl font-black text-white mb-3 leading-tight">
+            <h1 className="text-2xl sm:text-4xl md:text-5xl font-black text-white mb-2 sm:mb-3 leading-tight">
               {playlist.name}
             </h1>
             {playlist.description && (
-              <p className="text-sm text-white/70 mb-2 max-w-lg">
+              <p className="text-xs sm:text-sm text-white/70 mb-2 max-w-lg">
                 {playlist.description}
               </p>
             )}
-            <div className="flex items-center gap-1 text-sm text-white/80">
+            <div className="flex items-center gap-1 text-xs sm:text-sm text-white/80 flex-wrap justify-center sm:justify-start">
               <span className="font-bold text-white">{ownerName}</span>
               {playlist.category && (
                 <>
@@ -205,15 +211,15 @@ export default function PlaylistDetailPage() {
             }}
           />
 
-          <div className="relative z-10 px-8 py-6">
-            {/* Controls */}
-            <div className="flex items-center gap-4 mb-6">
+          <div className="relative z-10 px-4 sm:px-8 py-6">
+            {/* Controls — wrap on mobile */}
+            <div className="flex items-center gap-3 sm:gap-4 mb-6 flex-wrap">
               <button
                 onClick={handlePlayAll}
-                className="w-14 h-14 bg-spotify-green rounded-full flex items-center justify-center hover:scale-110 hover:bg-spotify-green-bright transition-all shadow-lg"
+                className="w-12 h-12 sm:w-14 sm:h-14 bg-spotify-green rounded-full flex items-center justify-center hover:scale-110 hover:bg-spotify-green-bright transition-all shadow-lg"
                 aria-label="Play all"
               >
-                <Play className="w-6 h-6 text-black fill-current ml-0.5" />
+                <Play className="w-5 h-5 sm:w-6 sm:h-6 text-black fill-current ml-0.5" />
               </button>
 
               {/* Follow button (if not owner) */}
@@ -236,11 +242,11 @@ export default function PlaylistDetailPage() {
               {canEdit && (
                 <button
                   onClick={() => setShowAddSongModal(true)}
-                  className="flex items-center gap-1.5 px-4 py-2 bg-white/10 hover:bg-white/20 text-white text-xs font-semibold rounded-full transition-colors"
+                  className="flex items-center gap-1.5 px-3 sm:px-4 py-2 bg-white/10 hover:bg-white/20 text-white text-xs font-semibold rounded-full transition-colors"
                   title="Add Songs"
                 >
                   <Plus className="w-4 h-4" />
-                  Add Songs
+                  <span className="hidden sm:inline">Add Songs</span>
                 </button>
               )}
 
@@ -248,11 +254,11 @@ export default function PlaylistDetailPage() {
               {isOwner && (
                 <button
                   onClick={() => setShowCollaboratorModal(true)}
-                  className="flex items-center gap-1.5 px-4 py-2 bg-white/10 hover:bg-white/20 text-white text-xs font-semibold rounded-full transition-colors"
+                  className="flex items-center gap-1.5 px-3 sm:px-4 py-2 bg-white/10 hover:bg-white/20 text-white text-xs font-semibold rounded-full transition-colors"
                   title="Manage Collaborators"
                 >
                   <UserPlus className="w-4 h-4" />
-                  Collaborators
+                  <span className="hidden sm:inline">Collaborators</span>
                 </button>
               )}
 
@@ -342,18 +348,18 @@ export default function PlaylistDetailPage() {
                           <span className="text-sm text-white truncate">
                             {song.title}
                           </span>
-                          <span className="text-xs text-spotify-muted truncate">
+                          <span className="text-xs text-spotify-muted truncate hidden sm:inline">
                             {song.artists?.map((a) => a.name).join(', ')}
                           </span>
                         </div>
                         <button
                           onClick={() => handleRemoveSong(song.id_song)}
                           disabled={removingSongId === song.id_song}
-                          className="p-1.5 text-spotify-muted hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
+                          className="p-1.5 text-spotify-muted hover:text-red-400 transition-colors sm:opacity-0 sm:group-hover:opacity-100"
                           title="Remove from playlist"
                         >
                           {removingSongId === song.id_song ? (
-                            <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin inline-block" />
+                            <Loader2 className="w-4 h-4 animate-spin" />
                           ) : (
                             <Trash2 className="w-4 h-4" />
                           )}
@@ -394,8 +400,9 @@ export default function PlaylistDetailPage() {
         onConfirm={handleDeletePlaylist}
         title="Hapus Playlist"
         description={`Apakah Anda yakin ingin menghapus playlist "${playlist.name}"? Tindakan ini tidak dapat dibatalkan.`}
-        confirmLabel={isDeleting ? 'Menghapus...' : 'Hapus'}
+        confirmLabel="Hapus"
         variant="danger"
+        isLoading={isDeleting}
       />
 
       <AddSongToPlaylistModal
