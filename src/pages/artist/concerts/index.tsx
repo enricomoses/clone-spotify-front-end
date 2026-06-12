@@ -16,7 +16,7 @@ import {
 import { fetcher } from '@/lib/fetcher';
 import { withArtistAuth } from '@/utils/withArtistAuth';
 import { useArtistStore } from '@/stores/useArtistStore';
-import { GridSkeleton } from '@/components/ui/SkeletonCard';
+import { ArtistConcertsSkeleton } from '@/components/ui/SkeletonCard';
 import { formatDate } from '@/utils/formatDuration';
 import type { Concert, Artist } from '@/types';
 import api from '@/lib/axios';
@@ -106,7 +106,7 @@ function ArtistConcertsPage() {
     }
   };
 
-  if (isLoading) return <GridSkeleton count={6} />;
+  if (isLoading) return <ArtistConcertsSkeleton />;
 
   const allConcerts = concerts || [];
   const now = new Date();

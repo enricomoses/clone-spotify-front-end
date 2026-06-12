@@ -367,4 +367,73 @@ export function ArtistAlbumsSkeleton() {
   );
 }
 
+// Artist concerts page skeleton
+export function ArtistConcertsSkeleton() {
+  return (
+    <div>
+      {/* Header */}
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <Skeleton className="h-8 w-48 mb-2" />
+          <Skeleton className="h-4 w-28" />
+        </div>
+        <Skeleton className="h-10 w-32 rounded-full" />
+      </div>
+
+      {/* Upcoming Section */}
+      <div className="mb-8">
+        <div className="flex items-center gap-2 mb-4">
+          <Skeleton className="w-5 h-5 rounded" />
+          <Skeleton className="h-6 w-32" />
+        </div>
+        <div className="space-y-3">
+          {Array.from({ length: 2 }).map((_, i) => (
+            <div
+              key={i}
+              className="bg-spotify-card/50 border border-spotify-border/20 rounded-lg p-4 flex items-center justify-between"
+            >
+              <div className="flex items-center gap-4">
+                <Skeleton className="w-10 h-10 rounded-lg shrink-0" />
+                <div className="space-y-1.5">
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-3.5 w-24" />
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Skeleton className="h-5 w-16 rounded-full" />
+                <Skeleton className="h-8 w-8 rounded-full" />
+                <Skeleton className="h-8 w-8 rounded-full" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Past Section */}
+      <div>
+        <div className="flex items-center gap-2 mb-4">
+          <Skeleton className="h-6 w-24" />
+        </div>
+        <div className="space-y-2 opacity-60">
+          {Array.from({ length: 1 }).map((_, i) => (
+            <div
+              key={i}
+              className="bg-spotify-card/30 rounded-lg p-4 flex items-center justify-between"
+            >
+              <div className="flex items-center gap-4">
+                <Skeleton className="w-10 h-10 rounded-lg shrink-0" />
+                <div className="space-y-1.5">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-3.5 w-20" />
+                </div>
+              </div>
+              <Skeleton className="h-5 w-14 rounded-full" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default Skeleton;
