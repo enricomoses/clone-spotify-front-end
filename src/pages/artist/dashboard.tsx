@@ -4,7 +4,7 @@ import { Music, Disc3, TrendingUp, BarChart3, Play, Calendar } from 'lucide-reac
 import { withArtistAuth } from '@/utils/withArtistAuth';
 import { useArtistStore } from '@/stores/useArtistStore';
 import { fetcher } from '@/lib/fetcher';
-import { GridSkeleton } from '@/components/ui/SkeletonCard';
+import { ArtistDashboardSkeleton } from '@/components/ui/SkeletonCard';
 import AnalyticsChart from '@/components/artist-portal/AnalyticsChart';
 import type { Song, StreamingHistory, Album } from '@/types';
 import { useMemo } from 'react';
@@ -84,7 +84,7 @@ function ArtistDashboardPage() {
       .filter((item) => item.song);
   }, [artistHistory, artistSongs]);
 
-  if (isLoading) return <GridSkeleton count={6} />;
+  if (isLoading) return <ArtistDashboardSkeleton />;
 
   return (
     <>
