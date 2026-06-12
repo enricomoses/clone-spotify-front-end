@@ -10,10 +10,12 @@ import api from '@/lib/axios';
 import { GridSkeleton } from '@/components/ui/SkeletonCard';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import type { Album } from '@/types';
+import { useToastStore } from '@/components/ui/Toast';
 
 function ArtistAlbumsPage() {
   const artist = useArtistStore((s) => s.artist);
   const { data: allAlbums, isLoading } = useSWR<Album[]>('/albums', fetcher);
+  const addToast = useToastStore((s) => s.addToast);
   const [deleteTarget, setDeleteTarget] = useState<Album | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -44,10 +46,11 @@ function ArtistAlbumsPage() {
         _method: 'DELETE',
       });
       mutate('/albums');
+      addToast('Album berhasil dihapus!', 'success');
       setDeleteTarget(null);
     } catch (err) {
       console.error('Failed to delete album:', err);
-      alert('Failed to delete album. Please try again.');
+      addToast('Gagal menghapus album. Silakan coba lagi.', 'error');
     } finally {
       setIsDeleting(false);
     }

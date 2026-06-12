@@ -12,6 +12,7 @@ import { fetcher } from '@/lib/fetcher';
 import api from '@/lib/axios';
 import type { Album, Artist } from '@/types';
 import ArtistAutocomplete from '@/components/ui/ArtistAutocomplete';
+import { useToastStore } from '@/components/ui/Toast';
 
 const createSongSchema = z.object({
   title: z.string().min(1, 'Judul lagu wajib diisi'),
@@ -25,6 +26,7 @@ type CreateSongForm = z.infer<typeof createSongSchema>;
 function CreateSongPage() {
   const router = useRouter();
   const artist = useArtistStore((s) => s.artist);
+  const addToast = useToastStore((s) => s.addToast);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -73,9 +75,11 @@ function CreateSongPage() {
       };
 
       await api.post('/songs', payload);
+      addToast('Lagu berhasil ditambahkan!', 'success');
       router.push('/artist/songs');
     } catch (err: any) {
       setError('Failed to create song. Please try again.');
+      addToast('Gagal menambahkan lagu. Silakan coba lagi.', 'error');
       console.error(err);
     } finally {
       setIsSubmitting(false);

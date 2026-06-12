@@ -23,6 +23,7 @@ import { formatDate } from '@/utils/formatDuration';
 import type { Artist, ArtistGallery, Concert } from '@/types';
 import { cn } from '@/lib/utils';
 import api from '@/lib/axios';
+import { useToastStore } from '@/components/ui/Toast';
 
 type ArtistTab = 'songs' | 'albums' | 'concerts' | 'gallery';
 
@@ -33,6 +34,7 @@ export default function ArtistProfilePage() {
   const { requireAuth, user } = useRequireAuth();
   const setUser = useAuthStore((s) => s.setUser);
   const refreshUser = useAuthStore((s) => s.refreshUser);
+  const addToast = useToastStore((s) => s.addToast);
   const [activeTab, setActiveTab] = useState<ArtistTab>('songs');
 
   const { data: artist, isLoading } = useSWR<Artist>(
@@ -72,8 +74,10 @@ export default function ArtistProfilePage() {
         artist_id: artist.id_artist,
       });
       await refreshUser();
+      addToast('Berhasil mengikuti artis', 'success');
     } catch (e) {
       console.error('Failed to follow artist', e);
+      addToast('Gagal mengikuti artis', 'error');
       throw e;
     }
   };
@@ -88,8 +92,10 @@ export default function ArtistProfilePage() {
         },
       );
       await refreshUser();
+      addToast('Batal mengikuti artis', 'success');
     } catch (e) {
       console.error('Failed to unfollow artist', e);
+      addToast('Gagal membatalkan mengikuti artis', 'error');
       throw e;
     }
   };

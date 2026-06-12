@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { Artist } from '@/types';
+import { useToastStore } from '@/components/ui/Toast';
 
 const SESSION_DURATION_MS = 4 * 60 * 60 * 1000; // 4 hours
 
@@ -37,6 +38,7 @@ export const useArtistStore = create<ArtistAuthState>()(
         if (typeof document !== 'undefined') {
           document.cookie = 'artist-session=; max-age=0; path=/;';
         }
+        useToastStore.getState().addToast('Logout berhasil.', 'success');
       },
 
       isAuthenticated: () => {

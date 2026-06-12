@@ -12,6 +12,7 @@ import { fetcher } from '@/lib/fetcher';
 import api from '@/lib/axios';
 import type { PodcastCategory } from '@/types';
 import ImageUpload from '@/components/ui/ImageUpload';
+import { useToastStore } from '@/components/ui/Toast';
 
 const createPodcastSchema = z.object({
   name: z.string().min(1, 'Nama podcast wajib diisi'),
@@ -25,6 +26,7 @@ type CreatePodcastForm = z.infer<typeof createPodcastSchema>;
 function CreatePodcastPage() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
+  const addToast = useToastStore((s) => s.addToast);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -59,9 +61,11 @@ function CreatePodcastPage() {
 
       const response = await api.post('/podcasts', payload);
       const newPodcast = response.data.data || response.data;
+      addToast('Podcast berhasil dibuat!', 'success');
       router.push(`/podcast/${newPodcast.id_podcast}`);
     } catch (err: any) {
       setError('Failed to create podcast. Please try again.');
+      addToast('Gagal membuat podcast. Silakan coba lagi.', 'error');
       console.error(err);
     } finally {
       setIsSubmitting(false);

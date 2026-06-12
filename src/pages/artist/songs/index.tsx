@@ -11,10 +11,12 @@ import SongManageRow from '@/components/artist-portal/SongManageRow';
 import { GridSkeleton } from '@/components/ui/SkeletonCard';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import type { Song } from '@/types';
+import { useToastStore } from '@/components/ui/Toast';
 
 function ArtistSongsPage() {
   const artist = useArtistStore((s) => s.artist);
   const { data: allSongs, isLoading } = useSWR<Song[]>('/songs', fetcher);
+  const addToast = useToastStore((s) => s.addToast);
   const [deleteTarget, setDeleteTarget] = useState<Song | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -35,10 +37,11 @@ function ArtistSongsPage() {
     try {
       await api.post(`/songs/${deleteTarget.id_song}`, { _method: 'DELETE' });
       mutate('/songs');
+      addToast('Lagu berhasil dihapus!', 'success');
       setDeleteTarget(null);
     } catch (err) {
       console.error('Failed to delete song:', err);
-      alert('Failed to delete song. Please try again.');
+      addToast('Gagal menghapus lagu. Silakan coba lagi.', 'error');
     } finally {
       setIsDeleting(false);
     }

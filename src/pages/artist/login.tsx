@@ -7,6 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Loader2 } from 'lucide-react';
 import { useArtistStore } from '@/stores/useArtistStore';
+import { useToastStore } from '@/components/ui/Toast';
 import api from '@/lib/axios';
 
 const loginSchema = z.object({
@@ -19,6 +20,7 @@ type LoginForm = z.infer<typeof loginSchema>;
 export default function ArtistLoginPage() {
   const router = useRouter();
   const setArtist = useArtistStore((s) => s.setArtist);
+  const addToast = useToastStore((s) => s.addToast);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -50,12 +52,15 @@ export default function ArtistLoginPage() {
 
       // setArtist will also set the artist-session cookie
       setArtist(artistData);
+      addToast('Login Artis berhasil! Selamat datang di Portal Artis.', 'success');
       router.push('/artist/dashboard');
     } catch (err: any) {
       if (err.response && err.response.status === 401) {
         setError('Email atau password salah');
+        addToast('Login gagal. Silakan periksa kembali email dan password Anda.', 'error');
       } else {
         setError('Terjadi kesalahan. Pastikan server berjalan.');
+        addToast('Login gagal. Terjadi kesalahan koneksi.', 'error');
         console.error(err);
       }
     } finally {

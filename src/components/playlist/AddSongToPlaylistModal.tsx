@@ -5,6 +5,7 @@ import { useAuthStore } from '@/stores/useAuthStore';
 import { fetcher } from '@/lib/fetcher';
 import api from '@/lib/axios';
 import type { Song } from '@/types';
+import { useToastStore } from '@/components/ui/Toast';
 
 interface AddSongToPlaylistModalProps {
   playlistId: string;
@@ -20,6 +21,7 @@ export default function AddSongToPlaylistModal({
   onClose,
 }: AddSongToPlaylistModalProps) {
   const user = useAuthStore((s) => s.user);
+  const addToast = useToastStore((s) => s.addToast);
   const [query, setQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const [addingId, setAddingId] = useState<string | null>(null);
@@ -67,13 +69,15 @@ export default function AddSongToPlaylistModal({
         });
         setAddedIds((prev) => new Set(prev).add(songId));
         mutate(`/playlists/${playlistId}`);
+        addToast('Lagu berhasil ditambahkan ke playlist', 'success');
       } catch (err) {
         console.error('Failed to add song to playlist', err);
+        addToast('Gagal menambahkan lagu ke playlist', 'error');
       } finally {
         setAddingId(null);
       }
     },
-    [playlistId, user]
+    [playlistId, user, addToast]
   );
 
   const formatDuration = (seconds: number) => {

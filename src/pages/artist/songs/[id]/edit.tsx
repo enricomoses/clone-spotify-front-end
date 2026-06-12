@@ -13,6 +13,7 @@ import api from '@/lib/axios';
 import { GridSkeleton } from '@/components/ui/SkeletonCard';
 import type { Song, Album, Artist } from '@/types';
 import ArtistAutocomplete from '@/components/ui/ArtistAutocomplete';
+import { useToastStore } from '@/components/ui/Toast';
 
 const editSongSchema = z.object({
   title: z.string().min(1, 'Judul lagu wajib diisi'),
@@ -27,6 +28,7 @@ function EditSongPage() {
   const router = useRouter();
   const { id } = router.query;
   const artist = useArtistStore((s) => s.artist);
+  const addToast = useToastStore((s) => s.addToast);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -95,9 +97,11 @@ function EditSongPage() {
         artist_ids: collabArtists.map((a) => a.id_artist),
         _method: 'PUT',
       });
+      addToast('Lagu berhasil diperbarui!', 'success');
       router.push('/artist/songs');
     } catch (err: any) {
       setError('Failed to update song. Please try again.');
+      addToast('Gagal memperbarui lagu. Silakan coba lagi.', 'error');
       console.error(err);
     } finally {
       setIsSubmitting(false);

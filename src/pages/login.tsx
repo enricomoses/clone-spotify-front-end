@@ -7,6 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Loader2 } from 'lucide-react';
 import { useAuthStore } from '@/stores/useAuthStore';
+import { useToastStore } from '@/components/ui/Toast';
 import api from '@/lib/axios';
 
 const loginSchema = z.object({
@@ -19,6 +20,7 @@ type LoginForm = z.infer<typeof loginSchema>;
 export default function LoginPage() {
   const router = useRouter();
   const setUser = useAuthStore((s) => s.setUser);
+  const addToast = useToastStore((s) => s.addToast);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -52,6 +54,7 @@ export default function LoginPage() {
 
       // Memasukkan data user ke dalam state management (Zustand)
       setUser(userData);
+      addToast('Login berhasil! Selamat datang kembali.', 'success');
 
       // Cek redirect setelah login (dari guest mode)
       const redirectTo = sessionStorage.getItem('redirectAfterLogin');
@@ -61,8 +64,10 @@ export default function LoginPage() {
       // Menangkap error 401 Unauthorized (Email/Password salah) dari Laravel
       if (err.response && err.response.status === 401) {
         setError('Email atau password salah');
+        addToast('Login gagal. Silakan periksa kembali email dan password Anda.', 'error');
       } else {
         setError('Terjadi kesalahan. Pastikan server berjalan.');
+        addToast('Login gagal. Terjadi kesalahan koneksi.', 'error');
         console.error(err);
       }
     } finally {

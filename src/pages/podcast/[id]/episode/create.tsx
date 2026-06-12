@@ -8,6 +8,7 @@ import { Loader2 } from 'lucide-react';
 import { withAuth } from '@/utils/withAuth';
 import api from '@/lib/axios';
 import ImageUpload from '@/components/ui/ImageUpload';
+import { useToastStore } from '@/components/ui/Toast';
 
 const createEpisodeSchema = z.object({
   title: z.string().min(1, 'Judul episode wajib diisi'),
@@ -24,6 +25,7 @@ type CreateEpisodeForm = z.infer<typeof createEpisodeSchema>;
 function CreateEpisodePage() {
   const router = useRouter();
   const { id } = router.query; // podcast ID
+  const addToast = useToastStore((s) => s.addToast);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -55,9 +57,11 @@ function CreateEpisodePage() {
       };
 
       await api.post('/episodes', payload);
+      addToast('Episode berhasil diunggah!', 'success');
       router.push(`/podcast/${id}`);
     } catch (err: any) {
       setError('Failed to create episode. Please try again.');
+      addToast('Gagal mengunggah episode. Silakan coba lagi.', 'error');
       console.error(err);
     } finally {
       setIsSubmitting(false);

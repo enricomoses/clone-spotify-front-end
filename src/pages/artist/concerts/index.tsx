@@ -21,6 +21,7 @@ import { formatDate } from '@/utils/formatDuration';
 import type { Concert, Artist } from '@/types';
 import api from '@/lib/axios';
 import ArtistAutocomplete from '@/components/ui/ArtistAutocomplete';
+import { useToastStore } from '@/components/ui/Toast';
 
 const concertSchema = z.object({
   location: z.string().min(1, 'Lokasi wajib diisi'),
@@ -33,6 +34,7 @@ type ConcertForm = z.infer<typeof concertSchema>;
 
 function ArtistConcertsPage() {
   const artist = useArtistStore((s) => s.artist);
+  const addToast = useToastStore((s) => s.addToast);
   const [showForm, setShowForm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -76,11 +78,13 @@ function ArtistConcertsPage() {
         artist_ids: collabArtists.map((a) => a.id_artist),
       });
       mutate(`/artists/${artist.id_artist}/concerts`);
+      addToast('Konser berhasil ditambahkan!', 'success');
       reset();
       setCollabArtists(artist ? [artist] : []);
       setShowForm(false);
     } catch (err: any) {
       setError('Gagal membuat konser. Coba lagi.');
+      addToast('Gagal menambahkan konser. Silakan coba lagi.', 'error');
     } finally {
       setIsSubmitting(false);
     }
@@ -93,8 +97,10 @@ function ArtistConcertsPage() {
     try {
       await api.post(`/concerts/${concertId}`, { _method: 'DELETE' });
       mutate(`/artists/${artist.id_artist}/concerts`);
+      addToast('Konser berhasil dihapus!', 'success');
     } catch (e) {
       console.error('Failed to delete concert', e);
+      addToast('Gagal menghapus konser. Silakan coba lagi.', 'error');
     } finally {
       setDeletingId(null);
     }

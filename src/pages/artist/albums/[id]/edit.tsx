@@ -14,6 +14,7 @@ import { GridSkeleton } from '@/components/ui/SkeletonCard';
 import type { Album, Artist } from '@/types';
 import ImageUpload from '@/components/ui/ImageUpload';
 import ArtistAutocomplete from '@/components/ui/ArtistAutocomplete';
+import { useToastStore } from '@/components/ui/Toast';
 
 const editAlbumSchema = z.object({
   title: z.string().min(1, 'Judul album wajib diisi'),
@@ -27,6 +28,7 @@ function EditAlbumPage() {
   const router = useRouter();
   const { id } = router.query;
   const artist = useArtistStore((s) => s.artist);
+  const addToast = useToastStore((s) => s.addToast);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -87,9 +89,11 @@ function EditAlbumPage() {
         artist_ids: collabArtists.map((a) => a.id_artist),
         _method: 'PUT',
       });
+      addToast('Album berhasil diperbarui!', 'success');
       router.push('/artist/albums');
     } catch (err: any) {
       setError('Failed to update album. Please try again.');
+      addToast('Gagal memperbarui album. Silakan coba lagi.', 'error');
       console.error(err);
     } finally {
       setIsSubmitting(false);

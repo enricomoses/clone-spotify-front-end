@@ -11,6 +11,7 @@ import api from '@/lib/axios';
 import ImageUpload from '@/components/ui/ImageUpload';
 import ArtistAutocomplete from '@/components/ui/ArtistAutocomplete';
 import type { Artist } from '@/types';
+import { useToastStore } from '@/components/ui/Toast';
 
 const createAlbumSchema = z.object({
   title: z.string().min(1, 'Judul album wajib diisi'),
@@ -23,6 +24,7 @@ type CreateAlbumForm = z.infer<typeof createAlbumSchema>;
 function CreateAlbumPage() {
   const router = useRouter();
   const artist = useArtistStore((s) => s.artist);
+  const addToast = useToastStore((s) => s.addToast);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -61,9 +63,11 @@ function CreateAlbumPage() {
         cover_image: data.cover_image || undefined,
         artist_ids: collabArtists.map((a) => a.id_artist),
       });
+      addToast('Album berhasil dibuat!', 'success');
       router.push('/artist/albums');
     } catch (err: any) {
       setError('Failed to create album. Please try again.');
+      addToast('Gagal membuat album. Silakan coba lagi.', 'error');
       console.error(err);
     } finally {
       setIsSubmitting(false);

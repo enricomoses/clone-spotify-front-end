@@ -41,6 +41,7 @@ export default function AddCollaboratorModal({
     } catch (err: any) {
       const msg = err.response?.data?.message || 'Gagal menambahkan kolaborator';
       setError(msg);
+      addToast(msg, 'error');
       setTimeout(() => setError(''), 4000);
     } finally {
       setIsAdding(false);
@@ -58,9 +59,11 @@ export default function AddCollaboratorModal({
         id_user: user.id_user,
       });
       mutate(`/playlists/${playlistId}`);
+      addToast('Kolaborator berhasil dihapus', 'success');
     } catch (err: any) {
       const msg = err.response?.data?.message || 'Gagal menghapus kolaborator';
       setError(msg);
+      addToast(msg, 'error');
       setTimeout(() => setError(''), 4000);
     } finally {
       setRemovingId(null);

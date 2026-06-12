@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { User } from '@/types';
 import api from '@/lib/axios';
+import { useToastStore } from '@/components/ui/Toast';
 
 const SESSION_DURATION_MS = 2 * 60 * 60 * 1000; // 2 hours
 
@@ -33,6 +34,7 @@ export const useAuthStore = create<AuthState>()(
         if (typeof window !== 'undefined') {
           localStorage.removeItem('token');
         }
+        useToastStore.getState().addToast('Logout berhasil.', 'success');
       },
 
       isAuthenticated: () => {

@@ -4,7 +4,6 @@ import Header from './Header';
 import PlayerBar from '@/components/player/PlayerBar';
 import BottomNav from './BottomNav';
 import GuestBanner from '@/components/ui/GuestBanner';
-import ToastContainer from '@/components/ui/Toast';
 import { useAuthStore } from '@/stores/useAuthStore';
 
 interface MainLayoutProps {
@@ -39,8 +38,6 @@ export default function MainLayout({ children }: MainLayoutProps) {
       {/* Mobile Bottom Navigation (below lg) */}
       <BottomNav />
 
-      {/* Toast Notifications */}
-      <ToastContainer />
     </div>
   );
 }

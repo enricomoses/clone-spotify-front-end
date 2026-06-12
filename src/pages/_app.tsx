@@ -6,6 +6,7 @@ import MainLayout from '@/components/layout/MainLayout';
 import ArtistLayout from '@/components/layout/ArtistLayout';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useArtistStore } from '@/stores/useArtistStore';
+import ToastContainer from '@/components/ui/Toast';
 
 // Pages that don't use any layout (full-screen auth pages)
 const noLayoutPages = ['/login', '/register', '/artist/login', '/', '/404', '/500'];
@@ -43,22 +44,33 @@ export default function App({ Component, pageProps }: AppProps) {
 
   // No layout for auth pages and landing
   if (isNoLayoutPage(pathname)) {
-    return <Component {...pageProps} />;
+    return (
+      <>
+        <Component {...pageProps} />
+        <ToastContainer />
+      </>
+    );
   }
 
   // Artist portal layout
   if (isArtistPortalPage(pathname)) {
     return (
-      <ArtistLayout>
-        <Component {...pageProps} />
-      </ArtistLayout>
+      <>
+        <ArtistLayout>
+          <Component {...pageProps} />
+        </ArtistLayout>
+        <ToastContainer />
+      </>
     );
   }
 
   // Default: Main user layout (sidebar + player bar)
   return (
-    <MainLayout>
-      <Component {...pageProps} />
-    </MainLayout>
+    <>
+      <MainLayout>
+        <Component {...pageProps} />
+      </MainLayout>
+      <ToastContainer />
+    </>
   );
 }

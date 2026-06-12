@@ -7,6 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Loader2 } from 'lucide-react';
 import api from '@/lib/axios';
+import { useToastStore } from '@/components/ui/Toast';
 
 const registerSchema = z.object({
   name: z.string().min(1, 'Nama wajib diisi'),
@@ -21,6 +22,7 @@ type RegisterForm = z.infer<typeof registerSchema>;
 
 export default function RegisterPage() {
   const router = useRouter();
+  const addToast = useToastStore((s) => s.addToast);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -38,12 +40,15 @@ export default function RegisterPage() {
 
     try {
       await api.post('/users', data);
+      addToast('Pendaftaran berhasil! Silakan login.', 'success');
       router.push('/login');
     } catch (err: any) {
       if (err.response?.status === 422) {
         setError('Email sudah terdaftar atau data tidak valid.');
+        addToast('Pendaftaran gagal: Email sudah terdaftar atau data tidak valid.', 'error');
       } else {
         setError('Terjadi kesalahan. Pastikan server berjalan.');
+        addToast('Pendaftaran gagal. Terjadi kesalahan koneksi.', 'error');
       }
       console.error(err);
     } finally {

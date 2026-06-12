@@ -11,12 +11,14 @@ import type { Podcast } from '@/types';
 import Link from 'next/link';
 import { useAuthStore } from '@/stores/useAuthStore';
 import api from '@/lib/axios';
+import { useToastStore } from '@/components/ui/Toast';
 
 function PodcastDetailPage() {
   const router = useRouter();
   const { id } = router.query;
   const user = useAuthStore((s) => s.user);
   const refreshUser = useAuthStore((s) => s.refreshUser);
+  const addToast = useToastStore((s) => s.addToast);
 
   const { data: podcast, isLoading } = useSWR<Podcast>(
     id ? `/podcasts/${id}` : null,
@@ -38,8 +40,10 @@ function PodcastDetailPage() {
         podcast_id: podcast.id_podcast,
       });
       await refreshUser();
+      addToast('Berhasil mengikuti podcast', 'success');
     } catch (e) {
       console.error('Failed to follow podcast', e);
+      addToast('Gagal mengikuti podcast', 'error');
       throw e;
     }
   };
@@ -52,8 +56,10 @@ function PodcastDetailPage() {
         { _method: 'DELETE' }
       );
       await refreshUser();
+      addToast('Batal mengikuti podcast', 'success');
     } catch (e) {
       console.error('Failed to unfollow podcast', e);
+      addToast('Gagal membatalkan mengikuti podcast', 'error');
       throw e;
     }
   };
