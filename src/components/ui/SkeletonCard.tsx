@@ -436,4 +436,101 @@ export function ArtistConcertsSkeleton() {
   );
 }
 
+// Artist analytics page skeleton
+export function ArtistAnalyticsSkeleton() {
+  return (
+    <div>
+      {/* Header */}
+      <Skeleton className="h-8 w-64 mb-6" />
+
+      {/* Summary Stats */}
+      <div className="grid grid-cols-3 gap-4 mb-8">
+        {[
+          { color: 'bg-spotify-green/20' },
+          { color: 'bg-blue-400/20' },
+          { color: 'bg-orange-400/20' },
+        ].map((item, i) => (
+          <div
+            key={i}
+            className="bg-spotify-card/40 border border-spotify-border/20 rounded-xl p-5 animate-pulse"
+          >
+            <Skeleton className={`w-5 h-5 rounded mb-2 ${item.color}`} />
+            <Skeleton className="h-8 w-20 mb-2" />
+            <Skeleton className="h-3.5 w-24" />
+          </div>
+        ))}
+      </div>
+
+      {/* Chart Block */}
+      <div className="bg-spotify-card/30 border border-spotify-border/20 rounded-xl p-6 mb-8">
+        <div className="flex items-center gap-2 mb-6 animate-pulse">
+          <Skeleton className="w-5 h-5 rounded" />
+          <Skeleton className="h-6 w-48" />
+        </div>
+        {/* Simulating a chart with 12 vertical bar outlines in anim pulse */}
+        <div className="h-64 flex items-end gap-3 px-4 pt-4 border-b border-spotify-border/10 animate-pulse">
+          {Array.from({ length: 12 }).map((_, i) => {
+            const heights = [
+              'h-1/4',
+              'h-1/2',
+              'h-3/4',
+              'h-1/3',
+              'h-2/3',
+              'h-5/6',
+              'h-1/2',
+              'h-1/4',
+              'h-3/4',
+              'h-2/3',
+              'h-1/3',
+              'h-1/2',
+            ];
+            return (
+              <Skeleton
+                key={i}
+                className={`flex-1 ${heights[i]} rounded-t-sm`}
+              />
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Detailed Table Block */}
+      <div className="bg-spotify-card/30 border border-spotify-border/20 rounded-xl overflow-hidden">
+        <div className="px-6 py-4 border-b border-spotify-border/20 animate-pulse">
+          <Skeleton className="h-6 w-40" />
+        </div>
+        <div className="px-6 py-3 border-b border-spotify-border/20 grid grid-cols-[40px_1fr_100px_100px_100px_100px] gap-4 items-center animate-pulse">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton
+              key={i}
+              className={`h-3 w-12 ${i >= 3 ? 'ml-auto' : ''}`}
+            />
+          ))}
+        </div>
+        <div className="divide-y divide-spotify-border/10">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div
+              key={i}
+              className="px-6 py-4 grid grid-cols-[40px_1fr_100px_100px_100px_100px] gap-4 items-center animate-pulse"
+            >
+              <Skeleton className="h-4 w-4" />
+              <div className="flex items-center gap-3">
+                <Skeleton className="w-10 h-10 rounded shrink-0" />
+                <div className="space-y-1.5 flex-1">
+                  <Skeleton className="h-4 w-1/3" />
+                  <Skeleton className="h-3 w-1/4" />
+                </div>
+              </div>
+              <Skeleton className="h-4 w-12" />
+              <Skeleton className="h-4 w-12 ml-auto" />
+              <Skeleton className="h-4 w-12 ml-auto" />
+              <Skeleton className="h-4 w-12 ml-auto" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default Skeleton;

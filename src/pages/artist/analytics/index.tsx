@@ -7,7 +7,7 @@ import { useArtistStore } from '@/stores/useArtistStore';
 import { fetcher } from '@/lib/fetcher';
 import { formatDuration } from '@/utils/formatDuration';
 import AnalyticsChart from '@/components/artist-portal/AnalyticsChart';
-import { GridSkeleton } from '@/components/ui/SkeletonCard';
+import { ArtistAnalyticsSkeleton } from '@/components/ui/SkeletonCard';
 import type { Song, StreamingHistory } from '@/types';
 
 function ArtistAnalyticsPage() {
@@ -71,7 +71,7 @@ function ArtistAnalyticsPage() {
       .sort((a, b) => b.total - a.total);
   }, [artistSongs, artistHistory]);
 
-  if (isLoading) return <GridSkeleton count={6} />;
+  if (isLoading) return <ArtistAnalyticsSkeleton />;
 
   return (
     <>
