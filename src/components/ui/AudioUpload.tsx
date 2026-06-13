@@ -70,9 +70,9 @@ export default function AudioUpload({
       setError('Format audio harus MP3, WAV, AAC, M4A, atau OGG');
       return false;
     }
-    // 20MB limit
-    if (file.size > 20 * 1024 * 1024) {
-      setError('Ukuran audio maksimal adalah 20MB');
+    // 4MB limit
+    if (file.size > 4 * 1024 * 1024) {
+      setError('Ukuran audio maksimal adalah 4MB');
       return false;
     }
     setError(null);
@@ -255,7 +255,7 @@ export default function AudioUpload({
                 </p>
               </div>
               <p className="text-[10px] text-spotify-muted/70">
-                Mendukung MP3, WAV, AAC, M4A, OGG (Maks. 20MB)
+                Mendukung MP3, WAV, AAC, M4A, OGG (Maks. 4MB)
               </p>
             </div>
           )}

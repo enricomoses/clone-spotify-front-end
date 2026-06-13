@@ -13,6 +13,7 @@ interface PlayerState {
   isShuffle: boolean;
   repeatMode: RepeatMode;
   isQueueOpen: boolean;
+  seekTo: number | null;
 
   // Actions
   playSong: (song: Song, queue?: Song[]) => void;
@@ -23,6 +24,7 @@ interface PlayerState {
   prevSong: () => void;
   setCurrentTime: (time: number) => void;
   setDuration: (duration: number) => void;
+  triggerSeek: (time: number) => void;
   setVolume: (volume: number) => void;
   toggleShuffle: () => void;
   cycleRepeat: () => void;
@@ -43,6 +45,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   isShuffle: false,
   repeatMode: 'off',
   isQueueOpen: false,
+  seekTo: null,
 
   // Play a specific song, optionally setting the full queue
   playSong: (song, queue) => {
@@ -68,8 +71,8 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
     let nextIndex: number;
 
     if (repeatMode === 'one') {
-      // Repeat current song
-      set({ currentTime: 0, isPlaying: true });
+      // Repeat current song — trigger actual seek
+      set({ currentTime: 0, seekTo: 0, isPlaying: true });
       return;
     }
 
@@ -102,7 +105,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
 
     // If more than 3 seconds in, restart current song
     if (currentTime > 3) {
-      set({ currentTime: 0 });
+      set({ currentTime: 0, seekTo: 0 });
       return;
     }
 
@@ -117,6 +120,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
 
   setCurrentTime: (time) => set({ currentTime: time }),
   setDuration: (duration) => set({ duration }),
+  triggerSeek: (time) => set({ seekTo: time, currentTime: time }),
   setVolume: (volume) => set({ volume: Math.max(0, Math.min(1, volume)) }),
   toggleShuffle: () => set((s) => ({ isShuffle: !s.isShuffle })),
   cycleRepeat: () =>

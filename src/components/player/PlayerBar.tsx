@@ -19,6 +19,7 @@ import {
 import { cn } from '@/lib/utils';
 import { useRef, useState, useCallback, useEffect } from 'react';
 import api from '@/lib/axios';
+import { useAudioEngine } from '@/hooks/useAudioEngine';
 
 export default function PlayerBar() {
   const {
@@ -38,9 +39,13 @@ export default function PlayerBar() {
     cycleRepeat,
     toggleQueue,
     isQueueOpen,
+    triggerSeek,
   } = usePlayerStore();
 
   const user = useAuthStore((s) => s.user);
+
+  // Mount the audio engine — this drives actual Howler.js playback
+  useAudioEngine();
 
   const [isDragging, setIsDragging] = useState(false);
   const [dragTime, setDragTime] = useState(0);
@@ -129,9 +134,9 @@ export default function PlayerBar() {
       if (!progressRef.current || !duration) return;
       const rect = progressRef.current.getBoundingClientRect();
       const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-      setCurrentTime(ratio * duration);
+      triggerSeek(ratio * duration);
     },
-    [duration, setCurrentTime]
+    [duration, triggerSeek]
   );
 
   // Volume bar interaction
