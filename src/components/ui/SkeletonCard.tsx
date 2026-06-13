@@ -1,13 +1,20 @@
 import { cn } from '@/lib/utils';
 
 // Base skeleton pulse block
-function Skeleton({ className }: { className?: string }) {
+function Skeleton({
+  className,
+  style,
+}: {
+  className?: string;
+  style?: React.CSSProperties;
+}) {
   return (
     <div
       className={cn(
         'animate-pulse rounded-md bg-spotify-card/80',
         className
       )}
+      style={style}
     />
   );
 }
@@ -473,30 +480,22 @@ export function ArtistAnalyticsSkeleton() {
           <Skeleton className="w-5 h-5 rounded" />
           <Skeleton className="h-6 w-48" />
         </div>
-        {/* Simulating a chart with 12 vertical bar outlines in anim pulse */}
-        <div className="h-64 flex items-end gap-3 px-4 pt-4 border-b border-spotify-border/10 animate-pulse">
-          {Array.from({ length: 12 }).map((_, i) => {
-            const heights = [
-              'h-1/4',
-              'h-1/2',
-              'h-3/4',
-              'h-1/3',
-              'h-2/3',
-              'h-5/6',
-              'h-1/2',
-              'h-1/4',
-              'h-3/4',
-              'h-2/3',
-              'h-1/3',
-              'h-1/2',
-            ];
-            return (
-              <Skeleton
-                key={i}
-                className={`flex-1 ${heights[i]} rounded-t-sm`}
-              />
-            );
-          })}
+        {/* Simulating horizontal progress bars for top songs */}
+        <div className="space-y-4 animate-pulse">
+          {[85, 60, 45, 30, 15].map((width, idx) => (
+            <div key={idx} className="flex items-center gap-3">
+              <Skeleton className="w-6 h-4 rounded shrink-0" />
+              <div className="flex-1 min-w-0">
+                <div className="flex justify-between items-center mb-2">
+                  <Skeleton className="h-4 w-1/3" />
+                  <Skeleton className="h-3.5 w-20" />
+                </div>
+                <div className="w-full h-2.5 bg-spotify-card rounded-full overflow-hidden">
+                  <Skeleton className="h-full rounded-full" style={{ width: `${width}%` }} />
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 
@@ -520,12 +519,9 @@ export function ArtistAnalyticsSkeleton() {
               className="px-6 py-4 grid grid-cols-[40px_1fr_100px_100px_100px_100px] gap-4 items-center animate-pulse"
             >
               <Skeleton className="h-4 w-4" />
-              <div className="flex items-center gap-3">
-                <Skeleton className="w-10 h-10 rounded shrink-0" />
-                <div className="space-y-1.5 flex-1">
-                  <Skeleton className="h-4 w-1/3" />
-                  <Skeleton className="h-3 w-1/4" />
-                </div>
+              <div className="space-y-1.5 flex-1">
+                <Skeleton className="h-4 w-1/3" />
+                <Skeleton className="h-3 w-1/4" />
               </div>
               <Skeleton className="h-4 w-12" />
               <Skeleton className="h-4 w-12 ml-auto" />

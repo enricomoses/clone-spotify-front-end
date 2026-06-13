@@ -12,13 +12,12 @@ import { fetcher } from '@/lib/fetcher';
 import api from '@/lib/axios';
 import type { Album, Artist } from '@/types';
 import ArtistAutocomplete from '@/components/ui/ArtistAutocomplete';
+import AudioUpload from '@/components/ui/AudioUpload';
 import { useToastStore } from '@/components/ui/Toast';
 
 const createSongSchema = z.object({
   title: z.string().min(1, 'Judul lagu wajib diisi'),
-  duration: z.coerce.number().min(1, 'Durasi harus lebih dari 0 detik'),
   id_album: z.string().optional(),
-  audio_url: z.string().url('Audio URL harus valid').optional().or(z.literal('')),
 });
 
 type CreateSongForm = z.infer<typeof createSongSchema>;
@@ -29,6 +28,10 @@ function CreateSongPage() {
   const addToast = useToastStore((s) => s.addToast);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Audio upload state
+  const [audioUrl, setAudioUrl] = useState('');
+  const [audioDuration, setAudioDuration] = useState(0);
 
   // Collaborating artists state — start with current artist
   const [collabArtists, setCollabArtists] = useState<Artist[]>(() =>
@@ -61,16 +64,26 @@ function CreateSongPage() {
     setCollabArtists((prev) => prev.filter((a) => a.id_artist !== artistId));
   };
 
+  const handleAudioChange = (url: string, duration: number) => {
+    setAudioUrl(url);
+    setAudioDuration(duration);
+  };
+
   const onSubmit = async (data: CreateSongForm) => {
+    if (!audioUrl) {
+      setError('Silakan unggah file audio terlebih dahulu.');
+      return;
+    }
+
     setIsSubmitting(true);
     setError('');
 
     try {
       const payload = {
         title: data.title,
-        duration: data.duration,
+        duration: Math.round(audioDuration),
         id_album: data.id_album || undefined,
-        audio_url: data.audio_url || undefined,
+        audio_url: audioUrl,
         artist_ids: collabArtists.map((a) => a.id_artist),
       };
 
@@ -84,6 +97,13 @@ function CreateSongPage() {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  /** Format duration for display */
+  const formatDuration = (seconds: number) => {
+    const m = Math.floor(seconds / 60);
+    const s = Math.floor(seconds % 60);
+    return `${m}:${s.toString().padStart(2, '0')}`;
   };
 
   return (
@@ -118,21 +138,19 @@ function CreateSongPage() {
             )}
           </div>
 
-          {/* Duration */}
+          {/* Audio Upload */}
           <div>
             <label className="block text-sm font-semibold text-white mb-2">
-              Duration (seconds) *
+              Audio File *
             </label>
-            <input
-              {...register('duration')}
-              type="number"
-              min="1"
-              placeholder="e.g. 210"
-              className="w-full bg-spotify-hover border border-spotify-border rounded-md px-4 py-3 text-white placeholder:text-spotify-muted/60 focus:outline-none focus:border-spotify-green focus:ring-1 focus:ring-spotify-green transition-all"
+            <AudioUpload
+              value={audioUrl}
+              onChange={handleAudioChange}
+              folder="songs"
             />
-            {errors.duration && (
-              <p className="mt-1 text-xs text-red-400">
-                {errors.duration.message}
+            {audioDuration > 0 && (
+              <p className="mt-2 text-xs text-spotify-muted">
+                Durasi terdeteksi: <span className="text-white font-medium">{formatDuration(audioDuration)}</span>
               </p>
             )}
           </div>
@@ -153,24 +171,6 @@ function CreateSongPage() {
                 </option>
               ))}
             </select>
-          </div>
-
-          {/* Audio URL */}
-          <div>
-            <label className="block text-sm font-semibold text-white mb-2">
-              Audio URL
-            </label>
-            <input
-              {...register('audio_url')}
-              type="url"
-              placeholder="https://example.com/audio.mp3"
-              className="w-full bg-spotify-hover border border-spotify-border rounded-md px-4 py-3 text-white placeholder:text-spotify-muted/60 focus:outline-none focus:border-spotify-green focus:ring-1 focus:ring-spotify-green transition-all"
-            />
-            {errors.audio_url && (
-              <p className="mt-1 text-xs text-red-400">
-                {errors.audio_url.message}
-              </p>
-            )}
           </div>
 
           {/* Collaborating Artists */}

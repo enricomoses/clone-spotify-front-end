@@ -35,6 +35,19 @@ function ArtistSongsPage() {
     setIsDeleting(true);
 
     try {
+      // Delete audio from Cloudinary first to free up storage
+      if (deleteTarget.audio_url) {
+        try {
+          await api.post('/media/audio/delete', {
+            audio_url: deleteTarget.audio_url,
+            _method: 'DELETE',
+          });
+        } catch (err) {
+          console.warn('Failed to delete audio from Cloudinary:', err);
+          // Continue with song deletion even if Cloudinary cleanup fails
+        }
+      }
+
       await api.post(`/songs/${deleteTarget.id_song}`, { _method: 'DELETE' });
       mutate('/songs');
       addToast('Lagu berhasil dihapus!', 'success');
