@@ -2,7 +2,7 @@ import { useRouter } from 'next/router';
 import Head from 'next/head';
 import Link from 'next/link';
 import useSWR from 'swr';
-import { Play, Music } from 'lucide-react';
+import { Play, Music, User } from 'lucide-react';
 import { fetcher } from '@/lib/fetcher';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
 import { usePlayerStore } from '@/stores/usePlayerStore';
@@ -71,23 +71,41 @@ export default function AlbumDetailPage() {
             <h1 className="text-3xl sm:text-5xl font-black text-white mb-2 sm:mb-4 leading-tight">
               {album.title}
             </h1>
-            <div className="flex items-center gap-1 text-sm text-white/80 flex-wrap">
-              {/* Many-to-many artists */}
-              {album.artists && album.artists.length > 0 ? (
-                album.artists.map((artist, idx) => (
-                  <span key={artist.id_artist}>
-                    <Link
-                      href={`/artist/${artist.id_artist}`}
-                      className="font-bold text-white hover:underline"
-                    >
-                      {artist.name}
-                    </Link>
-                    {idx < album.artists!.length - 1 && <span>, </span>}
-                  </span>
-                ))
-              ) : (
-                <span className="font-bold text-white">Unknown Artist</span>
+            <div className="flex items-center gap-2 text-sm text-white/80 flex-wrap">
+              {/* Profile image of first artist if available */}
+              {album.artists && album.artists.length > 0 && (
+                <div className="w-6 h-6 rounded-full overflow-hidden bg-spotify-dark shrink-0">
+                  {album.artists[0].profile_picture ? (
+                    <img
+                      src={album.artists[0].profile_picture}
+                      alt={album.artists[0].name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <User className="w-3.5 h-3.5 text-spotify-muted" />
+                    </div>
+                  )}
+                </div>
               )}
+              {/* Many-to-many artists */}
+              <div className="flex items-center gap-1">
+                {album.artists && album.artists.length > 0 ? (
+                  album.artists.map((artist, idx) => (
+                    <span key={artist.id_artist}>
+                      <Link
+                        href={`/artist/${artist.id_artist}`}
+                        className="font-bold text-white hover:underline"
+                      >
+                        {artist.name}
+                      </Link>
+                      {idx < album.artists!.length - 1 && <span>, </span>}
+                    </span>
+                  ))
+                ) : (
+                  <span className="font-bold text-white">Unknown Artist</span>
+                )}
+              </div>
               {album.release && (
                 <>
                   <span className="mx-1">•</span>
@@ -127,7 +145,13 @@ export default function AlbumDetailPage() {
 
             {/* Songs */}
             {album.songs && album.songs.length > 0 && (
-              <SongList songs={album.songs} showAlbum={false} />
+              <SongList
+                songs={album.songs.map((song) => ({
+                  ...song,
+                  album: album,
+                }))}
+                showAlbum={false}
+              />
             )}
           </div>
         </div>
