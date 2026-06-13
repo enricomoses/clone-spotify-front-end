@@ -16,6 +16,7 @@ import {
   UserPlus,
   ChevronLeft,
   ChevronRight,
+  LayoutGrid,
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
@@ -26,6 +27,7 @@ import { useUIStore } from '@/stores/useUIStore';
 const mainNavItems = [
   { href: '/home', label: 'Home', icon: Home },
   { href: '/search', label: 'Search', icon: Search },
+  { href: '/genres', label: 'Genre', icon: LayoutGrid },
   { href: '/discover-weekly', label: 'Discover Weekly', icon: Compass },
   { href: '/concerts', label: 'Concerts', icon: Calendar },
 ];
@@ -70,14 +72,19 @@ export default function Sidebar() {
       {/* Main Navigation */}
       <nav className="px-2 mb-2">
         <ul className="space-y-0.5">
-          {mainNavItems.map(({ href, label, icon: Icon }) => (
+          {mainNavItems.map(({ href, label, icon: Icon }) => {
+            const isActive =
+              router.pathname === href ||
+              (href === '/genres' && router.pathname.startsWith('/genres'));
+
+            return (
             <li key={href}>
               <Link
                 href={href}
                 className={cn(
                   'flex items-center gap-4 rounded-md transition-all duration-200 group',
                   isCollapsed ? 'justify-center px-2 py-3' : 'px-4 py-3',
-                  router.pathname === href
+                  isActive
                     ? 'text-white bg-spotify-card'
                     : 'text-spotify-muted hover:text-white'
                 )}
@@ -86,7 +93,7 @@ export default function Sidebar() {
                 <Icon
                   className={cn(
                     'w-6 h-6 transition-colors shrink-0',
-                    router.pathname === href
+                    isActive
                       ? 'text-white'
                       : 'text-spotify-muted group-hover:text-white'
                   )}
@@ -96,7 +103,8 @@ export default function Sidebar() {
                 )}
               </Link>
             </li>
-          ))}
+            );
+          })}
         </ul>
       </nav>
 
