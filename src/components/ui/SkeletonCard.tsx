@@ -161,8 +161,14 @@ export function HomePageSkeleton() {
       {/* Quick Play */}
       <QuickPlaySkeleton />
 
+      {/* Discover Weekly Skeleton */}
+      <section className="mb-10">
+        <Skeleton className="h-7 w-48 mb-5" />
+        <GridSkeleton count={5} className="xl:grid-cols-5" />
+      </section>
+
       {/* Section skeletons */}
-      {[1, 2, 3].map((section) => (
+      {[1, 2].map((section) => (
         <section key={section} className="mb-10">
           <Skeleton className="h-7 w-48 mb-5" />
           <GridSkeleton count={6} />
