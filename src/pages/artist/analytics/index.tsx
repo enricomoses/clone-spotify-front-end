@@ -19,7 +19,7 @@ function ArtistAnalyticsPage() {
   );
   const { data: allHistory, isLoading: historyLoading } = useSWR<
     StreamingHistory[]
-  >('/streaming-history', fetcher);
+  >(artist ? `/artists/${artist.id_artist}/song-streaming` : null, fetcher);
 
   const isLoading = songsLoading || historyLoading;
 

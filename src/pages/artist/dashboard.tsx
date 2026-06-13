@@ -20,7 +20,7 @@ function ArtistDashboardPage() {
   const { data: allAlbums } = useSWR<Album[]>('/albums', fetcher);
   const { data: allHistory, isLoading: historyLoading } = useSWR<
     StreamingHistory[]
-  >('/song-streaming', fetcher);
+  >(artist ? `/artists/${artist.id_artist}/song-streaming` : null, fetcher);
 
   const isLoading = songsLoading || historyLoading;
 

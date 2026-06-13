@@ -8,7 +8,7 @@ import type { Song, StreamingHistory } from '@/types';
 export async function getDiscoverWeekly(): Promise<Song[]> {
   try {
     // 1. Fetch all streaming history
-    const historyRes = await api.get('/streaming-history');
+    const historyRes = await api.get('/song-streaming');
     const history: StreamingHistory[] = historyRes.data.data || historyRes.data || [];
 
     // 2. Filter last 7 days
