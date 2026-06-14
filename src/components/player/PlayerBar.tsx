@@ -13,13 +13,13 @@ import {
   VolumeX,
   Volume1,
   ListMusic,
-  Heart,
   Music,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useRef, useState, useCallback, useEffect } from 'react';
 import api from '@/lib/axios';
 import { useAudioEngine } from '@/hooks/useAudioEngine';
+import LikeButton from '@/components/song/LikeButton';
 
 export default function PlayerBar() {
   const {
@@ -197,12 +197,11 @@ export default function PlayerBar() {
                 'Unknown Artist'}
             </p>
           </div>
-          <button
-            className="text-spotify-muted hover:text-white transition-colors shrink-0"
-            aria-label="Like song"
-          >
-            <Heart className="w-4 h-4" />
-          </button>
+          <LikeButton
+            songId={currentSong.id_song}
+            isLiked={user?.liked_songs?.some((s) => s.id_song === currentSong.id_song) || false}
+            size="sm"
+          />
         </div>
 
         {/* Center — Controls + Progress */}
@@ -373,13 +372,14 @@ export default function PlayerBar() {
         </div>
 
         {/* Like Button */}
-        <button
-          onClick={(e) => e.stopPropagation()}
-          className="text-spotify-muted hover:text-white transition-colors shrink-0 p-1"
-          aria-label="Like"
-        >
-          <Heart className="w-5 h-5" />
-        </button>
+        <div onClick={(e) => e.stopPropagation()}>
+          <LikeButton
+            songId={currentSong.id_song}
+            isLiked={user?.liked_songs?.some((s) => s.id_song === currentSong.id_song) || false}
+            size="md"
+            className="p-1"
+          />
+        </div>
 
         {/* Play/Pause */}
         <button
