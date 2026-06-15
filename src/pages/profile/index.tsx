@@ -53,19 +53,27 @@ function ProfilePage() {
           }}
         >
           {/* Avatar */}
-          <div className="w-32 h-32 sm:w-44 md:w-52 sm:h-44 md:h-52 shrink-0 rounded-full overflow-hidden shadow-2xl shadow-black/50">
+          <Link
+            href="/profile/edit"
+            className="group relative block w-32 h-32 sm:w-44 md:w-52 sm:h-44 md:h-52 shrink-0 rounded-full overflow-hidden shadow-2xl shadow-black/50 cursor-pointer"
+            title="Edit Profile"
+          >
             {user.profile_picture ? (
               <img
                 src={user.profile_picture}
                 alt={user.name}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover group-hover:opacity-75 transition-opacity duration-300"
               />
             ) : (
-              <div className="w-full h-full bg-spotify-card flex items-center justify-center">
+              <div className="w-full h-full bg-spotify-card flex items-center justify-center group-hover:bg-spotify-hover transition-colors duration-300">
                 <User className="w-16 sm:w-20 h-16 sm:h-20 text-spotify-muted" />
               </div>
             )}
-          </div>
+            <div className="absolute inset-0 bg-black/45 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center gap-1.5 text-white">
+              <Settings className="w-6 h-6 animate-pulse" />
+              <span className="text-xs font-bold tracking-wide">Edit Profile</span>
+            </div>
+          </Link>
 
           {/* User Info */}
           <div className="flex flex-col items-center sm:items-start justify-end text-center sm:text-left">
@@ -102,7 +110,16 @@ function ProfilePage() {
         <div className="px-4 sm:px-8 py-6 sm:py-8">
           {/* User Details */}
           <section className="mb-8 sm:mb-10">
-            <h2 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-5">About</h2>
+            <div className="flex items-center justify-between mb-4 sm:mb-5">
+              <h2 className="text-xl sm:text-2xl font-bold text-white">About</h2>
+              <Link
+                href="/profile/edit"
+                className="flex items-center gap-2 text-xs sm:text-sm font-bold text-white/80 hover:text-white transition-colors bg-spotify-card/50 hover:bg-spotify-card border border-spotify-border/60 hover:border-spotify-border px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full"
+              >
+                <Settings className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
+                Edit Profile
+              </Link>
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
               {user.email && (
                 <div className="bg-spotify-card/50 rounded-lg p-4">
