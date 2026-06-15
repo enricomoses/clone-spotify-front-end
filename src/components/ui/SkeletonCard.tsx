@@ -648,4 +648,45 @@ export function PodcastDetailSkeleton() {
   );
 }
 
+
+// Genre page skeleton
+export function GenreDetailSkeleton() {
+  return (
+    <div className="-mt-[60px]">
+      {/* Hero Banner Skeleton */}
+      <div
+        className="relative px-4 sm:px-8 pt-20 pb-8 sm:pb-12"
+        style={{
+          background: 'linear-gradient(135deg, #282828 0%, #181818 100%)',
+          minHeight: '340px',
+        }}
+      >
+        {/* Back button */}
+        <Skeleton className="absolute top-20 left-4 sm:left-8 w-8 h-8 rounded-full" />
+
+        {/* Genre Info */}
+        <div className="flex flex-col justify-end h-full min-h-[180px] sm:min-h-[220px] relative z-10">
+          <Skeleton className="h-4 w-24 mb-3" />
+          <Skeleton className="h-12 sm:h-16 w-48 sm:w-72 mb-3" />
+          <Skeleton className="h-4 w-20" />
+        </div>
+
+        {/* Gradient fade to page background */}
+        <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-spotify-black to-transparent pointer-events-none" />
+      </div>
+
+      {/* Grid Skeleton */}
+      <div className="relative px-4 sm:px-8 pt-6 pb-8">
+        <div
+          className="absolute inset-0 h-40 pointer-events-none"
+          style={{ background: 'linear-gradient(rgba(40,40,40,0.15), transparent)' }}
+        />
+        <div className="relative z-10">
+          <GridSkeleton count={6} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default Skeleton;

@@ -5,7 +5,7 @@ import useSWR from 'swr';
 import { ArrowLeft, Music, Play } from 'lucide-react';
 import { fetcher } from '@/lib/fetcher';
 import { usePlayerStore } from '@/stores/usePlayerStore';
-import { BannerSkeleton } from '@/components/ui/SkeletonCard';
+import { GenreDetailSkeleton } from '@/components/ui/SkeletonCard';
 import type { PlaylistCategory, Playlist } from '@/types';
 
 interface PlaylistCategoryWithPlaylists extends PlaylistCategory {
@@ -22,7 +22,7 @@ export default function PlaylistGenreDetailPage() {
     fetcher
   );
 
-  if (isLoading || !category) return <BannerSkeleton />;
+  if (isLoading || !category) return <GenreDetailSkeleton />;
 
   const playlists = category.playlists || [];
 

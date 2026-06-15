@@ -4,7 +4,7 @@ import Link from 'next/link';
 import useSWR from 'swr';
 import { ArrowLeft, Mic2 } from 'lucide-react';
 import { fetcher } from '@/lib/fetcher';
-import { BannerSkeleton } from '@/components/ui/SkeletonCard';
+import { GenreDetailSkeleton } from '@/components/ui/SkeletonCard';
 import PodcastCard from '@/components/podcast/PodcastCard';
 import type { PodcastCategory, Podcast } from '@/types';
 
@@ -21,7 +21,7 @@ export default function PodcastGenreDetailPage() {
     fetcher
   );
 
-  if (isLoading || !category) return <BannerSkeleton />;
+  if (isLoading || !category) return <GenreDetailSkeleton />;
 
   const podcasts = category.podcasts || [];
 
