@@ -19,9 +19,24 @@ function PodcastListPage() {
 
   if (isLoading) return (
     <div className="px-4 sm:px-6 pb-8">
-      <div className="mb-6 pt-4">
-        <div className="h-8 w-32 bg-spotify-card/80 rounded animate-pulse" />
+      {/* Header Skeleton */}
+      <div className="flex items-center justify-between mb-6 pt-4">
+        <div className="h-9 w-40 bg-spotify-card/80 rounded animate-pulse" />
+        <div className="h-9 w-32 bg-spotify-card/80 rounded-full animate-pulse" />
       </div>
+
+      {/* Category Filter Skeleton */}
+      <div className="flex gap-2 mb-6 flex-wrap">
+        <div className="h-8 w-12 bg-spotify-card/80 rounded-full animate-pulse" />
+        <div className="h-8 w-20 bg-spotify-card/80 rounded-full animate-pulse" />
+        <div className="h-8 w-24 bg-spotify-card/80 rounded-full animate-pulse" />
+        <div className="h-8 w-28 bg-spotify-card/80 rounded-full animate-pulse" />
+        <div className="h-8 w-20 bg-spotify-card/80 rounded-full animate-pulse" />
+        <div className="h-8 w-24 bg-spotify-card/80 rounded-full animate-pulse" />
+        <div className="h-8 w-16 bg-spotify-card/80 rounded-full animate-pulse" />
+        <div className="h-8 w-24 bg-spotify-card/80 rounded-full animate-pulse" />
+      </div>
+
       <GridSkeleton count={12} />
     </div>
   );
