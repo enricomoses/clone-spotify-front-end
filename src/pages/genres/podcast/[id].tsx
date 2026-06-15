@@ -70,7 +70,7 @@ export default function PodcastGenreDetailPage() {
         </div>
 
         {/* Podcast Grid */}
-        <div className="relative px-4 sm:px-8 pb-8">
+        <div className="relative px-4 sm:px-8 pt-6 pb-8">
           {/* Gradient continuation */}
           <div
             className="absolute inset-0 h-40 pointer-events-none"
