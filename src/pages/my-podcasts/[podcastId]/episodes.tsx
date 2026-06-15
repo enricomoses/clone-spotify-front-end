@@ -260,7 +260,51 @@ function PodcastEpisodesPage() {
     return `${m}:${s.toString().padStart(2, '0')}`;
   };
 
-  if (isLoading || !podcast) return <GridSkeleton count={6} />;
+  if (isLoading || !podcast) return (
+    <div className="px-6 pb-8 max-w-4xl mx-auto">
+      {/* Header Skeleton */}
+      <div className="pt-4 mb-8">
+        <div className="flex items-center gap-2 text-sm text-spotify-muted mb-4">
+          <ArrowLeft className="w-4 h-4 animate-pulse" />
+          <div className="h-4 w-36 bg-spotify-card/80 rounded animate-pulse" />
+        </div>
+
+        <div className="flex items-center gap-4">
+          <div className="w-16 h-16 rounded-lg bg-spotify-card/80 animate-pulse shrink-0" />
+          <div>
+            <div className="h-7 w-48 bg-spotify-card/80 rounded animate-pulse mb-2" />
+            <div className="h-4 w-20 bg-spotify-card/80 rounded animate-pulse" />
+          </div>
+        </div>
+      </div>
+
+      {/* Button Skeleton */}
+      <div className="mb-6">
+        <div className="h-10 w-48 bg-spotify-card/80 rounded-full animate-pulse" />
+      </div>
+
+      {/* Episodes List Skeleton */}
+      <div className="space-y-3">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div
+            key={i}
+            className="flex items-center gap-4 bg-spotify-card/30 rounded-lg p-4"
+          >
+            <div className="w-8 h-4 bg-spotify-card/50 rounded animate-pulse mx-auto" />
+            <div className="w-12 h-12 rounded-md bg-spotify-card/80 animate-pulse shrink-0" />
+            <div className="flex-1 min-w-0">
+              <div className="h-4 w-1/3 bg-spotify-card/80 rounded animate-pulse mb-2" />
+              <div className="h-3 w-1/4 bg-spotify-card/80 rounded animate-pulse" />
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <div className="w-8 h-8 bg-spotify-card/50 rounded animate-pulse" />
+              <div className="w-8 h-8 bg-spotify-card/50 rounded animate-pulse" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 
   const episodes = podcast.episodes || [];
   const isFormVisible = showForm || !!editingEpisode;
