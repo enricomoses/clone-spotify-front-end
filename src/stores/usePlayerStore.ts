@@ -1,9 +1,10 @@
 import { create } from 'zustand';
-import type { Song, RepeatMode } from '@/types';
+import type { Song, Episode, RepeatMode } from '@/types';
 
 interface PlayerState {
   // State
   currentSong: Song | null;
+  currentEpisode: Episode | null;
   queue: Song[];
   queueIndex: number;
   isPlaying: boolean;
@@ -14,9 +15,11 @@ interface PlayerState {
   repeatMode: RepeatMode;
   isQueueOpen: boolean;
   seekTo: number | null;
+  isVideoExpanded: boolean;
 
   // Actions
   playSong: (song: Song, queue?: Song[]) => void;
+  playEpisode: (episode: Episode) => void;
   togglePlay: () => void;
   pause: () => void;
   resume: () => void;
@@ -31,11 +34,13 @@ interface PlayerState {
   toggleQueue: () => void;
   clearQueue: () => void;
   addToQueue: (song: Song) => void;
+  toggleVideoExpanded: () => void;
 }
 
 export const usePlayerStore = create<PlayerState>((set, get) => ({
   // Initial state
   currentSong: null,
+  currentEpisode: null,
   queue: [],
   queueIndex: -1,
   isPlaying: false,
@@ -46,6 +51,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   repeatMode: 'off',
   isQueueOpen: false,
   seekTo: null,
+  isVideoExpanded: true,
 
   // Play a specific song, optionally setting the full queue
   playSong: (song, queue) => {
@@ -53,10 +59,24 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
     const index = newQueue.findIndex((s) => s.id_song === song.id_song);
     set({
       currentSong: song,
+      currentEpisode: null, // Clear episode when playing a song
       queue: newQueue,
       queueIndex: index >= 0 ? index : 0,
       isPlaying: true,
       currentTime: 0,
+    });
+  },
+
+  // Play a podcast episode (standalone, no queue)
+  playEpisode: (episode) => {
+    set({
+      currentEpisode: episode,
+      currentSong: null, // Clear song when playing an episode
+      queue: [],
+      queueIndex: -1,
+      isPlaying: true,
+      currentTime: 0,
+      isVideoExpanded: !!episode.video_url, // Auto-expand video panel if episode has video
     });
   },
 
@@ -134,4 +154,5 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
     set((s) => ({
       queue: [...s.queue, song],
     })),
+  toggleVideoExpanded: () => set((s) => ({ isVideoExpanded: !s.isVideoExpanded })),
 }));

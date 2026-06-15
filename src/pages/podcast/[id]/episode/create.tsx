@@ -4,19 +4,19 @@ import Head from 'next/head';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Music, Video, Info } from 'lucide-react';
 import { withAuth } from '@/utils/withAuth';
+import { useAuthStore } from '@/stores/useAuthStore';
 import api from '@/lib/axios';
 import ImageUpload from '@/components/ui/ImageUpload';
+import AudioUpload from '@/components/ui/AudioUpload';
+import VideoUpload from '@/components/ui/VideoUpload';
 import { useToastStore } from '@/components/ui/Toast';
 
 const createEpisodeSchema = z.object({
   title: z.string().min(1, 'Judul episode wajib diisi'),
   description: z.string().optional(),
   published_at: z.string().min(1, 'Tanggal publish wajib diisi'),
-  duration: z.coerce.number().min(1, 'Durasi harus lebih dari 0 detik'),
-  audio_url: z.string().url('Audio URL harus valid'),
-  video_url: z.string().url('Video URL tidak valid').optional().or(z.literal('')),
   thumbnail_image: z.string().url('Thumbnail URL tidak valid').optional().or(z.literal('')),
 });
 
@@ -25,9 +25,26 @@ type CreateEpisodeForm = z.infer<typeof createEpisodeSchema>;
 function CreateEpisodePage() {
   const router = useRouter();
   const { id } = router.query; // podcast ID
+  const user = useAuthStore((s) => s.user);
   const addToast = useToastStore((s) => s.addToast);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Upload state — managed outside react-hook-form
+  const [audioUrl, setAudioUrl] = useState('');
+  const [audioDuration, setAudioDuration] = useState(0);
+  const [videoUrl, setVideoUrl] = useState('');
+  const [videoDuration, setVideoDuration] = useState(0);
+
+  // Derived: which media type is the primary source?
+  const hasVideo = !!videoUrl;
+  const hasAudio = !!audioUrl;
+
+  // The effective audio_url sent to the API:
+  // If video is uploaded, audio_url = video_url (video contains audio track)
+  // Otherwise, use the uploaded audio_url
+  const effectiveAudioUrl = hasVideo ? videoUrl : audioUrl;
+  const effectiveDuration = hasVideo ? videoDuration : audioDuration;
 
   const {
     register,
@@ -44,28 +61,61 @@ function CreateEpisodePage() {
 
   const thumbnailImage = watch('thumbnail_image');
 
+  const handleAudioChange = (url: string, duration: number) => {
+    setAudioUrl(url);
+    setAudioDuration(duration);
+  };
+
+  const handleVideoChange = (url: string, duration: number) => {
+    setVideoUrl(url);
+    setVideoDuration(duration);
+  };
+
   const onSubmit = async (data: CreateEpisodeForm) => {
+    // Validate that at least one media is uploaded
+    if (!effectiveAudioUrl) {
+      setError('Silakan unggah file audio atau video terlebih dahulu.');
+      return;
+    }
+
     setIsSubmitting(true);
     setError('');
 
     try {
       const payload = {
-        ...data,
-        id_podcast: id,
-        video_url: data.video_url || undefined,
+        title: data.title,
+        description: data.description || undefined,
+        published_at: data.published_at,
+        duration: Math.round(effectiveDuration),
+        audio_url: effectiveAudioUrl,
+        video_url: hasVideo ? videoUrl : undefined,
         thumbnail_image: data.thumbnail_image || undefined,
+        id_podcast: id,
+        id_user: user?.id_user,
       };
 
       await api.post('/episodes', payload);
       addToast('Episode berhasil diunggah!', 'success');
       router.push(`/podcast/${id}`);
     } catch (err: any) {
-      setError('Failed to create episode. Please try again.');
+      setError(err.response?.data?.message || 'Gagal mengunggah episode. Silakan coba lagi.');
       addToast('Gagal mengunggah episode. Silakan coba lagi.', 'error');
       console.error(err);
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  /** Format duration (seconds) to mm:ss for display */
+  const formatDur = (seconds: number) => {
+    if (!seconds || seconds <= 0) return '0:00';
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = Math.floor(seconds % 60);
+    if (h > 0) {
+      return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    }
+    return `${m}:${s.toString().padStart(2, '0')}`;
   };
 
   return (
@@ -75,7 +125,13 @@ function CreateEpisodePage() {
       </Head>
 
       <div className="max-w-2xl mx-auto px-6 py-8">
-        <h1 className="text-3xl font-bold text-white mb-8">Upload Episode</h1>
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-white mb-2">Upload Episode</h1>
+          <p className="text-sm text-spotify-muted">
+            Tambahkan episode baru ke podcast Anda. Unggah audio atau video untuk memulai.
+          </p>
+        </div>
 
         {error && (
           <div className="bg-red-500/20 border border-red-500/30 text-red-300 px-4 py-3 rounded-lg mb-6 text-sm">
@@ -87,12 +143,12 @@ function CreateEpisodePage() {
           {/* Title */}
           <div>
             <label className="block text-sm font-semibold text-white mb-2">
-              Title *
+              Judul Episode *
             </label>
             <input
               {...register('title')}
               type="text"
-              placeholder="Episode title"
+              placeholder="Masukkan judul episode"
               className="w-full bg-spotify-hover border border-spotify-border rounded-md px-4 py-3 text-white placeholder:text-spotify-muted/60 focus:outline-none focus:border-spotify-green focus:ring-1 focus:ring-spotify-green transition-all"
             />
             {errors.title && (
@@ -103,89 +159,101 @@ function CreateEpisodePage() {
           {/* Description */}
           <div>
             <label className="block text-sm font-semibold text-white mb-2">
-              Description
+              Deskripsi
             </label>
             <textarea
               {...register('description')}
-              placeholder="Episode description"
+              placeholder="Deskripsi episode"
               rows={4}
               className="w-full bg-spotify-hover border border-spotify-border rounded-md px-4 py-3 text-white placeholder:text-spotify-muted/60 focus:outline-none focus:border-spotify-green focus:ring-1 focus:ring-spotify-green transition-all resize-none"
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            {/* Published At */}
-            <div>
-              <label className="block text-sm font-semibold text-white mb-2">
-                Publish Date *
-              </label>
-              <input
-                {...register('published_at')}
-                type="date"
-                className="w-full bg-spotify-hover border border-spotify-border rounded-md px-4 py-3 text-white focus:outline-none focus:border-spotify-green focus:ring-1 focus:ring-spotify-green transition-all"
-              />
-              {errors.published_at && (
-                <p className="mt-1 text-xs text-red-400">
-                  {errors.published_at.message}
+          {/* Audio Upload */}
+          <div>
+            <label className="flex items-center gap-2 text-sm font-semibold text-white mb-2">
+              <Music className="w-4 h-4 text-spotify-green" />
+              File Audio {!hasVideo && '*'}
+            </label>
+            <AudioUpload
+              value={audioUrl}
+              onChange={handleAudioChange}
+              folder="episodes"
+            />
+            {audioDuration > 0 && !hasVideo && (
+              <p className="mt-2 text-xs text-spotify-muted">
+                Durasi terdeteksi: <span className="text-white font-medium">{formatDur(audioDuration)}</span>
+              </p>
+            )}
+            {hasVideo && hasAudio && (
+              <div className="mt-2 flex items-start gap-2 p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                <Info className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
+                <p className="text-xs text-blue-300">
+                  Video telah diunggah. Audio URL akan otomatis menggunakan URL video karena video sudah berisi audio track. Audio yang diunggah secara terpisah akan diabaikan.
                 </p>
-              )}
-            </div>
-
-            {/* Duration */}
-            <div>
-              <label className="block text-sm font-semibold text-white mb-2">
-                Duration (seconds) *
-              </label>
-              <input
-                {...register('duration')}
-                type="number"
-                min="1"
-                placeholder="e.g. 1800"
-                className="w-full bg-spotify-hover border border-spotify-border rounded-md px-4 py-3 text-white placeholder:text-spotify-muted/60 focus:outline-none focus:border-spotify-green focus:ring-1 focus:ring-spotify-green transition-all"
-              />
-              {errors.duration && (
-                <p className="mt-1 text-xs text-red-400">
-                  {errors.duration.message}
-                </p>
-              )}
-            </div>
+              </div>
+            )}
           </div>
 
-          {/* Audio URL */}
+          {/* Video Upload */}
           <div>
-            <label className="block text-sm font-semibold text-white mb-2">
-              Audio URL *
+            <label className="flex items-center gap-2 text-sm font-semibold text-white mb-2">
+              <Video className="w-4 h-4 text-purple-400" />
+              File Video (Opsional)
             </label>
-            <input
-              {...register('audio_url')}
-              type="url"
-              placeholder="https://example.com/audio.mp3"
-              className="w-full bg-spotify-hover border border-spotify-border rounded-md px-4 py-3 text-white placeholder:text-spotify-muted/60 focus:outline-none focus:border-spotify-green focus:ring-1 focus:ring-spotify-green transition-all"
+            <p className="text-xs text-spotify-muted mb-3">
+              Upload video untuk video podcast. Jika video diunggah, audio akan otomatis diambil dari video.
+            </p>
+            <VideoUpload
+              value={videoUrl}
+              onChange={handleVideoChange}
+              folder="episodes"
             />
-            {errors.audio_url && (
-              <p className="mt-1 text-xs text-red-400">
-                {errors.audio_url.message}
+            {videoDuration > 0 && (
+              <p className="mt-2 text-xs text-spotify-muted">
+                Durasi video: <span className="text-white font-medium">{formatDur(videoDuration)}</span>
               </p>
             )}
           </div>
 
-          {/* Video URL */}
+          {/* Duration display */}
+          {effectiveDuration > 0 && (
+            <div className="flex items-center gap-3 p-4 rounded-lg bg-spotify-card/50 border border-spotify-border">
+              <div className="w-10 h-10 rounded-full bg-spotify-green/10 flex items-center justify-center">
+                <span className="text-spotify-green text-lg">⏱</span>
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-white">
+                  Durasi Episode: {formatDur(effectiveDuration)}
+                </p>
+                <p className="text-xs text-spotify-muted">
+                  {hasVideo ? 'Berdasarkan durasi video' : 'Berdasarkan durasi audio'}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Published At */}
           <div>
             <label className="block text-sm font-semibold text-white mb-2">
-              Video URL (optional)
+              Tanggal Publish *
             </label>
             <input
-              {...register('video_url')}
-              type="url"
-              placeholder="https://example.com/video.mp4"
-              className="w-full bg-spotify-hover border border-spotify-border rounded-md px-4 py-3 text-white placeholder:text-spotify-muted/60 focus:outline-none focus:border-spotify-green focus:ring-1 focus:ring-spotify-green transition-all"
+              {...register('published_at')}
+              type="date"
+              className="w-full bg-spotify-hover border border-spotify-border rounded-md px-4 py-3 text-white focus:outline-none focus:border-spotify-green focus:ring-1 focus:ring-spotify-green transition-all"
             />
+            {errors.published_at && (
+              <p className="mt-1 text-xs text-red-400">
+                {errors.published_at.message}
+              </p>
+            )}
           </div>
 
           {/* Thumbnail Image Upload */}
           <div>
             <label className="block text-sm font-semibold text-white mb-2">
-              Thumbnail Image (optional)
+              Thumbnail Image (Opsional)
             </label>
             <input type="hidden" {...register('thumbnail_image')} />
             <ImageUpload
@@ -202,15 +270,15 @@ function CreateEpisodePage() {
               onClick={() => router.back()}
               className="btn-outline text-sm py-2.5 px-8"
             >
-              Cancel
+              Batal
             </button>
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || !effectiveAudioUrl}
               className="btn-spotify text-sm py-2.5 px-8 flex items-center gap-2 disabled:opacity-50"
             >
               {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
-              {isSubmitting ? 'Uploading...' : 'Upload Episode'}
+              {isSubmitting ? 'Mengunggah...' : 'Upload Episode'}
             </button>
           </div>
         </form>

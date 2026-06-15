@@ -6,16 +6,20 @@ import { usePlayerStore } from '@/stores/usePlayerStore';
  * Audio engine hook that bridges the Zustand player store with Howler.js.
  * This hook reacts to store state changes and controls actual audio playback.
  *
+ * Supports both songs and audio-only episodes.
+ * Video episodes are handled by the <video> element in PlayerBar, NOT by this hook.
+ *
  * Mount this hook ONCE in the PlayerBar or a top-level layout component.
  */
 export function useAudioEngine() {
   const howlRef = useRef<Howl | null>(null);
   const animFrameRef = useRef<number>(0);
-  const currentSongIdRef = useRef<string | null>(null);
+  const currentTrackIdRef = useRef<string | null>(null);
   const isSeeking = useRef(false);
 
   // Subscribe to individual store slices to avoid unnecessary re-renders
   const currentSong = usePlayerStore((s) => s.currentSong);
+  const currentEpisode = usePlayerStore((s) => s.currentEpisode);
   const isPlaying = usePlayerStore((s) => s.isPlaying);
   const volume = usePlayerStore((s) => s.volume);
   const repeatMode = usePlayerStore((s) => s.repeatMode);
@@ -23,6 +27,14 @@ export function useAudioEngine() {
   const setDuration = usePlayerStore((s) => s.setDuration);
   const nextSong = usePlayerStore((s) => s.nextSong);
   const seekTo = usePlayerStore((s) => s.seekTo);
+
+  // Determine whether this engine should be active
+  // Video episodes are driven by the <video> element, not Howler
+  const isVideoEpisode = currentEpisode && currentEpisode.video_url;
+
+  // Derive the track ID and audio URL
+  const trackId = currentSong?.id_song ?? (currentEpisode && !isVideoEpisode ? currentEpisode.id_episode : null);
+  const audioUrl = currentSong?.audio_url ?? (currentEpisode && !isVideoEpisode ? currentEpisode.audio_url : null);
 
   // Keep refs updated for use inside Howl callbacks (avoid stale closures)
   const repeatModeRef = useRef(repeatMode);
@@ -51,14 +63,11 @@ export function useAudioEngine() {
     cancelAnimationFrame(animFrameRef.current);
   }, []);
 
-  // ─── Load new song when currentSong changes ───────────────────────
+  // ─── Load new track when currentSong or currentEpisode changes ────
   useEffect(() => {
-    const songId = currentSong?.id_song ?? null;
-    const audioUrl = currentSong?.audio_url;
-
-    // Same song — don't reload
-    if (songId === currentSongIdRef.current) return;
-    currentSongIdRef.current = songId;
+    // Same track — don't reload
+    if (trackId === currentTrackIdRef.current) return;
+    currentTrackIdRef.current = trackId;
 
     // Cleanup previous howl
     if (howlRef.current) {
@@ -67,7 +76,7 @@ export function useAudioEngine() {
       howlRef.current = null;
     }
 
-    if (!audioUrl || !songId) {
+    if (!audioUrl || !trackId) {
       setDuration(0);
       setCurrentTime(0);
       return;
@@ -92,12 +101,17 @@ export function useAudioEngine() {
       },
       onend: () => {
         stopProgressLoop();
-        // Handle repeat / next song
+        // Handle repeat / next
         if (repeatModeRef.current === 'one') {
           howl.seek(0);
           howl.play();
         } else {
-          nextSongRef.current();
+          // For episodes (no queue), just stop. For songs, go to next.
+          if (usePlayerStore.getState().currentSong) {
+            nextSongRef.current();
+          } else {
+            usePlayerStore.setState({ isPlaying: false, currentTime: 0 });
+          }
         }
       },
       onloaderror: (_id: number, err: unknown) => {
@@ -120,9 +134,9 @@ export function useAudioEngine() {
     }
 
     return () => {
-      // Cleanup on unmount or before next song loads
+      // Cleanup on unmount or before next track loads
     };
-  }, [currentSong?.id_song, currentSong?.audio_url, setDuration, setCurrentTime, startProgressLoop, stopProgressLoop]);
+  }, [trackId, audioUrl, setDuration, setCurrentTime, startProgressLoop, stopProgressLoop]);
 
   // ─── Play / Pause ─────────────────────────────────────────────────
   useEffect(() => {
@@ -151,6 +165,10 @@ export function useAudioEngine() {
   // ─── Seek (via store's seekTo timestamp) ──────────────────────────
   useEffect(() => {
     if (seekTo === null || seekTo === undefined) return;
+
+    // Only process seek for Howler-managed tracks (not video episodes)
+    if (isVideoEpisode) return;
+
     const howl = howlRef.current;
     if (howl) {
       isSeeking.current = true;
@@ -163,7 +181,7 @@ export function useAudioEngine() {
     }
     // Reset the seekTo value after processing
     usePlayerStore.setState({ seekTo: null });
-  }, [seekTo, setCurrentTime]);
+  }, [seekTo, setCurrentTime, isVideoEpisode]);
 
   // ─── Cleanup on unmount ───────────────────────────────────────────
   useEffect(() => {

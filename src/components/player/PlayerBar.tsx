@@ -14,6 +14,10 @@ import {
   Volume1,
   ListMusic,
   Music,
+  Mic2,
+  ChevronDown,
+  ChevronUp,
+  Video,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useRef, useState, useCallback, useEffect } from 'react';
@@ -24,6 +28,7 @@ import LikeButton from '@/components/song/LikeButton';
 export default function PlayerBar() {
   const {
     currentSong,
+    currentEpisode,
     isPlaying,
     currentTime,
     duration,
@@ -34,28 +39,126 @@ export default function PlayerBar() {
     nextSong,
     prevSong,
     setCurrentTime,
+    setDuration,
     setVolume,
     toggleShuffle,
     cycleRepeat,
     toggleQueue,
     isQueueOpen,
     triggerSeek,
+    isVideoExpanded,
+    toggleVideoExpanded,
   } = usePlayerStore();
 
   const user = useAuthStore((s) => s.user);
 
-  // Mount the audio engine — this drives actual Howler.js playback
+  // Mount the audio engine — this drives actual Howler.js playback (for songs + audio-only episodes)
   useAudioEngine();
 
   const [isDragging, setIsDragging] = useState(false);
   const [dragTime, setDragTime] = useState(0);
   const progressRef = useRef<HTMLDivElement>(null);
   const volumeRef = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   // Streaming history tracking
   const [streamId, setStreamId] = useState<string | null>(null);
   const [trackStartTime, setTrackStartTime] = useState<number>(0);
-  const prevSongRef = useRef<string | null>(null);
+  const prevTrackRef = useRef<string | null>(null);
+
+  // Determine what's currently playing
+  const isEpisode = !!currentEpisode;
+  const isVideoEpisode = isEpisode && !!currentEpisode?.video_url;
+  const hasAnything = !!currentSong || !!currentEpisode;
+
+  // Display info
+  const displayTitle = currentSong?.title || currentEpisode?.title || '';
+  const displaySubtitle = currentSong
+    ? currentSong.artists?.map((a) => a.name).join(', ') ||
+      currentSong.album?.artists?.map((a) => a.name).join(', ') ||
+      'Unknown Artist'
+    : currentEpisode?.podcast?.name || 'Podcast';
+  const displayImage = currentSong?.album?.cover_image
+    || currentEpisode?.thumbnail_image
+    || currentEpisode?.podcast?.cover_image
+    || null;
+  const trackIdForHistory = currentSong?.id_song || currentEpisode?.id_episode || null;
+
+  // ─── Video element sync ───────────────────────────────────────────
+  // For video episodes, the <video> element drives time/duration updates
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !isVideoEpisode) return;
+
+    const handleTimeUpdate = () => {
+      setCurrentTime(video.currentTime);
+    };
+    const handleLoadedMetadata = () => {
+      setDuration(video.duration);
+    };
+    const handleEnded = () => {
+      usePlayerStore.setState({ isPlaying: false, currentTime: 0 });
+    };
+
+    video.addEventListener('timeupdate', handleTimeUpdate);
+    video.addEventListener('loadedmetadata', handleLoadedMetadata);
+    video.addEventListener('ended', handleEnded);
+
+    return () => {
+      video.removeEventListener('timeupdate', handleTimeUpdate);
+      video.removeEventListener('loadedmetadata', handleLoadedMetadata);
+      video.removeEventListener('ended', handleEnded);
+    };
+  }, [isVideoEpisode, currentEpisode?.id_episode, setCurrentTime, setDuration]);
+
+  // Sync video play/pause state
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !isVideoEpisode) return;
+
+    if (isPlaying) {
+      video.play().catch(() => {});
+    } else {
+      video.pause();
+    }
+  }, [isPlaying, isVideoEpisode]);
+
+  // Sync video volume
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    video.volume = volume;
+  }, [volume]);
+
+  // Seek video when seekTo changes (for video episodes)
+  const videoSeekTo = usePlayerStore((s) => s.seekTo);
+  useEffect(() => {
+    if (videoSeekTo === null || videoSeekTo === undefined) return;
+    if (!isVideoEpisode) return;
+
+    const video = videoRef.current;
+    if (video) {
+      video.currentTime = videoSeekTo;
+      setCurrentTime(videoSeekTo);
+    }
+    usePlayerStore.setState({ seekTo: null });
+  }, [videoSeekTo, isVideoEpisode, setCurrentTime]);
+
+  // Load new video source
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !isVideoEpisode || !currentEpisode?.video_url) return;
+
+    video.src = currentEpisode.video_url;
+    video.load();
+    if (isPlaying) {
+      video.play().catch(() => {});
+    }
+  }, [currentEpisode?.id_episode, currentEpisode?.video_url, isVideoEpisode]);
+
+  // ─── Streaming history ────────────────────────────────────────────
+  const streamEndpoint = isEpisode ? 'episode-streaming' : 'song-streaming';
+  const streamPayloadKey = isEpisode ? 'id_episode' : 'id_song';
 
   // Flush stream duration to backend
   const flushStreamDuration = useCallback(async () => {
@@ -63,7 +166,7 @@ export default function PlayerBar() {
     const elapsed = Math.floor((Date.now() - trackStartTime) / 1000);
     if (elapsed >= 3) {
       try {
-        await api.post(`/song-streaming/${streamId}`, {
+        await api.post(`/${streamEndpoint}/${streamId}`, {
           play_duration: elapsed,
           _method: 'PUT',
         });
@@ -72,12 +175,12 @@ export default function PlayerBar() {
       }
     }
     setStreamId(null);
-  }, [streamId, trackStartTime, user]);
+  }, [streamId, trackStartTime, user, streamEndpoint]);
 
-  // Track song changes for streaming history
+  // Track changes for streaming history
   useEffect(() => {
-    const currentId = currentSong?.id_song || null;
-    if (currentId !== prevSongRef.current && currentId && isPlaying && user) {
+    const currentId = trackIdForHistory;
+    if (currentId !== prevTrackRef.current && currentId && isPlaying && user) {
       // Flush previous stream
       if (streamId) {
         flushStreamDuration();
@@ -86,9 +189,9 @@ export default function PlayerBar() {
       // Start new stream
       const startStream = async () => {
         try {
-          const res = await api.post('/song-streaming', {
+          const res = await api.post(`/${streamEndpoint}`, {
             id_user: user.id_user,
-            id_song: currentId,
+            [streamPayloadKey]: currentId,
           });
           setStreamId(res.data.data.id_stream);
           setTrackStartTime(Date.now());
@@ -98,8 +201,8 @@ export default function PlayerBar() {
       };
       startStream();
     }
-    prevSongRef.current = currentId;
-  }, [currentSong?.id_song, isPlaying]);
+    prevTrackRef.current = currentId;
+  }, [trackIdForHistory, isPlaying]);
 
   // Flush on pause
   useEffect(() => {
@@ -114,11 +217,10 @@ export default function PlayerBar() {
       if (streamId && user) {
         const elapsed = Math.floor((Date.now() - trackStartTime) / 1000);
         if (elapsed >= 3) {
-          // Use sendBeacon for reliable delivery on unload
           const data = JSON.stringify({ play_duration: elapsed });
           const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api';
           navigator.sendBeacon(
-            `${baseUrl}/song-streaming/${streamId}`,
+            `${baseUrl}/${streamEndpoint}/${streamId}`,
             new Blob([data], { type: 'application/json' })
           );
         }
@@ -126,7 +228,7 @@ export default function PlayerBar() {
     };
     window.addEventListener('beforeunload', handleUnload);
     return () => window.removeEventListener('beforeunload', handleUnload);
-  }, [streamId, trackStartTime, user]);
+  }, [streamId, trackStartTime, user, streamEndpoint]);
 
   // Progress bar interaction
   const handleProgressClick = useCallback(
@@ -134,9 +236,17 @@ export default function PlayerBar() {
       if (!progressRef.current || !duration) return;
       const rect = progressRef.current.getBoundingClientRect();
       const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-      triggerSeek(ratio * duration);
+      const newTime = ratio * duration;
+
+      // For video episodes, seek the video element directly
+      if (isVideoEpisode && videoRef.current) {
+        videoRef.current.currentTime = newTime;
+        setCurrentTime(newTime);
+      } else {
+        triggerSeek(newTime);
+      }
     },
-    [duration, triggerSeek]
+    [duration, triggerSeek, isVideoEpisode, setCurrentTime]
   );
 
   // Volume bar interaction
@@ -159,7 +269,7 @@ export default function PlayerBar() {
   // Repeat icon
   const RepeatIcon = repeatMode === 'one' ? Repeat1 : Repeat;
 
-  if (!currentSong) {
+  if (!hasAnything) {
     // Empty player bar
     return (
       <div className="fixed bottom-14 lg:bottom-0 left-0 right-0 h-16 lg:h-[90px] bg-spotify-dark border-t border-spotify-border/30 z-30 flex items-center justify-center">
@@ -170,50 +280,114 @@ export default function PlayerBar() {
 
   return (
     <>
-      {/* Desktop Player Bar */}
+      {/* ─── Video Player Panel (Desktop) ─── */}
+      {isVideoEpisode && (
+        <div
+          className={cn(
+            'fixed z-40 transition-all duration-300 ease-in-out',
+            isVideoExpanded
+              ? 'bottom-[90px] right-4 w-[400px] rounded-xl overflow-hidden shadow-2xl shadow-black/60 border border-white/10'
+              : 'bottom-[90px] right-4 w-[280px] rounded-xl overflow-hidden shadow-xl shadow-black/40 border border-white/10',
+            'hidden lg:block'
+          )}
+        >
+          {/* Video Header */}
+          <div className="bg-spotify-dark/95 backdrop-blur-xl px-4 py-2.5 flex items-center justify-between border-b border-white/5">
+            <div className="flex items-center gap-2 min-w-0">
+              <Video className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+              <span className="text-xs font-semibold text-white truncate">
+                {currentEpisode?.title}
+              </span>
+            </div>
+            <button
+              onClick={toggleVideoExpanded}
+              className="p-1 text-spotify-muted hover:text-white transition-colors shrink-0"
+              aria-label={isVideoExpanded ? 'Minimize video' : 'Expand video'}
+            >
+              {isVideoExpanded ? (
+                <ChevronDown className="w-4 h-4" />
+              ) : (
+                <ChevronUp className="w-4 h-4" />
+              )}
+            </button>
+          </div>
+
+          {/* Video Element */}
+          <div className={cn(
+            'bg-black transition-all duration-300',
+            isVideoExpanded ? 'aspect-video' : 'h-0 overflow-hidden'
+          )}>
+            <video
+              ref={videoRef}
+              className="w-full h-full object-contain bg-black"
+              playsInline
+              preload="metadata"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* ─── Desktop Player Bar ─── */}
       <div className="fixed bottom-0 left-0 right-0 h-[90px] bg-spotify-dark border-t border-spotify-border/30 z-30 hidden lg:flex items-center px-4">
         {/* Left — Now Playing Info */}
         <div className="w-[30%] min-w-[180px] flex items-center gap-3">
-          <div className="w-14 h-14 bg-spotify-card rounded-md overflow-hidden shrink-0 shadow-lg">
-            {currentSong.album?.cover_image ? (
+          <div className="w-14 h-14 bg-spotify-card rounded-md overflow-hidden shrink-0 shadow-lg relative">
+            {displayImage ? (
               <img
-                src={currentSong.album.cover_image}
-                alt={currentSong.title}
+                src={displayImage}
+                alt={displayTitle}
                 className="w-full h-full object-cover"
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center">
-                <Music className="w-6 h-6 text-spotify-muted" />
+                {isEpisode ? (
+                  <Mic2 className="w-6 h-6 text-spotify-muted" />
+                ) : (
+                  <Music className="w-6 h-6 text-spotify-muted" />
+                )}
+              </div>
+            )}
+            {/* Video badge */}
+            {isVideoEpisode && (
+              <div className="absolute bottom-0.5 right-0.5 bg-purple-500 rounded-sm p-0.5">
+                <Video className="w-2.5 h-2.5 text-white" />
               </div>
             )}
           </div>
           <div className="min-w-0 flex-1">
             <p className="text-sm font-medium text-white truncate hover:underline cursor-pointer">
-              {currentSong.title}
+              {displayTitle}
             </p>
             <p className="text-xs text-spotify-muted truncate">
-              {currentSong.artists?.map((a) => a.name).join(', ') ||
-                currentSong.album?.artists?.map((a) => a.name).join(', ') ||
-                'Unknown Artist'}
+              {displaySubtitle}
             </p>
           </div>
-          <LikeButton
-            songId={currentSong.id_song}
-            isLiked={user?.liked_songs?.some((s) => s.id_song === currentSong.id_song) || false}
-            size="sm"
-          />
+          {/* Like button only for songs */}
+          {currentSong && (
+            <LikeButton
+              songId={currentSong.id_song}
+              isLiked={user?.liked_songs?.some((s) => s.id_song === currentSong.id_song) || false}
+              size="sm"
+            />
+          )}
         </div>
 
         {/* Center — Controls + Progress */}
         <div className="flex-1 max-w-[722px] flex flex-col items-center justify-center mx-4">
           {/* Control Buttons */}
           <div className="flex items-center gap-4 mb-1">
+            {/* Shuffle — only for song queues */}
             <button
               onClick={toggleShuffle}
               className={cn(
                 'p-1.5 transition-colors',
-                isShuffle ? 'text-spotify-green hover:text-spotify-green-bright' : 'text-spotify-muted hover:text-white'
+                isEpisode
+                  ? 'text-spotify-muted/30 cursor-not-allowed'
+                  : isShuffle
+                    ? 'text-spotify-green hover:text-spotify-green-bright'
+                    : 'text-spotify-muted hover:text-white'
               )}
+              disabled={isEpisode}
               aria-label="Toggle shuffle"
             >
               <Shuffle className="w-4 h-4" />
@@ -224,7 +398,13 @@ export default function PlayerBar() {
                 flushStreamDuration();
                 prevSong();
               }}
-              className="text-spotify-muted hover:text-white transition-colors p-1"
+              className={cn(
+                'transition-colors p-1',
+                isEpisode
+                  ? 'text-spotify-muted/30 cursor-not-allowed'
+                  : 'text-spotify-muted hover:text-white'
+              )}
+              disabled={isEpisode}
               aria-label="Previous"
             >
               <SkipBack className="w-5 h-5 fill-current" />
@@ -247,7 +427,13 @@ export default function PlayerBar() {
                 flushStreamDuration();
                 nextSong();
               }}
-              className="text-spotify-muted hover:text-white transition-colors p-1"
+              className={cn(
+                'transition-colors p-1',
+                isEpisode
+                  ? 'text-spotify-muted/30 cursor-not-allowed'
+                  : 'text-spotify-muted hover:text-white'
+              )}
+              disabled={isEpisode}
               aria-label="Next"
             >
               <SkipForward className="w-5 h-5 fill-current" />
@@ -257,14 +443,17 @@ export default function PlayerBar() {
               onClick={cycleRepeat}
               className={cn(
                 'p-1.5 transition-colors relative',
-                repeatMode !== 'off'
-                  ? 'text-spotify-green hover:text-spotify-green-bright'
-                  : 'text-spotify-muted hover:text-white'
+                isEpisode
+                  ? 'text-spotify-muted/30 cursor-not-allowed'
+                  : repeatMode !== 'off'
+                    ? 'text-spotify-green hover:text-spotify-green-bright'
+                    : 'text-spotify-muted hover:text-white'
               )}
+              disabled={isEpisode}
               aria-label="Toggle repeat"
             >
               <RepeatIcon className="w-4 h-4" />
-              {repeatMode !== 'off' && (
+              {repeatMode !== 'off' && !isEpisode && (
                 <span className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-spotify-green" />
               )}
             </button>
@@ -283,7 +472,12 @@ export default function PlayerBar() {
             >
               <div className="w-full h-1 bg-white/20 rounded-full relative group-hover:h-1.5 transition-all">
                 <div
-                  className="absolute left-0 top-0 h-full bg-white group-hover:bg-spotify-green rounded-full transition-colors"
+                  className={cn(
+                    'absolute left-0 top-0 h-full rounded-full transition-colors',
+                    isEpisode
+                      ? 'bg-white group-hover:bg-purple-400'
+                      : 'bg-white group-hover:bg-spotify-green'
+                  )}
                   style={{ width: `${progress}%` }}
                 />
                 <div
@@ -299,18 +493,34 @@ export default function PlayerBar() {
           </div>
         </div>
 
-        {/* Right — Volume + Queue */}
+        {/* Right — Volume + Queue + Video Toggle */}
         <div className="w-[30%] min-w-[180px] flex items-center justify-end gap-2">
-          <button
-            onClick={toggleQueue}
-            className={cn(
-              'p-1.5 transition-colors',
-              isQueueOpen ? 'text-spotify-green' : 'text-spotify-muted hover:text-white'
-            )}
-            aria-label="Toggle queue"
-          >
-            <ListMusic className="w-4 h-4" />
-          </button>
+          {/* Video toggle button */}
+          {isVideoEpisode && (
+            <button
+              onClick={toggleVideoExpanded}
+              className={cn(
+                'p-1.5 transition-colors',
+                isVideoExpanded ? 'text-purple-400' : 'text-spotify-muted hover:text-white'
+              )}
+              aria-label="Toggle video"
+            >
+              <Video className="w-4 h-4" />
+            </button>
+          )}
+
+          {!isEpisode && (
+            <button
+              onClick={toggleQueue}
+              className={cn(
+                'p-1.5 transition-colors',
+                isQueueOpen ? 'text-spotify-green' : 'text-spotify-muted hover:text-white'
+              )}
+              aria-label="Toggle queue"
+            >
+              <ListMusic className="w-4 h-4" />
+            </button>
+          )}
 
           <div className="flex items-center gap-1.5 w-[140px]">
             <button
@@ -341,45 +551,56 @@ export default function PlayerBar() {
         </div>
       </div>
 
-      {/* Mobile Player Bar — Compact */}
+      {/* ─── Mobile Player Bar — Compact ─── */}
       <div
         className="fixed bottom-14 left-0 right-0 h-16 bg-spotify-dark/95 backdrop-blur-lg border-t border-spotify-border/20 z-30 lg:hidden flex items-center px-3 gap-3"
         onClick={togglePlay}
       >
-        {/* Album Art */}
-        <div className="w-11 h-11 bg-spotify-card rounded-md overflow-hidden shrink-0">
-          {currentSong.album?.cover_image ? (
+        {/* Album Art / Thumbnail */}
+        <div className="w-11 h-11 bg-spotify-card rounded-md overflow-hidden shrink-0 relative">
+          {displayImage ? (
             <img
-              src={currentSong.album.cover_image}
-              alt={currentSong.title}
+              src={displayImage}
+              alt={displayTitle}
               className="w-full h-full object-cover"
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
-              <Music className="w-5 h-5 text-spotify-muted" />
+              {isEpisode ? (
+                <Mic2 className="w-5 h-5 text-spotify-muted" />
+              ) : (
+                <Music className="w-5 h-5 text-spotify-muted" />
+              )}
+            </div>
+          )}
+          {isVideoEpisode && (
+            <div className="absolute bottom-0.5 right-0.5 bg-purple-500 rounded-sm p-0.5">
+              <Video className="w-2 h-2 text-white" />
             </div>
           )}
         </div>
 
-        {/* Song Info */}
+        {/* Track Info */}
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium text-white truncate">
-            {currentSong.title}
+            {displayTitle}
           </p>
           <p className="text-xs text-spotify-muted truncate">
-            {currentSong.artists?.map((a) => a.name).join(', ') || 'Unknown Artist'}
+            {displaySubtitle}
           </p>
         </div>
 
-        {/* Like Button */}
-        <div onClick={(e) => e.stopPropagation()}>
-          <LikeButton
-            songId={currentSong.id_song}
-            isLiked={user?.liked_songs?.some((s) => s.id_song === currentSong.id_song) || false}
-            size="md"
-            className="p-1"
-          />
-        </div>
+        {/* Like Button (songs only) */}
+        {currentSong && (
+          <div onClick={(e) => e.stopPropagation()}>
+            <LikeButton
+              songId={currentSong.id_song}
+              isLiked={user?.liked_songs?.some((s) => s.id_song === currentSong.id_song) || false}
+              size="md"
+              className="p-1"
+            />
+          </div>
+        )}
 
         {/* Play/Pause */}
         <button
@@ -400,7 +621,10 @@ export default function PlayerBar() {
         {/* Progress bar at top of mobile player */}
         <div className="absolute top-0 left-0 right-0 h-[2px] bg-white/10">
           <div
-            className="h-full bg-white"
+            className={cn(
+              'h-full',
+              isEpisode ? 'bg-purple-400' : 'bg-white'
+            )}
             style={{ width: `${progress}%` }}
           />
         </div>
