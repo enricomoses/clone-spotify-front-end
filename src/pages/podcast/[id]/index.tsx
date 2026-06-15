@@ -6,7 +6,7 @@ import { fetcher } from '@/lib/fetcher';
 import { withAuth } from '@/utils/withAuth';
 import FollowButton from '@/components/social/FollowButton';
 import EpisodeRow from '@/components/podcast/EpisodeRow';
-import { BannerSkeleton } from '@/components/ui/SkeletonCard';
+import { PodcastDetailSkeleton } from '@/components/ui/SkeletonCard';
 import type { Podcast } from '@/types';
 import Link from 'next/link';
 import { useAuthStore } from '@/stores/useAuthStore';
@@ -25,7 +25,7 @@ function PodcastDetailPage() {
     fetcher
   );
 
-  if (isLoading || !podcast) return <BannerSkeleton />;
+  if (isLoading || !podcast) return <PodcastDetailSkeleton />;
 
   const isCreator = podcast.id_user === user?.id_user;
 

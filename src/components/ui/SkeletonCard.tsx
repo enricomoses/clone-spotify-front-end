@@ -563,4 +563,89 @@ export function ArtistGallerySkeleton() {
   );
 }
 
+
+// Podcast detail page skeleton
+export function PodcastDetailSkeleton() {
+  return (
+    <div className="-mt-[60px]">
+      {/* Banner */}
+      <div
+        className="relative flex flex-col sm:flex-row items-center sm:items-end gap-4 sm:gap-6 px-4 sm:px-8 pt-20 sm:pt-24 pb-6 sm:pb-8"
+        style={{
+          background:
+            'linear-gradient(transparent 0, rgba(0,0,0,.5) 100%), linear-gradient(135deg, #065f46 0%, #134e4a 50%, #0f172a 100%)',
+          minHeight: '340px',
+        }}
+      >
+        {/* Cover Skeleton */}
+        <Skeleton className="w-36 h-36 sm:w-48 md:w-56 sm:h-48 md:h-56 rounded-xl shrink-0 shadow-2xl shadow-black/50" />
+
+        {/* Info Skeleton */}
+        <div className="flex flex-col items-center sm:items-start justify-end flex-1 w-full text-center sm:text-left">
+          {/* Podcast tag */}
+          <Skeleton className="h-4 w-16 mb-2" />
+          {/* Title */}
+          <Skeleton className="h-10 sm:h-14 w-3/4 sm:w-1/2 mb-3" />
+          {/* Description */}
+          <Skeleton className="h-4 w-2/3 sm:w-1/3 mb-2" />
+          {/* Metadata */}
+          <Skeleton className="h-4 w-48" />
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="relative">
+        <div
+          className="absolute inset-0 h-40"
+          style={{
+            background: 'linear-gradient(rgba(6,95,70,.3), #121212)',
+          }}
+        />
+
+        <div className="relative z-10 px-4 sm:px-8 py-6">
+          {/* Actions Skeleton */}
+          <div className="flex items-center gap-4 mb-8">
+            {/* Follow button skeleton */}
+            <Skeleton className="h-9 w-24 rounded-full" />
+          </div>
+
+          {/* Episodes Skeleton */}
+          <section>
+            <h2 className="text-2xl font-bold text-white mb-5">
+              All Episodes
+            </h2>
+            <div className="space-y-1">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="flex gap-4 p-4 rounded-lg border-b border-spotify-border/20 last:border-0">
+                  {/* Thumbnail Skeleton */}
+                  <Skeleton className="w-28 h-28 shrink-0 rounded-lg" />
+
+                  {/* Content Skeleton */}
+                  <div className="flex-1 min-w-0 flex flex-col justify-between py-1">
+                    <div>
+                      {/* Title skeleton */}
+                      <Skeleton className="h-5 w-1/3 mb-2" />
+                      {/* Description skeleton */}
+                      <Skeleton className="h-4 w-3/4 mb-1.5" />
+                      <Skeleton className="h-4 w-1/2" />
+                    </div>
+
+                    {/* Bottom bar skeleton */}
+                    <div className="flex items-center gap-4 mt-3">
+                      {/* Play button skeleton */}
+                      <Skeleton className="w-8 h-8 rounded-full shrink-0" />
+                      {/* Metadata skeleton */}
+                      <Skeleton className="h-3.5 w-32" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default Skeleton;
