@@ -55,10 +55,16 @@ export default function ArtistProfilePage() {
 
   if (isLoading || !artist) return <BannerSkeleton />;
 
+  const mappedSongs = artist.songs?.map((song) => ({
+    ...song,
+    album: song.album || artist.albums?.find((a) => a.id_album === song.id_album),
+    artists: song.artists && song.artists.length > 0 ? song.artists : [artist],
+  })) || [];
+
   const handlePlayAll = () => {
     requireAuth(() => {
-      if (artist.songs && artist.songs.length > 0) {
-        playSong(artist.songs[0], artist.songs);
+      if (mappedSongs.length > 0) {
+        playSong(mappedSongs[0], mappedSongs);
       }
     });
   };
@@ -111,7 +117,7 @@ export default function ArtistProfilePage() {
   const galleryData = gallery || artist.galleries || [];
 
   const tabs: { key: ArtistTab; label: string; count?: number }[] = [
-    { key: 'songs', label: 'Popular Songs', count: artist.songs?.length },
+    { key: 'songs', label: 'Popular Songs', count: mappedSongs.length },
     { key: 'albums', label: 'Discography', count: artist.albums?.length },
     {
       key: 'concerts',
@@ -280,18 +286,17 @@ export default function ArtistProfilePage() {
 
             {/* Tab Content: Songs */}
             {activeTab === 'songs' &&
-              artist.songs &&
-              artist.songs.length > 0 && (
+              mappedSongs.length > 0 && (
                 <div className="max-w-4xl">
                   <SongList
-                    songs={artist.songs}
+                    songs={mappedSongs}
                     showAlbum={true}
                     showHeader={true}
                   />
                 </div>
               )}
             {activeTab === 'songs' &&
-              (!artist.songs || artist.songs.length === 0) && (
+              mappedSongs.length === 0 && (
                 <p className="text-spotify-muted text-sm py-8 text-center">
                   No songs available.
                 </p>
