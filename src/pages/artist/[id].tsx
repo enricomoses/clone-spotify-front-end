@@ -20,6 +20,7 @@ import AlbumCard from '@/components/album/AlbumCard';
 import FollowButton from '@/components/social/FollowButton';
 import ShareButton from '@/components/social/ShareButton';
 import { BannerSkeleton } from '@/components/ui/SkeletonCard';
+import Modal from '@/components/ui/Modal';
 import { formatDate } from '@/utils/formatDuration';
 import type { Artist, ArtistGallery, Concert } from '@/types';
 import { cn } from '@/lib/utils';
@@ -37,6 +38,7 @@ export default function ArtistProfilePage() {
   const refreshUser = useAuthStore((s) => s.refreshUser);
   const addToast = useToastStore((s) => s.addToast);
   const [activeTab, setActiveTab] = useState<ArtistTab>('songs');
+  const [isBioModalOpen, setIsBioModalOpen] = useState(false);
 
   const { data: artist, isLoading } = useSWR<Artist>(
     id ? `/artists/${id}` : null,
@@ -171,8 +173,20 @@ export default function ArtistProfilePage() {
               {artist.name}
             </h1>
             {artist.bio && (
-              <p className="text-xs sm:text-sm text-white/70 max-w-lg line-clamp-2">
-                {artist.bio}
+              <p className="text-xs sm:text-sm text-white/70 max-w-lg">
+                {artist.bio.length > 150 ? (
+                  <>
+                    {artist.bio.slice(0, 150)}...
+                    <button
+                      onClick={() => setIsBioModalOpen(true)}
+                      className="text-white hover:underline font-bold text-xs sm:text-sm ml-1.5 focus:outline-none"
+                    >
+                      View more
+                    </button>
+                  </>
+                ) : (
+                  artist.bio
+                )}
               </p>
             )}
             {/* Social Links */}
@@ -432,6 +446,35 @@ export default function ArtistProfilePage() {
           </div>
         </div>
       </div>
+      
+      <Modal
+        isOpen={isBioModalOpen}
+        onClose={() => setIsBioModalOpen(false)}
+        title={`About ${artist.name}`}
+        size="lg"
+      >
+        <div className="flex flex-col md:flex-row gap-6 text-white pt-2">
+          {artist.profile_picture ? (
+            <div className="w-32 h-32 md:w-40 md:h-40 shrink-0 rounded-xl overflow-hidden shadow-2xl mx-auto md:mx-0">
+              <img
+                src={artist.profile_picture}
+                alt={artist.name}
+                className="w-full h-full object-cover"
+              />
+            </div>
+          ) : (
+            <div className="w-32 h-32 md:w-40 md:h-40 shrink-0 rounded-xl bg-spotify-card flex items-center justify-center shadow-2xl mx-auto md:mx-0">
+              <User className="w-16 h-16 text-spotify-muted" />
+            </div>
+          )}
+          <div className="flex-1 flex flex-col justify-center">
+            <h3 className="text-2xl font-bold mb-3 text-center md:text-left text-white">{artist.name}</h3>
+            <div className="text-sm text-white/70 leading-relaxed whitespace-pre-line overflow-y-auto max-h-[40vh] pr-2">
+              {artist.bio}
+            </div>
+          </div>
+        </div>
+      </Modal>
     </>
   );
 }
