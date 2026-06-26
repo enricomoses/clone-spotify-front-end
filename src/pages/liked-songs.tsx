@@ -1,7 +1,6 @@
 import Head from 'next/head';
-import { useEffect } from 'react';
-import { useRouter } from 'next/router';
 import { Heart, Play, Music, Clock } from 'lucide-react';
+import { withAuth } from '@/utils/withAuth';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { usePlayerStore } from '@/stores/usePlayerStore';
 import SongList from '@/components/song/SongList';
@@ -10,16 +9,9 @@ import useSWR from 'swr';
 import { fetcher } from '@/lib/fetcher';
 import type { User } from '@/types';
 
-export default function LikedSongsPage() {
-  const router = useRouter();
+function LikedSongsPage() {
   const currentUser = useAuthStore((s) => s.user);
   const playSong = usePlayerStore((s) => s.playSong);
-
-  useEffect(() => {
-    if (!currentUser) {
-      router.replace('/login');
-    }
-  }, [currentUser, router]);
 
   const { data: userData, isLoading } = useSWR<User>(
     currentUser ? `/users/${currentUser.id_user}` : null,
@@ -121,3 +113,5 @@ export default function LikedSongsPage() {
     </>
   );
 }
+
+export default withAuth(LikedSongsPage);

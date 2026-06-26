@@ -1,8 +1,8 @@
 import Head from 'next/head';
-import { useEffect, useMemo } from 'react';
-import { useRouter } from 'next/router';
+import { useMemo } from 'react';
 import useSWR from 'swr';
 import { History, Play, Clock, Music } from 'lucide-react';
+import { withAuth } from '@/utils/withAuth';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { usePlayerStore } from '@/stores/usePlayerStore';
 import SongList from '@/components/song/SongList';
@@ -11,17 +11,9 @@ import { fetcher } from '@/lib/fetcher';
 import { formatRelativeTime } from '@/utils/formatDuration';
 import type { SongStreamingHistory, Song } from '@/types';
 
-export default function RecentsPage() {
-  const router = useRouter();
+function RecentsPage() {
   const currentUser = useAuthStore((s) => s.user);
   const playSong = usePlayerStore((s) => s.playSong);
-
-  // Redirect if not logged in
-  useEffect(() => {
-    if (!currentUser) {
-      router.replace('/login');
-    }
-  }, [currentUser, router]);
 
   // Fetch streaming history for the current user
   const { data: historyData, isLoading: historyLoading } = useSWR<SongStreamingHistory[]>(
@@ -188,3 +180,5 @@ export default function RecentsPage() {
     </>
   );
 }
+
+export default withAuth(RecentsPage);
