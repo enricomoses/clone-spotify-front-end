@@ -52,3 +52,38 @@ export function truncateText(text: string, maxLength: number): string {
   if (text.length <= maxLength) return text;
   return text.slice(0, maxLength) + '...';
 }
+
+/**
+ * Format date string to relative time words (e.g. "one minute ago", "2 hours ago")
+ */
+export function formatRelativeTime(dateString: string): string {
+  const now = new Date();
+  const date = new Date(dateString);
+  const diffMs = now.getTime() - date.getTime();
+  const diffSecs = Math.floor(diffMs / 1000);
+  const diffMins = Math.floor(diffSecs / 60);
+  const diffHrs = Math.floor(diffMins / 60);
+  const diffDays = Math.floor(diffHrs / 24);
+
+  if (diffSecs < 60) {
+    return 'just now';
+  } else if (diffMins === 1) {
+    return '1 minute ago';
+  } else if (diffMins < 60) {
+    return `${diffMins} minutes ago`;
+  } else if (diffHrs === 1) {
+    return '1 hour ago';
+  } else if (diffHrs < 24) {
+    return `${diffHrs} hours ago`;
+  } else if (diffDays === 1) {
+    return 'yesterday';
+  } else if (diffDays < 7) {
+    return `${diffDays} days ago`;
+  } else {
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+  }
+}

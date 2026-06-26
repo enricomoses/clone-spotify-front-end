@@ -91,6 +91,15 @@ export default function Header() {
                 >
                   Profile
                 </button>
+                <button
+                  onClick={() => {
+                    router.push('/profile/recents');
+                    setShowMenu(false);
+                  }}
+                  className="w-full text-left px-4 py-2.5 text-sm text-spotify-muted hover:text-white hover:bg-spotify-hover transition-colors"
+                >
+                  Recents
+                </button>
                 <hr className="border-spotify-border my-1" />
                 <button
                   onClick={() => {

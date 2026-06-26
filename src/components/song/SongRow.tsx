@@ -4,7 +4,7 @@ import { Play, Music, ListPlus } from 'lucide-react';
 import { usePlayerStore } from '@/stores/usePlayerStore';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
 import { useAuthStore } from '@/stores/useAuthStore';
-import { formatDuration } from '@/utils/formatDuration';
+import { formatDuration, formatRelativeTime } from '@/utils/formatDuration';
 import LikeButton from './LikeButton';
 import AddToPlaylistModal from '@/components/playlist/AddToPlaylistModal';
 import type { Song } from '@/types';
@@ -16,6 +16,7 @@ interface SongRowProps {
   queue?: Song[];
   showAlbum?: boolean;
   showIndex?: boolean;
+  showLastPlayed?: boolean;
 }
 
 export default function SongRow({
@@ -24,6 +25,7 @@ export default function SongRow({
   queue = [],
   showAlbum = true,
   showIndex = true,
+  showLastPlayed = false,
 }: SongRowProps) {
   const { playSong, currentSong, isPlaying } = usePlayerStore();
   const { requireAuth } = useRequireAuth();
@@ -44,9 +46,11 @@ export default function SongRow({
       <div
         className={cn(
           'group grid items-center gap-4 px-4 py-2 rounded-md hover:bg-white/10 transition-colors cursor-pointer',
-          showAlbum
-            ? 'grid-cols-[16px_minmax(120px,6fr)_auto_minmax(40px,1fr)] md:grid-cols-[16px_minmax(120px,4fr)_minmax(120px,2fr)_auto_minmax(40px,1fr)]'
-            : 'grid-cols-[16px_minmax(120px,6fr)_auto_minmax(40px,1fr)]',
+          showLastPlayed && showAlbum
+            ? 'grid-cols-[16px_minmax(120px,6fr)_auto_minmax(40px,1fr)] md:grid-cols-[16px_minmax(120px,3.5fr)_minmax(120px,2fr)_minmax(120px,2.5fr)_auto_minmax(40px,1fr)]'
+            : showAlbum
+              ? 'grid-cols-[16px_minmax(120px,6fr)_auto_minmax(40px,1fr)] md:grid-cols-[16px_minmax(120px,4fr)_minmax(120px,2fr)_auto_minmax(40px,1fr)]'
+              : 'grid-cols-[16px_minmax(120px,6fr)_auto_minmax(40px,1fr)]',
           isActive && 'bg-white/5'
         )}
         onDoubleClick={handlePlay}
@@ -120,8 +124,15 @@ export default function SongRow({
           </div>
         )}
 
+        {/* Last Played */}
+        {showLastPlayed && (
+          <div className="min-w-0 hidden md:block text-sm text-spotify-muted">
+            {song.last_played_at ? formatRelativeTime(song.last_played_at) : '-'}
+          </div>
+        )}
+
         {/* Actions (Like + Add to Playlist) */}
-        <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity w-[48px] justify-end">
           <LikeButton songId={song.id_song} isLiked={isLiked} size="sm" />
           <button
             onClick={(e) => {

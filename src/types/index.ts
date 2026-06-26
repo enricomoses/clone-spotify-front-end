@@ -63,6 +63,7 @@ export interface Song {
   streaming_histories_count?: number; // from withCount in Discover Weekly
   created_at?: string;
   updated_at?: string;
+  last_played_at?: string;
 }
 
 export interface Concert {
