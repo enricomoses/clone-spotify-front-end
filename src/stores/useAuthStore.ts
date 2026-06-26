@@ -34,7 +34,7 @@ export const useAuthStore = create<AuthState>()(
         if (typeof window !== 'undefined') {
           localStorage.removeItem('token');
         }
-        useToastStore.getState().addToast('Logout berhasil.', 'success');
+        useToastStore.getState().addToast('Logged out successfully.', 'success');
       },
 
       isAuthenticated: () => {

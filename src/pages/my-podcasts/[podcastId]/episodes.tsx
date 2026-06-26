@@ -8,7 +8,6 @@ import { z } from 'zod';
 import { ArrowLeft, Plus, Edit3, Trash2, Loader2, Mic, Play, Music, Video, Info } from 'lucide-react';
 import { fetcher } from '@/lib/fetcher';
 import { withAuth } from '@/utils/withAuth';
-import { GridSkeleton } from '@/components/ui/SkeletonCard';
 import { formatDuration, formatDate } from '@/utils/formatDuration';
 import type { Podcast, Episode } from '@/types';
 import api from '@/lib/axios';
@@ -20,10 +19,10 @@ import { useToastStore } from '@/components/ui/Toast';
 import { useAuthStore } from '@/stores/useAuthStore';
 
 const episodeSchema = z.object({
-  title: z.string().min(1, 'Judul episode wajib diisi'),
+  title: z.string().min(1, 'Episode title is required'),
   description: z.string().optional(),
-  published_at: z.string().min(1, 'Tanggal publish wajib diisi'),
-  thumbnail_image: z.string().url('Thumbnail URL tidak valid').optional().or(z.literal('')),
+  published_at: z.string().min(1, 'Publish date is required'),
+  thumbnail_image: z.string().url('Thumbnail URL is invalid').optional().or(z.literal('')),
 });
 
 type EpisodeForm = z.infer<typeof episodeSchema>;
@@ -144,7 +143,7 @@ function PodcastEpisodesPage() {
 
   const onSubmit = async (data: EpisodeForm) => {
     if (!effectiveAudioUrl) {
-      setError('Silakan unggah file audio atau video terlebih dahulu.');
+      setError('Please upload an audio or video file first.');
       return;
     }
 
@@ -169,11 +168,11 @@ function PodcastEpisodesPage() {
           ...payload,
           _method: 'PUT',
         });
-        addToast('Episode berhasil diperbarui!', 'success');
+        addToast('Episode updated successfully!', 'success');
         setEditingEpisode(null);
       } else {
         await api.post('/episodes', payload);
-        addToast('Episode berhasil diunggah!', 'success');
+        addToast('Episode uploaded successfully!', 'success');
         setShowForm(false);
       }
       mutate(`/podcasts/${podcastId}`);
@@ -188,7 +187,7 @@ function PodcastEpisodesPage() {
       setVideoUrl('');
       setVideoDuration(0);
     } catch (err: any) {
-      const errMsg = err.response?.data?.message || 'Gagal menyimpan episode. Silakan coba lagi.';
+      const errMsg = err.response?.data?.message || 'Failed to save episode. Please try again.';
       setError(errMsg);
       addToast(errMsg, 'error');
     } finally {
@@ -197,7 +196,7 @@ function PodcastEpisodesPage() {
   };
 
   const handleDelete = async (episodeId: string) => {
-    if (!confirm('Hapus episode ini?')) return;
+    if (!confirm('Delete this episode?')) return;
     setDeletingId(episodeId);
     try {
       const episode = episodes.find((e) => e.id_episode === episodeId);
@@ -239,11 +238,11 @@ function PodcastEpisodesPage() {
         _method: 'DELETE',
         id_user: user?.id_user,
       });
-      addToast('Episode berhasil dihapus!', 'success');
+      addToast('Episode deleted successfully!', 'success');
       mutate(`/podcasts/${podcastId}`);
     } catch (e: any) {
       console.error('Failed to delete episode', e);
-      addToast(e.response?.data?.message || 'Gagal menghapus episode. Silakan coba lagi.', 'error');
+      addToast(e.response?.data?.message || 'Failed to delete episode. Please try again.', 'error');
     } finally {
       setDeletingId(null);
     }
@@ -322,7 +321,7 @@ function PodcastEpisodesPage() {
             className="flex items-center gap-2 text-sm text-spotify-muted hover:text-white transition-colors mb-4"
           >
             <ArrowLeft className="w-4 h-4" />
-            Kembali ke Podcast Saya
+            Back to My Podcasts
           </Link>
 
           <div className="flex items-center gap-4">
@@ -349,7 +348,7 @@ function PodcastEpisodesPage() {
             className="flex items-center gap-2 px-5 py-2.5 bg-spotify-green text-black text-sm font-bold rounded-full hover:bg-spotify-green-bright transition-colors"
           >
             <Plus className="w-4 h-4" />
-            {isFormVisible ? 'Tutup Form' : 'Upload Episode Baru'}
+            {isFormVisible ? 'Close Form' : 'Upload New Episode'}
           </button>
         </div>
 
@@ -357,7 +356,7 @@ function PodcastEpisodesPage() {
         {isFormVisible && (
           <div className="bg-spotify-card/50 border border-spotify-border/20 rounded-xl p-6 mb-8 transition-all">
             <h2 className="text-lg font-bold text-white mb-4">
-              {editingEpisode ? `Edit Episode: ${editingEpisode.title}` : 'Upload Episode Baru'}
+              {editingEpisode ? `Edit Episode: ${editingEpisode.title}` : 'Upload New Episode'}
             </h2>
 
             {error && (
@@ -369,13 +368,13 @@ function PodcastEpisodesPage() {
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-semibold text-white mb-1.5">Judul Episode *</label>
-                  <input {...register('title')} type="text" placeholder="Judul episode"
+                  <label className="block text-sm font-semibold text-white mb-1.5">Episode Title *</label>
+                  <input {...register('title')} type="text" placeholder="Episode title"
                     className="w-full bg-spotify-hover border border-spotify-border rounded-md px-4 py-2.5 text-sm text-white placeholder:text-spotify-muted/60 focus:outline-none focus:border-spotify-green transition-all" />
                   {errors.title && <p className="mt-1 text-xs text-red-400">{errors.title.message}</p>}
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-white mb-1.5">Tanggal Publish *</label>
+                  <label className="block text-sm font-semibold text-white mb-1.5">Publish Date *</label>
                   <input {...register('published_at')} type="date"
                     className="w-full bg-spotify-hover border border-spotify-border rounded-md px-4 py-2.5 text-sm text-white focus:outline-none focus:border-spotify-green transition-all" />
                   {errors.published_at && <p className="mt-1 text-xs text-red-400">{errors.published_at.message}</p>}
@@ -383,8 +382,8 @@ function PodcastEpisodesPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-white mb-1.5">Deskripsi</label>
-                <textarea {...register('description')} placeholder="Deskripsi episode..." rows={3}
+                <label className="block text-sm font-semibold text-white mb-1.5">Description</label>
+                <textarea {...register('description')} placeholder="Episode description..." rows={3}
                   className="w-full bg-spotify-hover border border-spotify-border rounded-md px-4 py-2.5 text-sm text-white placeholder:text-spotify-muted/60 focus:outline-none focus:border-spotify-green transition-all resize-none" />
               </div>
 
@@ -392,7 +391,7 @@ function PodcastEpisodesPage() {
               <div>
                 <label className="flex items-center gap-2 text-sm font-semibold text-white mb-2">
                   <Music className="w-4 h-4 text-spotify-green" />
-                  File Audio {!hasVideo && '*'}
+                  Audio File {!hasVideo && '*'}
                 </label>
                 <AudioUpload
                   value={audioUrl}
@@ -401,14 +400,14 @@ function PodcastEpisodesPage() {
                 />
                 {audioDuration > 0 && !hasVideo && (
                   <p className="mt-2 text-xs text-spotify-muted">
-                    Durasi terdeteksi: <span className="text-white font-medium">{formatDur(audioDuration)}</span>
+                    Detected duration: <span className="text-white font-medium">{formatDur(audioDuration)}</span>
                   </p>
                 )}
                 {hasVideo && hasAudio && (
                   <div className="mt-2 flex items-start gap-2 p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
                     <Info className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
                     <p className="text-xs text-blue-300">
-                      Video telah diunggah. Audio URL akan otomatis menggunakan URL video karena video sudah berisi audio track. Audio yang diunggah secara terpisah akan diabaikan.
+                      Video has been uploaded. Audio URL will automatically use the video URL because the video already contains the audio track. Separately uploaded audio will be ignored.
                     </p>
                   </div>
                 )}
@@ -418,10 +417,10 @@ function PodcastEpisodesPage() {
               <div>
                 <label className="flex items-center gap-2 text-sm font-semibold text-white mb-2">
                   <Video className="w-4 h-4 text-purple-400" />
-                  File Video (Opsional)
+                  Video File (Optional)
                 </label>
                 <p className="text-xs text-spotify-muted mb-3">
-                  Upload video untuk video podcast. Jika video diunggah, audio akan otomatis diambil dari video.
+                  Upload video for a video podcast. If video is uploaded, audio will automatically be taken from the video.
                 </p>
                 <VideoUpload
                   value={videoUrl}
@@ -430,7 +429,7 @@ function PodcastEpisodesPage() {
                 />
                 {videoDuration > 0 && (
                   <p className="mt-2 text-xs text-spotify-muted">
-                    Durasi video: <span className="text-white font-medium">{formatDur(videoDuration)}</span>
+                    Video duration: <span className="text-white font-medium">{formatDur(videoDuration)}</span>
                   </p>
                 )}
               </div>
@@ -443,10 +442,10 @@ function PodcastEpisodesPage() {
                   </div>
                   <div>
                     <p className="text-sm font-semibold text-white">
-                      Durasi Episode: {formatDur(effectiveDuration)}
+                      Episode Duration: {formatDur(effectiveDuration)}
                     </p>
                     <p className="text-xs text-spotify-muted">
-                      {hasVideo ? 'Berdasarkan durasi video' : 'Berdasarkan durasi audio'}
+                      {hasVideo ? 'Based on video duration' : 'Based on audio duration'}
                     </p>
                   </div>
                 </div>
@@ -454,7 +453,7 @@ function PodcastEpisodesPage() {
 
               {/* Thumbnail Image */}
               <div>
-                <label className="block text-sm font-semibold text-white mb-1.5">Thumbnail Image (Opsional)</label>
+                <label className="block text-sm font-semibold text-white mb-1.5">Thumbnail Image (Optional)</label>
                 <input type="hidden" {...register('thumbnail_image')} />
                 <ImageUpload
                   value={thumbnailImage}
@@ -467,12 +466,12 @@ function PodcastEpisodesPage() {
                 <button type="submit" disabled={isSubmitting || !effectiveAudioUrl}
                   className="px-6 py-2.5 bg-spotify-green text-black font-bold rounded-full text-sm hover:bg-spotify-green-bright transition-colors disabled:opacity-50 flex items-center gap-2">
                   {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
-                  {isSubmitting ? (editingEpisode ? 'Menyimpan...' : 'Mengunggah...') : (editingEpisode ? 'Simpan Perubahan' : 'Upload Episode')}
+                  {isSubmitting ? (editingEpisode ? 'Saving...' : 'Uploading...') : (editingEpisode ? 'Save Changes' : 'Upload Episode')}
                 </button>
                 {editingEpisode && (
                   <button type="button" onClick={handleCancelEdit}
                     className="px-6 py-2.5 bg-transparent border border-spotify-border hover:border-white text-white font-bold rounded-full text-sm transition-colors">
-                    Batal Edit
+                    Cancel Edit
                   </button>
                 )}
               </div>
@@ -502,7 +501,7 @@ function PodcastEpisodesPage() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <p className="text-sm font-medium text-white truncate">{episode.title}</p>
+                     <p className="text-sm font-medium text-white truncate">{episode.title}</p>
                     {episode.video_url && (
                       <span className="px-1.5 py-0.5 bg-purple-500/20 text-purple-400 border border-purple-500/30 text-[10px] font-bold rounded uppercase tracking-wider shrink-0">
                         Video
@@ -526,7 +525,7 @@ function PodcastEpisodesPage() {
                     onClick={() => handleDelete(episode.id_episode)}
                     disabled={deletingId === episode.id_episode}
                     className="p-2 text-spotify-muted hover:text-red-400 transition-colors"
-                    title="Hapus Episode"
+                    title="Delete Episode"
                   >
                     {deletingId === episode.id_episode ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
@@ -541,7 +540,7 @@ function PodcastEpisodesPage() {
         ) : (
           <div className="flex flex-col items-center justify-center min-h-[30vh]">
             <Play className="w-12 h-12 text-spotify-muted/30 mb-3" />
-            <p className="text-sm text-spotify-muted">Belum ada episode. Upload episode pertamamu!</p>
+            <p className="text-sm text-spotify-muted">No episodes yet. Upload your first episode!</p>
           </div>
         )}
       </div>

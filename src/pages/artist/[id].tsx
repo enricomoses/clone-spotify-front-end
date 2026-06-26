@@ -34,7 +34,6 @@ export default function ArtistProfilePage() {
   const { id } = router.query;
   const playSong = usePlayerStore((s) => s.playSong);
   const { requireAuth, user } = useRequireAuth();
-  const setUser = useAuthStore((s) => s.setUser);
   const refreshUser = useAuthStore((s) => s.refreshUser);
   const addToast = useToastStore((s) => s.addToast);
   const [activeTab, setActiveTab] = useState<ArtistTab>('songs');
@@ -83,10 +82,10 @@ export default function ArtistProfilePage() {
         artist_id: artist.id_artist,
       });
       await refreshUser();
-      addToast('Berhasil mengikuti artis', 'success');
+      addToast('Successfully followed artist', 'success');
     } catch (e) {
       console.error('Failed to follow artist', e);
-      addToast('Gagal mengikuti artis', 'error');
+      addToast('Failed to follow artist', 'error');
       throw e;
     }
   };
@@ -101,14 +100,13 @@ export default function ArtistProfilePage() {
         },
       );
       await refreshUser();
-      addToast('Batal mengikuti artis', 'success');
+      addToast('Unfollowed artist successfully', 'success');
     } catch (e) {
       console.error('Failed to unfollow artist', e);
-      addToast('Gagal membatalkan mengikuti artis', 'error');
+      addToast('Failed to unfollow artist', 'error');
       throw e;
     }
   };
-
 
   const upcomingConcerts = (concerts || artist.concerts || []).filter(
     (c) => new Date(c.event_at) > new Date(),

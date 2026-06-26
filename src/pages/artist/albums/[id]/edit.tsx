@@ -89,11 +89,11 @@ function EditAlbumPage() {
         artist_ids: collabArtists.map((a) => a.id_artist),
         _method: 'PUT',
       });
-      addToast('Album berhasil diperbarui!', 'success');
+      addToast('Album updated successfully!', 'success');
       router.push('/artist/albums');
     } catch (err: any) {
       setError('Failed to update album. Please try again.');
-      addToast('Gagal memperbarui album. Silakan coba lagi.', 'error');
+      addToast('Failed to update album. Please try again.', 'error');
       console.error(err);
     } finally {
       setIsSubmitting(false);

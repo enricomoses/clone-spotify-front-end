@@ -38,7 +38,7 @@ export const useArtistStore = create<ArtistAuthState>()(
         if (typeof document !== 'undefined') {
           document.cookie = 'artist-session=; max-age=0; path=/;';
         }
-        useToastStore.getState().addToast('Logout berhasil.', 'success');
+        useToastStore.getState().addToast('Logged out successfully.', 'success');
       },
 
       isAuthenticated: () => {

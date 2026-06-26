@@ -36,10 +36,10 @@ export default function AddCollaboratorModal({
         user_id: selectedUser.id_user,
         id_user: user.id_user,
       });
-      addToast(`${selectedUser.name} berhasil ditambahkan sebagai Editor`, 'success');
+      addToast(`${selectedUser.name} added successfully as Editor`, 'success');
       mutate(`/playlists/${playlistId}`);
     } catch (err: any) {
-      const msg = err.response?.data?.message || 'Gagal menambahkan kolaborator';
+      const msg = err.response?.data?.message || 'Failed to add collaborator';
       setError(msg);
       addToast(msg, 'error');
       setTimeout(() => setError(''), 4000);
@@ -59,9 +59,9 @@ export default function AddCollaboratorModal({
         id_user: user.id_user,
       });
       mutate(`/playlists/${playlistId}`);
-      addToast('Kolaborator berhasil dihapus', 'success');
+      addToast('Collaborator removed successfully', 'success');
     } catch (err: any) {
-      const msg = err.response?.data?.message || 'Gagal menghapus kolaborator';
+      const msg = err.response?.data?.message || 'Failed to remove collaborator';
       setError(msg);
       addToast(msg, 'error');
       setTimeout(() => setError(''), 4000);

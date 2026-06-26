@@ -114,12 +114,12 @@ export default function AudioUpload({
         setFileName(file.name);
         onChange(data.secure_url, data.duration ?? 0);
       } else {
-        setError('Gagal mendapatkan URL audio dari server');
+        setError('Failed to get audio URL from server');
       }
     } catch (err: any) {
       console.error('Error uploading audio:', err);
       setError(
-        err.response?.data?.message || 'Gagal mengunggah audio. Silakan coba lagi.'
+        err.response?.data?.message || 'Failed to upload audio. Please try again.'
       );
     } finally {
       setIsUploading(false);
@@ -148,7 +148,7 @@ export default function AudioUpload({
     } catch (err: any) {
       console.error('Error deleting audio:', err);
       setError(
-        err.response?.data?.message || 'Gagal menghapus audio dari penyimpanan.'
+        err.response?.data?.message || 'Failed to delete audio from storage.'
       );
       // Fallback: clear anyway to prevent user blockage
       setFileName(null);
@@ -194,7 +194,7 @@ export default function AudioUpload({
             <p className="text-sm text-white font-medium truncate" title={displayName || ''}>
               {displayName || 'Audio file'}
             </p>
-            <p className="text-xs text-spotify-muted mt-0.5">Audio berhasil diunggah</p>
+            <p className="text-xs text-spotify-muted mt-0.5">Audio uploaded successfully</p>
           </div>
 
           {/* Actions */}
@@ -236,7 +236,7 @@ export default function AudioUpload({
           {isUploading ? (
             <div className="flex flex-col items-center gap-2">
               <Loader2 className="w-8 h-8 text-spotify-green animate-spin" />
-              <p className="text-sm text-white font-medium">Mengunggah audio...</p>
+              <p className="text-sm text-white font-medium">Uploading audio...</p>
               <p className="text-xs text-spotify-muted">
                 Ini mungkin memerlukan beberapa saat
               </p>

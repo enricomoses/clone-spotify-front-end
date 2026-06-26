@@ -15,9 +15,9 @@ import ImageUpload from '@/components/ui/ImageUpload';
 import { useToastStore } from '@/components/ui/Toast';
 
 const createPodcastSchema = z.object({
-  name: z.string().min(1, 'Nama podcast wajib diisi'),
+  name: z.string().min(1, 'Podcast name is required'),
   about: z.string().optional(),
-  cover_image: z.string().url('URL tidak valid').optional().or(z.literal('')),
+  cover_image: z.string().url('Invalid URL').optional().or(z.literal('')),
   id_podcast_category: z.string().optional(),
 });
 
@@ -61,11 +61,11 @@ function CreatePodcastPage() {
 
       const response = await api.post('/podcasts', payload);
       const newPodcast = response.data.data || response.data;
-      addToast('Podcast berhasil dibuat!', 'success');
+      addToast('Podcast created successfully!', 'success');
       router.push(`/podcast/${newPodcast.id_podcast}`);
     } catch (err: any) {
       setError('Failed to create podcast. Please try again.');
-      addToast('Gagal membuat podcast. Silakan coba lagi.', 'error');
+      addToast('Failed to create podcast. Please try again.', 'error');
       console.error(err);
     } finally {
       setIsSubmitting(false);

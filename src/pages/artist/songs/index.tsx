@@ -50,11 +50,11 @@ function ArtistSongsPage() {
 
       await api.post(`/songs/${deleteTarget.id_song}`, { _method: 'DELETE' });
       mutate('/songs');
-      addToast('Lagu berhasil dihapus!', 'success');
+      addToast('Song deleted successfully!', 'success');
       setDeleteTarget(null);
     } catch (err) {
       console.error('Failed to delete song:', err);
-      addToast('Gagal menghapus lagu. Silakan coba lagi.', 'error');
+      addToast('Failed to delete song. Please try again.', 'error');
     } finally {
       setIsDeleting(false);
     }

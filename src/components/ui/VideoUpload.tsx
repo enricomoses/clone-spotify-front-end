@@ -113,12 +113,12 @@ export default function VideoUpload({
         setFileName(file.name);
         onChange(data.secure_url, data.duration ?? 0);
       } else {
-        setError('Gagal mendapatkan URL video dari server');
+        setError('Failed to get video URL from server');
       }
     } catch (err: any) {
       console.error('Error uploading video:', err);
       setError(
-        err.response?.data?.message || 'Gagal mengunggah video. Silakan coba lagi.'
+        err.response?.data?.message || 'Failed to upload video. Please try again.'
       );
     } finally {
       setIsUploading(false);
@@ -147,7 +147,7 @@ export default function VideoUpload({
     } catch (err: any) {
       console.error('Error deleting video:', err);
       setError(
-        err.response?.data?.message || 'Gagal menghapus video dari penyimpanan.'
+        err.response?.data?.message || 'Failed to delete video from storage.'
       );
       // Fallback: clear anyway to prevent user blockage
       setFileName(null);
@@ -186,7 +186,7 @@ export default function VideoUpload({
             <p className="text-sm text-white font-medium truncate" title={displayName || ''}>
               {displayName || 'Video file'}
             </p>
-            <p className="text-xs text-spotify-muted mt-0.5">Video berhasil diunggah</p>
+            <p className="text-xs text-spotify-muted mt-0.5">Video uploaded successfully</p>
           </div>
 
           {/* Actions */}
@@ -228,7 +228,7 @@ export default function VideoUpload({
           {isUploading ? (
             <div className="flex flex-col items-center gap-2">
               <Loader2 className="w-8 h-8 text-purple-400 animate-spin" />
-              <p className="text-sm text-white font-medium">Mengunggah video...</p>
+              <p className="text-sm text-white font-medium">Uploading video...</p>
               <p className="text-xs text-spotify-muted">
                 Ini mungkin memerlukan beberapa saat
               </p>

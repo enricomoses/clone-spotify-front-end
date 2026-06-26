@@ -69,10 +69,10 @@ export default function AddSongToPlaylistModal({
         });
         setAddedIds((prev) => new Set(prev).add(songId));
         mutate(`/playlists/${playlistId}`);
-        addToast('Lagu berhasil ditambahkan ke playlist', 'success');
+        addToast('Song added to playlist successfully', 'success');
       } catch (err) {
         console.error('Failed to add song to playlist', err);
-        addToast('Gagal menambahkan lagu ke playlist', 'error');
+        addToast('Failed to add song to playlist', 'error');
       } finally {
         setAddingId(null);
       }

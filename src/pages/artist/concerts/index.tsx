@@ -78,13 +78,13 @@ function ArtistConcertsPage() {
         artist_ids: collabArtists.map((a) => a.id_artist),
       });
       mutate(`/artists/${artist.id_artist}/concerts`);
-      addToast('Konser berhasil ditambahkan!', 'success');
+      addToast('Concert added successfully!', 'success');
       reset();
       setCollabArtists(artist ? [artist] : []);
       setShowForm(false);
     } catch (err: any) {
-      setError('Gagal membuat konser. Coba lagi.');
-      addToast('Gagal menambahkan konser. Silakan coba lagi.', 'error');
+      setError('Failed to create concert. Try again.');
+      addToast('Failed to add concert. Please try again.', 'error');
     } finally {
       setIsSubmitting(false);
     }
@@ -92,15 +92,15 @@ function ArtistConcertsPage() {
 
   const handleDelete = async (concertId: string) => {
     if (!artist) return;
-    if (!confirm('Hapus konser ini?')) return;
+    if (!confirm('Delete this concert?')) return;
     setDeletingId(concertId);
     try {
       await api.post(`/concerts/${concertId}`, { _method: 'DELETE' });
       mutate(`/artists/${artist.id_artist}/concerts`);
-      addToast('Konser berhasil dihapus!', 'success');
+      addToast('Concert deleted successfully!', 'success');
     } catch (e) {
       console.error('Failed to delete concert', e);
-      addToast('Gagal menghapus konser. Silakan coba lagi.', 'error');
+      addToast('Failed to delete concert. Please try again.', 'error');
     } finally {
       setDeletingId(null);
     }

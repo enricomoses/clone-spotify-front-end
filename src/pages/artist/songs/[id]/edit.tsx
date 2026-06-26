@@ -95,7 +95,7 @@ function EditSongPage() {
 
   const onSubmit = async (data: EditSongForm) => {
     if (!audioUrl) {
-      setError('Silakan unggah file audio terlebih dahulu.');
+      setError('Please upload an audio file first.');
       return;
     }
 
@@ -111,11 +111,11 @@ function EditSongPage() {
         artist_ids: collabArtists.map((a) => a.id_artist),
         _method: 'PUT',
       });
-      addToast('Lagu berhasil diperbarui!', 'success');
+      addToast('Song updated successfully!', 'success');
       router.push('/artist/songs');
     } catch (err: any) {
       setError('Failed to update song. Please try again.');
-      addToast('Gagal memperbarui lagu. Silakan coba lagi.', 'error');
+      addToast('Failed to update song. Please try again.', 'error');
       console.error(err);
     } finally {
       setIsSubmitting(false);

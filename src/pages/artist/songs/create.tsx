@@ -71,7 +71,7 @@ function CreateSongPage() {
 
   const onSubmit = async (data: CreateSongForm) => {
     if (!audioUrl) {
-      setError('Silakan unggah file audio terlebih dahulu.');
+      setError('Please upload an audio file first.');
       return;
     }
 
@@ -88,11 +88,11 @@ function CreateSongPage() {
       };
 
       await api.post('/songs', payload);
-      addToast('Lagu berhasil ditambahkan!', 'success');
+      addToast('Song added successfully!', 'success');
       router.push('/artist/songs');
     } catch (err: any) {
       setError('Failed to create song. Please try again.');
-      addToast('Gagal menambahkan lagu. Silakan coba lagi.', 'error');
+      addToast('Failed to add song. Please try again.', 'error');
       console.error(err);
     } finally {
       setIsSubmitting(false);

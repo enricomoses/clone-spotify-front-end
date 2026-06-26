@@ -78,10 +78,10 @@ function EditArtistProfilePage() {
       const response = await api.post(`/artists/${artist.id_artist}`, payload);
       const updatedArtist = response.data.data || response.data;
       setArtist({ ...artist, ...updatedArtist });
-      addToast('Profil artis berhasil diperbarui!', 'success');
+      addToast('Artist profile updated successfully!', 'success');
     } catch (err: any) {
       setError('Failed to update profile. Please try again.');
-      addToast('Gagal memperbarui profil. Silakan coba lagi.', 'error');
+      addToast('Failed to update profile. Please try again.', 'error');
       console.error(err);
     } finally {
       setIsSubmitting(false);

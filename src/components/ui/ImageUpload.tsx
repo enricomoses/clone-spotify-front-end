@@ -101,12 +101,12 @@ export default function ImageUpload({
       if (data.secure_url) {
         onChange(data.secure_url);
       } else {
-        setError('Gagal mendapatkan URL gambar dari server');
+        setError('Failed to get image URL from server');
       }
     } catch (err: any) {
       console.error('Error uploading image:', err);
       setError(
-        err.response?.data?.message || 'Gagal mengunggah gambar. Silakan coba lagi.'
+        err.response?.data?.message || 'Failed to upload image. Please try again.'
       );
     } finally {
       setIsUploading(false);
@@ -134,7 +134,7 @@ export default function ImageUpload({
     } catch (err: any) {
       console.error('Error deleting image:', err);
       setError(
-        err.response?.data?.message || 'Gagal menghapus gambar dari penyimpanan.'
+        err.response?.data?.message || 'Failed to delete image from storage.'
       );
       // Fallback: clear anyway to prevent user blockage
       onChange('');
@@ -184,7 +184,7 @@ export default function ImageUpload({
               ) : (
                 <X className="w-3 h-3" />
               )}
-              Hapus
+              Delete
             </button>
           </div>
         </div>
@@ -203,7 +203,7 @@ export default function ImageUpload({
           {isUploading ? (
             <div className="flex flex-col items-center gap-2">
               <Loader2 className="w-8 h-8 text-spotify-green animate-spin" />
-              <p className="text-sm text-white font-medium">Mengunggah...</p>
+              <p className="text-sm text-white font-medium">Uploading...</p>
             </div>
           ) : (
             <div className="flex flex-col items-center gap-3">

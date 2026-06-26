@@ -63,11 +63,11 @@ function CreateAlbumPage() {
         cover_image: data.cover_image || undefined,
         artist_ids: collabArtists.map((a) => a.id_artist),
       });
-      addToast('Album berhasil dibuat!', 'success');
+      addToast('Album created successfully!', 'success');
       router.push('/artist/albums');
     } catch (err: any) {
       setError('Failed to create album. Please try again.');
-      addToast('Gagal membuat album. Silakan coba lagi.', 'error');
+      addToast('Failed to create album. Please try again.', 'error');
       console.error(err);
     } finally {
       setIsSubmitting(false);

@@ -11,8 +11,8 @@ import { useToastStore } from '@/components/ui/Toast';
 import api from '@/lib/axios';
 
 const loginSchema = z.object({
-  email: z.string().email('Email tidak valid'),
-  password: z.string().min(1, 'Password wajib diisi'),
+  email: z.string().email('Invalid email'),
+  password: z.string().min(1, 'Password is required'),
 });
 
 type LoginForm = z.infer<typeof loginSchema>;
@@ -37,37 +37,37 @@ export default function LoginPage() {
     setError('');
 
     try {
-      // Server-side auth: mengirim email dan password ke endpoint /login
+      // Server-side auth: sending email and password to endpoint /login
       const response = await api.post('/login', {
         email: data.email,
         password: data.password,
       });
 
-      // Mengambil data user dari response backend Laravel
+      // Retrieve user data from Laravel backend response
       const userData = response.data.data || response.data.user || response.data;
       const token = response.data.access_token || response.data.token;
 
-      // Menyimpan token ke localStorage agar bisa digunakan untuk request API selanjutnya
+      // Save token to localStorage for subsequent API requests
       if (token) {
         localStorage.setItem('token', token);
       }
 
-      // Memasukkan data user ke dalam state management (Zustand)
+      // Save user data to state management (Zustand)
       setUser(userData);
-      addToast('Login berhasil! Selamat datang kembali.', 'success');
+      addToast('Login successful! Welcome back.', 'success');
 
-      // Cek redirect setelah login (dari guest mode)
+      // Check redirect after login (from guest mode)
       const redirectTo = sessionStorage.getItem('redirectAfterLogin');
       sessionStorage.removeItem('redirectAfterLogin');
       router.push(redirectTo || '/home');
     } catch (err: any) {
-      // Menangkap error 401 Unauthorized (Email/Password salah) dari Laravel
+      // Catch 401 Unauthorized (incorrect email/password) from Laravel
       if (err.response && err.response.status === 401) {
-        setError('Email atau password salah');
-        addToast('Login gagal. Silakan periksa kembali email dan password Anda.', 'error');
+        setError('Incorrect email or password');
+        addToast('Login failed. Please check your email and password again.', 'error');
       } else {
-        setError('Terjadi kesalahan. Pastikan server berjalan.');
-        addToast('Login gagal. Terjadi kesalahan koneksi.', 'error');
+        setError('An error occurred. Make sure the server is running.');
+        addToast('Login failed. Connection error occurred.', 'error');
         console.error(err);
       }
     } finally {

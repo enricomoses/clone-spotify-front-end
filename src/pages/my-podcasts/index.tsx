@@ -6,7 +6,6 @@ import { Mic, Plus, Edit3, Trash2, Eye, Loader2 } from 'lucide-react';
 import { fetcher } from '@/lib/fetcher';
 import { withAuth } from '@/utils/withAuth';
 import { useAuthStore } from '@/stores/useAuthStore';
-import { GridSkeleton } from '@/components/ui/SkeletonCard';
 import type { Podcast } from '@/types';
 import api from '@/lib/axios';
 
@@ -20,7 +19,7 @@ function MyPodcastsPage() {
   const myPodcasts = allPodcasts?.filter((p) => p.id_user === user?.id_user) || [];
 
   const handleDelete = async (podcastId: string) => {
-    if (!confirm('Hapus podcast ini? Semua episode juga akan terhapus.')) return;
+    if (!confirm('Delete this podcast? All episodes will also be deleted.')) return;
     setDeletingId(podcastId);
     try {
       const podcast = myPodcasts.find((p) => p.id_podcast === podcastId);
@@ -55,7 +54,7 @@ function MyPodcastsPage() {
       mutate('/podcasts');
     } catch (e) {
       console.error('Failed to delete podcast', e);
-      alert('Gagal menghapus podcast.');
+      alert('Failed to delete podcast.');
     } finally {
       setDeletingId(null);
     }
@@ -113,8 +112,8 @@ function MyPodcastsPage() {
   return (
     <>
       <Head>
-        <title>Podcast Saya — Spotify Clone</title>
-        <meta name="description" content="Kelola podcast yang kamu buat" />
+        <title>My Podcasts — Spotify Clone</title>
+        <meta name="description" content="Manage podcasts you created" />
       </Head>
 
       <div className="px-6 pb-8">
@@ -122,10 +121,10 @@ function MyPodcastsPage() {
           <div>
             <h1 className="text-3xl font-bold text-white flex items-center gap-3">
               <Mic className="w-8 h-8 text-spotify-green" />
-              Podcast Saya
+              My Podcasts
             </h1>
             <p className="text-sm text-spotify-muted mt-1">
-              Kelola semua podcast yang kamu buat
+              Manage all podcasts you created
             </p>
           </div>
           <Link
@@ -133,7 +132,7 @@ function MyPodcastsPage() {
             className="flex items-center gap-2 px-5 py-2.5 bg-spotify-green text-black text-sm font-bold rounded-full hover:bg-spotify-green-bright transition-colors"
           >
             <Plus className="w-4 h-4" />
-            Buat Podcast Baru
+            Create New Podcast
           </Link>
         </div>
 
@@ -169,7 +168,7 @@ function MyPodcastsPage() {
                     )}
                     <div className="flex items-center gap-3 mt-2">
                       <span className="text-[10px] text-spotify-muted bg-white/10 px-2 py-0.5 rounded-full">
-                        {podcast.episodes?.length || 0} episode
+                        {podcast.episodes?.length || 0} episodes
                       </span>
                       {podcast.category && (
                         <span className="text-[10px] text-spotify-green bg-spotify-green/10 px-2 py-0.5 rounded-full">
@@ -213,16 +212,16 @@ function MyPodcastsPage() {
           <div className="flex flex-col items-center justify-center min-h-[40vh]">
             <Mic className="w-16 h-16 text-spotify-muted/30 mb-4" />
             <h2 className="text-xl font-bold text-white mb-2">
-              Belum ada podcast
+              No podcasts yet
             </h2>
             <p className="text-sm text-spotify-muted mb-6">
-              Mulai buat podcast pertamamu dan bagikan ke dunia!
+              Create your first podcast and share it with the world!
             </p>
             <Link
               href="/my-podcasts/create"
               className="px-6 py-3 bg-spotify-green text-black font-bold rounded-full hover:bg-spotify-green-bright transition-colors"
             >
-              Buat Podcast Baru
+              Create New Podcast
             </Link>
           </div>
         )}

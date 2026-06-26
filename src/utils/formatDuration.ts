@@ -20,7 +20,7 @@ export function formatDurationMs(ms: number): string {
  */
 export function formatDate(dateString: string): string {
   const date = new Date(dateString);
-  return date.toLocaleDateString('id-ID', {
+  return date.toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
@@ -39,10 +39,10 @@ export function formatNumber(num: number): string {
  */
 export function getGreeting(): string {
   const hour = new Date().getHours();
-  if (hour < 12) return 'Selamat Pagi';
-  if (hour < 17) return 'Selamat Siang';
-  if (hour < 21) return 'Selamat Sore';
-  return 'Selamat Malam';
+  if (hour < 12) return 'Good morning';
+  if (hour < 17) return 'Good afternoon';
+  if (hour < 21) return 'Good evening';
+  return 'Good evening';
 }
 
 /**

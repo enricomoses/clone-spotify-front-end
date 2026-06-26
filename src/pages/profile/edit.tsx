@@ -4,7 +4,7 @@ import Head from 'next/head';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Loader2, ArrowLeft, ShieldAlert, KeyRound, UserRound, Globe2, Calendar } from 'lucide-react';
+import { Loader2, ArrowLeft, ShieldAlert, KeyRound, UserRound, Globe2 } from 'lucide-react';
 import { withAuth } from '@/utils/withAuth';
 import { useAuthStore } from '@/stores/useAuthStore';
 import api from '@/lib/axios';
@@ -16,8 +16,8 @@ const editProfileSchema = z
   .object({
     name: z
       .string()
-      .min(1, 'Nama wajib diisi')
-      .max(100, 'Nama maksimal 100 karakter'),
+      .min(1, 'Name is required')
+      .max(100, 'Name must not exceed 100 characters'),
     birthday: z
       .string()
       .optional()
@@ -31,14 +31,14 @@ const editProfileSchema = z
           return selectedDate < today;
         },
         {
-          message: 'Tanggal lahir harus sebelum hari ini',
+          message: 'Date of birth must be before today',
         }
       ),
     gender: z.string().optional().nullable(),
     country: z.string().optional().nullable(),
     profile_picture: z
       .string()
-      .url('URL gambar tidak valid')
+      .url('Invalid image URL')
       .optional()
       .or(z.literal(''))
       .nullable(),
@@ -54,7 +54,7 @@ const editProfileSchema = z
       return true;
     },
     {
-      message: 'Password lama harus diisi untuk mengubah password',
+      message: 'Current password is required to change password',
       path: ['current_password'],
     }
   )
@@ -67,7 +67,7 @@ const editProfileSchema = z
       return true;
     },
     {
-      message: 'Password baru minimal 6 karakter',
+      message: 'New password must be at least 6 characters',
       path: ['password'],
     }
   )
@@ -80,7 +80,7 @@ const editProfileSchema = z
       return true;
     },
     {
-      message: 'Password baru tidak boleh sama dengan password lama',
+      message: 'New password cannot be the same as the current password',
       path: ['password'],
     }
   );
@@ -101,7 +101,7 @@ const formatDateForInput = (dateStr?: string) => {
 
 function EditProfilePage() {
   const router = useRouter();
-  const { user, setUser, refreshUser } = useAuthStore();
+  const { user, setUser } = useAuthStore();
   const addToast = useToastStore((s) => s.addToast);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -169,7 +169,7 @@ function EditProfilePage() {
         password: '',
       });
 
-      addToast('Profil berhasil diperbarui!', 'success');
+      addToast('Profile updated successfully!', 'success');
       router.push('/profile');
     } catch (err: any) {
       console.error('Update profile error:', err);
@@ -177,9 +177,9 @@ function EditProfilePage() {
       const errorMsg =
         err.response?.data?.errors
           ? Object.values(err.response.data.errors).flat().join(' ')
-          : err.response?.data?.message || 'Gagal memperbarui profil. Silakan coba lagi.';
+          : err.response?.data?.message || 'Failed to update profile. Please try again.';
       setError(errorMsg);
-      addToast('Gagal memperbarui profil', 'error');
+      addToast('Failed to update profile', 'error');
     } finally {
       setIsSubmitting(false);
     }
@@ -198,7 +198,7 @@ function EditProfilePage() {
           className="flex items-center gap-2 text-spotify-muted hover:text-white transition-colors text-sm font-semibold mb-6 sm:mb-8 group"
         >
           <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-          Kembali ke Profil
+          Back to Profile
         </button>
 
         <div className="flex flex-col lg:flex-row gap-8 items-start">
@@ -206,12 +206,12 @@ function EditProfilePage() {
           <div className="w-full lg:w-1/3 space-y-4">
             <h1 className="text-3xl font-black text-white tracking-tight">Edit Profile</h1>
             <p className="text-sm text-spotify-muted">
-              Kelola informasi akun Anda mulai dari nama tampilan, foto profil, preferensi regional, hingga keamanan kata sandi Anda.
+              Manage your account information, including your display name, profile picture, regional preferences, and password security.
             </p>
             <div className="p-4 bg-spotify-card/30 border border-spotify-border/40 rounded-lg text-xs text-spotify-muted space-y-2">
-              <span className="font-semibold text-white block">Catatan Akun:</span>
-              <p>• Alamat email terdaftar bersifat permanen dan tidak dapat diubah demi alasan keamanan.</p>
-              <p>• Perubahan gambar profil akan langsung disinkronkan ke seluruh aplikasi.</p>
+              <span className="font-semibold text-white block">Account Notes:</span>
+              <p>• The registered email address is permanent and cannot be changed for security reasons.</p>
+              <p>• Profile picture changes will be synced immediately across the app.</p>
             </div>
           </div>
 
@@ -229,10 +229,10 @@ function EditProfilePage() {
               <div className="space-y-3 pb-6 border-b border-spotify-border/40">
                 <h3 className="text-base font-bold text-white flex items-center gap-2">
                   <UserRound className="w-4 h-4 text-spotify-green animate-pulse" />
-                  Foto Profil
+                  Profile Picture
                 </h3>
                 <p className="text-xs text-spotify-muted">
-                  Sesuaikan tampilan avatar Anda. Disarankan gambar dengan rasio 1:1.
+                  Customize your avatar. Images with a 1:1 aspect ratio are recommended.
                 </p>
                 <div className="pt-2">
                   <input type="hidden" {...register('profile_picture')} />
@@ -253,19 +253,19 @@ function EditProfilePage() {
               <div className="space-y-5 pb-6 border-b border-spotify-border/40">
                 <h3 className="text-base font-bold text-white flex items-center gap-2">
                   <Globe2 className="w-4 h-4 text-spotify-green" />
-                  Informasi Pribadi
+                  Personal Info
                 </h3>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {/* Name */}
                   <div className="sm:col-span-2">
                     <label className="block text-xs font-bold uppercase tracking-wider text-spotify-muted mb-2">
-                      Nama Tampilan *
+                      Display Name *
                     </label>
                     <input
                       {...register('name')}
                       type="text"
-                      placeholder="Masukkan nama Anda"
+                      placeholder="Enter your name"
                       className="w-full bg-spotify-hover hover:bg-spotify-border/50 focus:bg-spotify-hover border border-spotify-border/80 focus:border-spotify-green rounded-md px-4 py-3 text-sm text-white focus:outline-none focus:ring-1 focus:ring-spotify-green transition-all"
                     />
                     {errors.name && (
@@ -278,7 +278,7 @@ function EditProfilePage() {
                   {/* Birthday */}
                   <div>
                     <label className="block text-xs font-bold uppercase tracking-wider text-spotify-muted mb-2">
-                      Tanggal Lahir
+                      Date of Birth
                     </label>
                     <div className="relative">
                       <input
@@ -297,17 +297,17 @@ function EditProfilePage() {
                   {/* Gender */}
                   <div>
                     <label className="block text-xs font-bold uppercase tracking-wider text-spotify-muted mb-2">
-                      Jenis Kelamin
+                      Gender
                     </label>
                     <select
                       {...register('gender')}
                       className="w-full bg-spotify-hover hover:bg-spotify-border/50 focus:bg-spotify-hover border border-spotify-border/80 focus:border-spotify-green rounded-md px-4 py-3 text-sm text-white focus:outline-none focus:ring-1 focus:ring-spotify-green transition-all"
                     >
-                      <option value="">Pilih Jenis Kelamin</option>
-                      <option value="Laki-laki">Laki-laki</option>
-                      <option value="Perempuan">Perempuan</option>
-                      <option value="Lainnya">Lainnya</option>
-                      <option value="Tidak ingin menyebutkan">Tidak ingin menyebutkan</option>
+                      <option value="">Select Gender</option>
+                      <option value="Male">Male</option>
+                      <option value="Female">Female</option>
+                      <option value="Other">Other</option>
+                      <option value="Prefer not to say">Prefer not to say</option>
                     </select>
                     {errors.gender && (
                       <p className="mt-1.5 text-xs text-red-400 font-medium">
@@ -319,12 +319,12 @@ function EditProfilePage() {
                   {/* Country */}
                   <div className="sm:col-span-2">
                     <label className="block text-xs font-bold uppercase tracking-wider text-spotify-muted mb-2">
-                      Negara / Wilayah
+                      Country / Region
                     </label>
                     <input
                       {...register('country')}
                       type="text"
-                      placeholder="Contoh: Indonesia"
+                      placeholder="e.g. Indonesia"
                       className="w-full bg-spotify-hover hover:bg-spotify-border/50 focus:bg-spotify-hover border border-spotify-border/80 focus:border-spotify-green rounded-md px-4 py-3 text-sm text-white focus:outline-none focus:ring-1 focus:ring-spotify-green transition-all"
                     />
                     {errors.country && (
@@ -340,23 +340,23 @@ function EditProfilePage() {
               <div className="space-y-5">
                 <h3 className="text-base font-bold text-white flex items-center gap-2">
                   <KeyRound className="w-4 h-4 text-spotify-green" />
-                  Ubah Kata Sandi
+                  Change Password
                 </h3>
                 <p className="text-xs text-spotify-muted">
-                  Biarkan kosong jika Anda tidak ingin mengubah kata sandi akun Anda.
+                  Leave blank if you do not want to change your password.
                 </p>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
                   {/* Current Password */}
                   <div>
                     <label className="block text-xs font-bold uppercase tracking-wider text-spotify-muted mb-2">
-                      Kata Sandi Saat Ini
+                      Current Password
                     </label>
                     <input
                       {...register('current_password')}
                       type="password"
                       autoComplete="current-password"
-                      placeholder="Masukkan kata sandi lama"
+                      placeholder="Enter current password"
                       className="w-full bg-spotify-hover hover:bg-spotify-border/50 focus:bg-spotify-hover border border-spotify-border/80 focus:border-spotify-green rounded-md px-4 py-3 text-sm text-white focus:outline-none focus:ring-1 focus:ring-spotify-green transition-all"
                     />
                     {errors.current_password && (
@@ -369,13 +369,13 @@ function EditProfilePage() {
                   {/* New Password */}
                   <div>
                     <label className="block text-xs font-bold uppercase tracking-wider text-spotify-muted mb-2">
-                      Kata Sandi Baru
+                      New Password
                     </label>
                     <input
                       {...register('password')}
                       type="password"
                       autoComplete="new-password"
-                      placeholder="Masukkan kata sandi baru (min. 6 karakter)"
+                      placeholder="Enter new password (min. 6 characters)"
                       className="w-full bg-spotify-hover hover:bg-spotify-border/50 focus:bg-spotify-hover border border-spotify-border/80 focus:border-spotify-green rounded-md px-4 py-3 text-sm text-white focus:outline-none focus:ring-1 focus:ring-spotify-green transition-all"
                     />
                     {errors.password && (
@@ -394,7 +394,7 @@ function EditProfilePage() {
                   onClick={() => router.push('/profile')}
                   className="btn-outline text-sm py-2.5 px-8 font-bold"
                 >
-                  Batal
+                  Cancel
                 </button>
                 <button
                   type="submit"
@@ -402,7 +402,7 @@ function EditProfilePage() {
                   className="btn-spotify text-sm py-2.5 px-8 font-bold flex items-center gap-2 disabled:opacity-50 transition-all hover:scale-105"
                 >
                   {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
-                  {isSubmitting ? 'Menyimpan...' : 'Simpan Profil'}
+                  {isSubmitting ? 'Saving...' : 'Save Profile'}
                 </button>
               </div>
             </form>

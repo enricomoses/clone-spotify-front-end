@@ -9,7 +9,6 @@ import { Loader2, Trash2 } from 'lucide-react';
 import { withAuth } from '@/utils/withAuth';
 import { fetcher } from '@/lib/fetcher';
 import api from '@/lib/axios';
-import { GridSkeleton } from '@/components/ui/SkeletonCard';
 import type { Playlist, PlaylistCategory } from '@/types';
 import ImageUpload from '@/components/ui/ImageUpload';
 import { useAuthStore } from '@/stores/useAuthStore';
@@ -17,9 +16,9 @@ import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import { useToastStore } from '@/components/ui/Toast';
 
 const editPlaylistSchema = z.object({
-  name: z.string().min(1, 'Nama playlist wajib diisi'),
+  name: z.string().min(1, 'Playlist name is required'),
   description: z.string().optional(),
-  cover_image: z.string().url('URL tidak valid').optional().or(z.literal('')),
+  cover_image: z.string().url('Invalid URL').optional().or(z.literal('')),
   id_playlist_category: z.string().optional(),
 });
 
@@ -61,11 +60,11 @@ function EditPlaylistPage() {
         _method: 'DELETE',
       });
       await refreshUser();
-      addToast('Playlist berhasil dihapus', 'success');
+      addToast('Playlist deleted successfully', 'success');
       router.push('/home');
     } catch (err) {
       console.error('Failed to delete playlist:', err);
-      addToast('Gagal menghapus playlist. Silakan coba lagi.', 'error');
+      addToast('Failed to delete playlist. Please try again.', 'error');
     } finally {
       setIsDeleting(false);
       setShowDeleteModal(false);
@@ -110,7 +109,7 @@ function EditPlaylistPage() {
         _method: 'PUT',
       });
       router.push(`/playlist/${id}`);
-      addToast('Playlist berhasil diperbarui', 'success');
+      addToast('Playlist updated successfully', 'success');
     } catch (err: any) {
       setError('Failed to update playlist. Please try again.');
       console.error(err);
@@ -225,7 +224,7 @@ function EditPlaylistPage() {
                 className="btn-spotify text-sm py-2.5 px-8 flex items-center gap-2 disabled:opacity-50"
               >
                 {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
-                {isSubmitting ? 'Saving' : 'Save Changes'}
+                {isSubmitting ? 'Saving...' : 'Save Changes'}
               </button>
             </div>
 
@@ -236,7 +235,7 @@ function EditPlaylistPage() {
                 className="px-5 py-2.5 text-red-500 hover:text-white hover:bg-red-600 border border-red-500 hover:border-transparent rounded-full font-bold text-sm transition-all flex items-center gap-2"
               >
                 <Trash2 className="w-4 h-4" />
-                Hapus Playlist
+                Delete Playlist
               </button>
             )}
           </div>
@@ -248,9 +247,9 @@ function EditPlaylistPage() {
           open={showDeleteModal}
           onClose={() => setShowDeleteModal(false)}
           onConfirm={handleDeletePlaylist}
-          title="Hapus Playlist"
-          description={`Apakah Anda yakin ingin menghapus playlist "${playlist.name}"? Tindakan ini tidak dapat dibatalkan.`}
-          confirmLabel={isDeleting ? 'Menghapus' : 'Hapus'}
+          title="Delete Playlist"
+          description={`Are you sure you want to delete playlist "${playlist.name}"? This action cannot be undone.`}
+          confirmLabel={isDeleting ? 'Deleting...' : 'Delete'}
           variant="danger"
           isLoading={isDeleting}
         />

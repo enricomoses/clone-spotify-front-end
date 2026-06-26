@@ -11,8 +11,8 @@ import { useToastStore } from '@/components/ui/Toast';
 import api from '@/lib/axios';
 
 const loginSchema = z.object({
-  email: z.string().email('Email tidak valid'),
-  password: z.string().min(1, 'Password wajib diisi'),
+  email: z.string().email('Invalid email'),
+  password: z.string().min(1, 'Password is required'),
 });
 
 type LoginForm = z.infer<typeof loginSchema>;
@@ -52,15 +52,15 @@ export default function ArtistLoginPage() {
 
       // setArtist will also set the artist-session cookie
       setArtist(artistData);
-      addToast('Login Artis berhasil! Selamat datang di Portal Artis.', 'success');
+      addToast('Artist login successful! Welcome to the Artist Portal.', 'success');
       router.push('/artist/dashboard');
     } catch (err: any) {
       if (err.response && err.response.status === 401) {
-        setError('Email atau password salah');
-        addToast('Login gagal. Silakan periksa kembali email dan password Anda.', 'error');
+        setError('Incorrect email or password');
+        addToast('Login failed. Please check your email and password again.', 'error');
       } else {
-        setError('Terjadi kesalahan. Pastikan server berjalan.');
-        addToast('Login gagal. Terjadi kesalahan koneksi.', 'error');
+        setError('An error occurred. Make sure the server is running.');
+        addToast('Login failed. Connection error occurred.', 'error');
         console.error(err);
       }
     } finally {

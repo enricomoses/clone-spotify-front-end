@@ -10,9 +10,9 @@ import api from '@/lib/axios';
 import { useToastStore } from '@/components/ui/Toast';
 
 const registerSchema = z.object({
-  name: z.string().min(1, 'Nama wajib diisi'),
-  email: z.string().email('Email tidak valid'),
-  password: z.string().min(6, 'Password minimal 6 karakter'),
+  name: z.string().min(1, 'Name is required'),
+  email: z.string().email('Invalid email'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
   birthday: z.string().optional(),
   gender: z.string().optional(),
   country: z.string().optional(),
@@ -40,15 +40,15 @@ export default function RegisterPage() {
 
     try {
       await api.post('/users', data);
-      addToast('Pendaftaran berhasil! Silakan login.', 'success');
+      addToast('Registration successful! Please log in.', 'success');
       router.push('/login');
     } catch (err: any) {
       if (err.response?.status === 422) {
-        setError('Email sudah terdaftar atau data tidak valid.');
-        addToast('Pendaftaran gagal: Email sudah terdaftar atau data tidak valid.', 'error');
+        setError('Email already registered or invalid data.');
+        addToast('Registration failed: Email already registered or invalid data.', 'error');
       } else {
-        setError('Terjadi kesalahan. Pastikan server berjalan.');
-        addToast('Pendaftaran gagal. Terjadi kesalahan koneksi.', 'error');
+        setError('An error occurred. Make sure the server is running.');
+        addToast('Registration failed. Connection error occurred.', 'error');
       }
       console.error(err);
     } finally {

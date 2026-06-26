@@ -15,9 +15,9 @@ import Link from 'next/link';
 import ImageUpload from '@/components/ui/ImageUpload';
 
 const createPodcastSchema = z.object({
-  name: z.string().min(1, 'Nama podcast wajib diisi'),
+  name: z.string().min(1, 'Podcast name is required'),
   about: z.string().optional(),
-  cover_image: z.string().url('URL tidak valid').optional().or(z.literal('')),
+  cover_image: z.string().url('Invalid URL').optional().or(z.literal('')),
   id_podcast_category: z.string().optional(),
 });
 
@@ -62,9 +62,9 @@ function CreatePodcastPage() {
       router.push('/my-podcasts');
     } catch (err: any) {
       if (err.response?.status === 422) {
-        setError('Data tidak valid. Periksa kembali input Anda.');
+        setError('Invalid data. Please check your input.');
       } else {
-        setError('Gagal membuat podcast. Coba lagi.');
+        setError('Failed to create podcast. Try again.');
       }
     } finally {
       setIsSubmitting(false);
@@ -74,7 +74,7 @@ function CreatePodcastPage() {
   return (
     <>
       <Head>
-        <title>Buat Podcast Baru — Spotify Clone</title>
+        <title>Create New Podcast — Spotify Clone</title>
       </Head>
 
       <div className="px-6 pb-8 max-w-2xl mx-auto">
@@ -84,11 +84,11 @@ function CreatePodcastPage() {
             className="flex items-center gap-2 text-sm text-spotify-muted hover:text-white transition-colors mb-4"
           >
             <ArrowLeft className="w-4 h-4" />
-            Kembali ke Podcast Saya
+            Back to My Podcasts
           </Link>
           <h1 className="text-3xl font-bold text-white flex items-center gap-3">
             <Mic className="w-8 h-8 text-spotify-green" />
-            Buat Podcast Baru
+            Create New Podcast
           </h1>
         </div>
 
@@ -101,12 +101,12 @@ function CreatePodcastPage() {
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <div>
             <label className="block text-sm font-semibold text-white mb-2">
-              Nama Podcast *
+              Podcast Name *
             </label>
             <input
               {...register('name')}
               type="text"
-              placeholder="Nama podcast kamu"
+              placeholder="Your podcast name"
               className="w-full bg-spotify-hover border border-spotify-border rounded-md px-4 py-3 text-white placeholder:text-spotify-muted/60 focus:outline-none focus:border-spotify-green focus:ring-1 focus:ring-spotify-green transition-all"
             />
             {errors.name && (
@@ -116,11 +116,11 @@ function CreatePodcastPage() {
 
           <div>
             <label className="block text-sm font-semibold text-white mb-2">
-              Tentang
+              About
             </label>
             <textarea
               {...register('about')}
-              placeholder="Deskripsi podcast..."
+              placeholder="Podcast description..."
               rows={4}
               className="w-full bg-spotify-hover border border-spotify-border rounded-md px-4 py-3 text-white placeholder:text-spotify-muted/60 focus:outline-none focus:border-spotify-green focus:ring-1 focus:ring-spotify-green transition-all resize-none"
             />
@@ -144,13 +144,13 @@ function CreatePodcastPage() {
 
           <div>
             <label className="block text-sm font-semibold text-white mb-2">
-              Kategori
+              Category
             </label>
             <select
               {...register('id_podcast_category')}
               className="w-full bg-spotify-hover border border-spotify-border rounded-md px-4 py-3 text-white focus:outline-none focus:border-spotify-green focus:ring-1 focus:ring-spotify-green transition-all"
             >
-              <option value="">Pilih kategori (opsional)</option>
+              <option value="">Select category (optional)</option>
               {categories?.map((cat) => (
                 <option key={cat.id_podcast_category} value={cat.id_podcast_category}>
                   {cat.name}
@@ -165,7 +165,7 @@ function CreatePodcastPage() {
             className="w-full bg-spotify-green hover:bg-spotify-green-bright text-black font-bold rounded-full py-3 text-base transition-all duration-200 hover:scale-[1.02] active:scale-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {isSubmitting && <Loader2 className="w-5 h-5 animate-spin" />}
-            {isSubmitting ? 'Membuat...' : 'Buat Podcast'}
+            {isSubmitting ? 'Creating...' : 'Create Podcast'}
           </button>
         </form>
       </div>

@@ -15,9 +15,9 @@ import ImageUpload from '@/components/ui/ImageUpload';
 import { useToastStore } from '@/components/ui/Toast';
 
 const createPlaylistSchema = z.object({
-  name: z.string().min(1, 'Nama playlist wajib diisi'),
+  name: z.string().min(1, 'Playlist name is required'),
   description: z.string().optional(),
-  cover_image: z.string().url('URL tidak valid').optional().or(z.literal('')),
+  cover_image: z.string().url('Invalid URL').optional().or(z.literal('')),
   id_playlist_category: z.string().optional(),
 });
 
@@ -61,7 +61,7 @@ function CreatePlaylistPage() {
 
       const response = await api.post('/playlists', payload);
       const newPlaylist = response.data.data || response.data;
-      addToast('Playlist berhasil dibuat!', 'success');
+      addToast('Playlist created successfully!', 'success');
       router.push(`/playlist/${newPlaylist.id_playlist}`);
     } catch (err: any) {
       setError('Failed to create playlist. Please try again.');
@@ -184,7 +184,7 @@ function CreatePlaylistPage() {
               className="btn-spotify text-sm py-2.5 px-8 flex items-center gap-2 disabled:opacity-50"
             >
               {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
-              {isSubmitting ? 'Creating' : 'Create Playlist'}
+              {isSubmitting ? 'Creating...' : 'Create Playlist'}
             </button>
           </div>
         </form>

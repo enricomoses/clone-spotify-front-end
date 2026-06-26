@@ -40,10 +40,10 @@ function PodcastDetailPage() {
         podcast_id: podcast.id_podcast,
       });
       await refreshUser();
-      addToast('Berhasil mengikuti podcast', 'success');
+      addToast('Successfully followed podcast', 'success');
     } catch (e) {
       console.error('Failed to follow podcast', e);
-      addToast('Gagal mengikuti podcast', 'error');
+      addToast('Failed to follow podcast', 'error');
       throw e;
     }
   };
@@ -56,10 +56,10 @@ function PodcastDetailPage() {
         { _method: 'DELETE' }
       );
       await refreshUser();
-      addToast('Batal mengikuti podcast', 'success');
+      addToast('Unfollowed podcast successfully', 'success');
     } catch (e) {
       console.error('Failed to unfollow podcast', e);
-      addToast('Gagal membatalkan mengikuti podcast', 'error');
+      addToast('Failed to unfollow podcast', 'error');
       throw e;
     }
   };

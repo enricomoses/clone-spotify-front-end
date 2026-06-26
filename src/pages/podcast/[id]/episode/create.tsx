@@ -14,10 +14,10 @@ import VideoUpload from '@/components/ui/VideoUpload';
 import { useToastStore } from '@/components/ui/Toast';
 
 const createEpisodeSchema = z.object({
-  title: z.string().min(1, 'Judul episode wajib diisi'),
+  title: z.string().min(1, 'Episode title is required'),
   description: z.string().optional(),
-  published_at: z.string().min(1, 'Tanggal publish wajib diisi'),
-  thumbnail_image: z.string().url('Thumbnail URL tidak valid').optional().or(z.literal('')),
+  published_at: z.string().min(1, 'Publish date is required'),
+  thumbnail_image: z.string().url('Thumbnail URL is invalid').optional().or(z.literal('')),
 });
 
 type CreateEpisodeForm = z.infer<typeof createEpisodeSchema>;
@@ -74,7 +74,7 @@ function CreateEpisodePage() {
   const onSubmit = async (data: CreateEpisodeForm) => {
     // Validate that at least one media is uploaded
     if (!effectiveAudioUrl) {
-      setError('Silakan unggah file audio atau video terlebih dahulu.');
+      setError('Please upload an audio or video file first.');
       return;
     }
 
@@ -95,11 +95,11 @@ function CreateEpisodePage() {
       };
 
       await api.post('/episodes', payload);
-      addToast('Episode berhasil diunggah!', 'success');
+      addToast('Episode uploaded successfully!', 'success');
       router.push(`/podcast/${id}`);
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Gagal mengunggah episode. Silakan coba lagi.');
-      addToast('Gagal mengunggah episode. Silakan coba lagi.', 'error');
+      setError(err.response?.data?.message || 'Failed to upload episode. Please try again.');
+      addToast('Failed to upload episode. Please try again.', 'error');
       console.error(err);
     } finally {
       setIsSubmitting(false);
@@ -129,7 +129,7 @@ function CreateEpisodePage() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-white mb-2">Upload Episode</h1>
           <p className="text-sm text-spotify-muted">
-            Tambahkan episode baru ke podcast Anda. Unggah audio atau video untuk memulai.
+            Add a new episode to your podcast. Upload audio or video to start.
           </p>
         </div>
 
@@ -143,12 +143,12 @@ function CreateEpisodePage() {
           {/* Title */}
           <div>
             <label className="block text-sm font-semibold text-white mb-2">
-              Judul Episode *
+              Episode Title *
             </label>
             <input
               {...register('title')}
               type="text"
-              placeholder="Masukkan judul episode"
+              placeholder="Enter episode title"
               className="w-full bg-spotify-hover border border-spotify-border rounded-md px-4 py-3 text-white placeholder:text-spotify-muted/60 focus:outline-none focus:border-spotify-green focus:ring-1 focus:ring-spotify-green transition-all"
             />
             {errors.title && (
@@ -159,11 +159,11 @@ function CreateEpisodePage() {
           {/* Description */}
           <div>
             <label className="block text-sm font-semibold text-white mb-2">
-              Deskripsi
+              Description
             </label>
             <textarea
               {...register('description')}
-              placeholder="Deskripsi episode"
+              placeholder="Episode description"
               rows={4}
               className="w-full bg-spotify-hover border border-spotify-border rounded-md px-4 py-3 text-white placeholder:text-spotify-muted/60 focus:outline-none focus:border-spotify-green focus:ring-1 focus:ring-spotify-green transition-all resize-none"
             />
@@ -173,7 +173,7 @@ function CreateEpisodePage() {
           <div>
             <label className="flex items-center gap-2 text-sm font-semibold text-white mb-2">
               <Music className="w-4 h-4 text-spotify-green" />
-              File Audio {!hasVideo && '*'}
+              Audio File {!hasVideo && '*'}
             </label>
             <AudioUpload
               value={audioUrl}
@@ -182,14 +182,14 @@ function CreateEpisodePage() {
             />
             {audioDuration > 0 && !hasVideo && (
               <p className="mt-2 text-xs text-spotify-muted">
-                Durasi terdeteksi: <span className="text-white font-medium">{formatDur(audioDuration)}</span>
+                Detected duration: <span className="text-white font-medium">{formatDur(audioDuration)}</span>
               </p>
             )}
             {hasVideo && hasAudio && (
               <div className="mt-2 flex items-start gap-2 p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
                 <Info className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
                 <p className="text-xs text-blue-300">
-                  Video telah diunggah. Audio URL akan otomatis menggunakan URL video karena video sudah berisi audio track. Audio yang diunggah secara terpisah akan diabaikan.
+                  Video has been uploaded. Audio URL will automatically use the video URL because the video already contains the audio track. Separately uploaded audio will be ignored.
                 </p>
               </div>
             )}
@@ -199,10 +199,10 @@ function CreateEpisodePage() {
           <div>
             <label className="flex items-center gap-2 text-sm font-semibold text-white mb-2">
               <Video className="w-4 h-4 text-purple-400" />
-              File Video (Opsional)
+              Video File (Optional)
             </label>
             <p className="text-xs text-spotify-muted mb-3">
-              Upload video untuk video podcast. Jika video diunggah, audio akan otomatis diambil dari video.
+              Upload video for a video podcast. If video is uploaded, audio will automatically be taken from the video.
             </p>
             <VideoUpload
               value={videoUrl}
@@ -211,7 +211,7 @@ function CreateEpisodePage() {
             />
             {videoDuration > 0 && (
               <p className="mt-2 text-xs text-spotify-muted">
-                Durasi video: <span className="text-white font-medium">{formatDur(videoDuration)}</span>
+                Video duration: <span className="text-white font-medium">{formatDur(videoDuration)}</span>
               </p>
             )}
           </div>
@@ -224,10 +224,10 @@ function CreateEpisodePage() {
               </div>
               <div>
                 <p className="text-sm font-semibold text-white">
-                  Durasi Episode: {formatDur(effectiveDuration)}
+                  Episode Duration: {formatDur(effectiveDuration)}
                 </p>
                 <p className="text-xs text-spotify-muted">
-                  {hasVideo ? 'Berdasarkan durasi video' : 'Berdasarkan durasi audio'}
+                  {hasVideo ? 'Based on video duration' : 'Based on audio duration'}
                 </p>
               </div>
             </div>
@@ -236,7 +236,7 @@ function CreateEpisodePage() {
           {/* Published At */}
           <div>
             <label className="block text-sm font-semibold text-white mb-2">
-              Tanggal Publish *
+              Publish Date *
             </label>
             <input
               {...register('published_at')}
@@ -253,7 +253,7 @@ function CreateEpisodePage() {
           {/* Thumbnail Image Upload */}
           <div>
             <label className="block text-sm font-semibold text-white mb-2">
-              Thumbnail Image (Opsional)
+              Thumbnail Image (Optional)
             </label>
             <input type="hidden" {...register('thumbnail_image')} />
             <ImageUpload
@@ -270,7 +270,7 @@ function CreateEpisodePage() {
               onClick={() => router.back()}
               className="btn-outline text-sm py-2.5 px-8"
             >
-              Batal
+              Cancel
             </button>
             <button
               type="submit"
@@ -278,7 +278,7 @@ function CreateEpisodePage() {
               className="btn-spotify text-sm py-2.5 px-8 flex items-center gap-2 disabled:opacity-50"
             >
               {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
-              {isSubmitting ? 'Mengunggah...' : 'Upload Episode'}
+              {isSubmitting ? 'Uploading...' : 'Upload Episode'}
             </button>
           </div>
         </form>

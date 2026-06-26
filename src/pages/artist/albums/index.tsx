@@ -46,11 +46,11 @@ function ArtistAlbumsPage() {
         _method: 'DELETE',
       });
       mutate('/albums');
-      addToast('Album berhasil dihapus!', 'success');
+      addToast('Album deleted successfully!', 'success');
       setDeleteTarget(null);
     } catch (err) {
       console.error('Failed to delete album:', err);
-      addToast('Gagal menghapus album. Silakan coba lagi.', 'error');
+      addToast('Failed to delete album. Please try again.', 'error');
     } finally {
       setIsDeleting(false);
     }

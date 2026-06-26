@@ -112,10 +112,10 @@ export default function PlaylistDetailPage() {
         id_user: user.id_user,
       });
       mutate(`/playlists/${id}`);
-      addToast('Lagu berhasil dihapus dari playlist', 'success');
+      addToast('Song removed from playlist successfully', 'success');
     } catch (e) {
       console.error('Failed to remove song', e);
-      addToast('Gagal menghapus lagu', 'error');
+      addToast('Failed to remove song', 'error');
     } finally {
       setRemovingSongId(null);
     }
@@ -129,11 +129,11 @@ export default function PlaylistDetailPage() {
         _method: 'DELETE',
       });
       await refreshUser();
-      addToast('Playlist berhasil dihapus', 'success');
+      addToast('Playlist deleted successfully', 'success');
       router.push('/home');
     } catch (e) {
       console.error('Failed to delete playlist', e);
-      addToast('Gagal menghapus playlist. Silakan coba lagi.', 'error');
+      addToast('Failed to delete playlist. Please try again.', 'error');
     } finally {
       setIsDeleting(false);
       setShowDeleteModal(false);
@@ -398,9 +398,9 @@ export default function PlaylistDetailPage() {
         open={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
         onConfirm={handleDeletePlaylist}
-        title="Hapus Playlist"
-        description={`Apakah Anda yakin ingin menghapus playlist "${playlist.name}"? Tindakan ini tidak dapat dibatalkan.`}
-        confirmLabel="Hapus"
+        title="Delete Playlist"
+        description={`Are you sure you want to delete playlist "${playlist.name}"? This action cannot be undone.`}
+        confirmLabel="Delete"
         variant="danger"
         isLoading={isDeleting}
       />
