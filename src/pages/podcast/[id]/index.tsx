@@ -109,9 +109,12 @@ function PodcastDetailPage() {
               </p>
             )}
             <div className="flex items-center gap-2 text-sm text-white/80">
-              <span className="font-bold text-white">
+              <Link
+                href={`/profile/${podcast.id_user}`}
+                className="font-bold text-white hover:underline transition-colors"
+              >
                 {podcast.creator?.name || 'Unknown Creator'}
-              </span>
+              </Link>
               {podcast.category && (
                 <>
                   <span className="mx-1">•</span>

@@ -1,5 +1,6 @@
 import { useRouter } from 'next/router';
 import Head from 'next/head';
+import Link from 'next/link';
 import useSWR, { mutate } from 'swr';
 import {
   Play,
@@ -189,7 +190,7 @@ export default function PlaylistDetailPage() {
               </p>
             )}
             <div className="flex items-center gap-1 text-xs sm:text-sm text-white/80 flex-wrap justify-center sm:justify-start">
-              <span className="font-bold text-white">{ownerName}</span>
+              <Link href={`/profile/${owner?.id_user || ''}`} className="font-bold text-white hover:underline transition-colors">{ownerName}</Link>
               {playlist.category && (
                 <>
                   <span className="mx-1">•</span>

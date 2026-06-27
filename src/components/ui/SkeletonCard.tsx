@@ -689,4 +689,56 @@ export function GenreDetailSkeleton() {
   );
 }
 
+// User profile page skeleton (for /profile/[id] and /profile)
+export function UserProfileSkeleton() {
+  return (
+    <div className="-mt-[60px]">
+      {/* Banner */}
+      <div
+        className="relative flex flex-col sm:flex-row items-center sm:items-end gap-6 px-4 sm:px-8 pt-24 pb-8"
+        style={{
+          background:
+            'linear-gradient(transparent 0, rgba(0,0,0,.5) 100%), linear-gradient(135deg, #282828 0%, #181818 100%)',
+          minHeight: '340px',
+        }}
+      >
+        <Skeleton className="w-32 h-32 sm:w-44 md:w-52 sm:h-44 md:h-52 rounded-full shrink-0" />
+        <div className="flex flex-col items-center sm:items-start gap-3">
+          <Skeleton className="h-3 w-14" />
+          <Skeleton className="h-12 sm:h-16 w-48 sm:w-72" />
+          <div className="flex items-center gap-4">
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-4 w-24" />
+          </div>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="px-4 sm:px-8 py-6">
+        {/* Follow button */}
+        <Skeleton className="h-10 w-28 rounded-full mb-8" />
+
+        {/* Playlists section */}
+        <div className="mb-10">
+          <Skeleton className="h-7 w-40 mb-5" />
+          <GridSkeleton count={6} />
+        </div>
+
+        {/* Podcasts section */}
+        <div className="mb-10">
+          <Skeleton className="h-7 w-32 mb-5" />
+          <GridSkeleton count={3} />
+        </div>
+
+        {/* Recent Artists section */}
+        <div className="mb-10">
+          <Skeleton className="h-7 w-52 mb-5" />
+          <GridSkeleton count={6} type="artist" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default Skeleton;

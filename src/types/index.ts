@@ -17,8 +17,22 @@ export interface User {
   followed_artists?: Artist[];
   followed_podcasts?: Podcast[];
   liked_songs?: Song[];
+  podcasts?: Podcast[];
+  collaborative_playlists?: Playlist[];
+  followers_count?: number;
+  following_count?: number;
+  user_playlists?: Playlist[];
+  recent_artists?: RecentArtist[];
   created_at?: string;
   updated_at?: string;
+}
+
+export interface RecentArtist {
+  id_artist: string;
+  name: string;
+  profile_picture?: string;
+  play_count: number;
+  last_played: string;
 }
 
 export interface Artist {

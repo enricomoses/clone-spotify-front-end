@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 import { Play, Music } from 'lucide-react';
 import { usePlayerStore } from '@/stores/usePlayerStore';
 import type { Playlist } from '@/types';
@@ -9,12 +10,28 @@ interface PlaylistCardProps {
 
 export default function PlaylistCard({ playlist }: PlaylistCardProps) {
   const playSong = usePlayerStore((s) => s.playSong);
+  const router = useRouter();
 
   const handlePlay = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     if (playlist.songs && playlist.songs.length > 0) {
       playSong(playlist.songs[0], playlist.songs);
+    }
+  };
+
+  // Find the owner from collaborators
+  const owner = playlist.collaborators?.find(
+    (c) => c.pivot?.role === 'Owner'
+  );
+  const ownerName = owner?.name || playlist.owner?.name || 'Unknown';
+  const ownerId = owner?.id_user || playlist.owner?.id_user || playlist.id_user;
+
+  const handleCreatorClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (ownerId) {
+      router.push(`/profile/${ownerId}`);
     }
   };
 
@@ -40,7 +57,18 @@ export default function PlaylistCard({ playlist }: PlaylistCardProps) {
         </div>
         <p className="text-sm font-bold text-white truncate mb-1">{playlist.name}</p>
         <p className="text-xs text-spotify-muted line-clamp-2">
-          {playlist.description || `By ${playlist.owner?.name || 'Unknown'}`}
+          {playlist.description || (
+            <>
+              By{' '}
+              <span
+                onClick={handleCreatorClick}
+                className="hover:text-white hover:underline transition-colors cursor-pointer"
+                role="link"
+              >
+                {ownerName}
+              </span>
+            </>
+          )}
         </p>
       </Link>
 

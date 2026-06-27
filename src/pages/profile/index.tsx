@@ -1,31 +1,50 @@
+import { useState } from 'react';
 import Head from 'next/head';
+import Link from 'next/link';
 import { withAuth } from '@/utils/withAuth';
 import useSWR from 'swr';
-import Link from 'next/link';
-import { User, ListMusic, Users, Settings } from 'lucide-react';
+import { User as UserIcon, ListMusic, Users, Settings, Mic2 } from 'lucide-react';
 import { fetcher } from '@/lib/fetcher';
 import { useAuthStore } from '@/stores/useAuthStore';
 import PlaylistCard from '@/components/playlist/PlaylistCard';
-import { ProfileSkeleton } from '@/components/ui/SkeletonCard';
-import type { User as UserType, Playlist } from '@/types';
+import PodcastCard from '@/components/podcast/PodcastCard';
+import FollowersModal from '@/components/social/FollowersModal';
+import { UserProfileSkeleton } from '@/components/ui/SkeletonCard';
+import type { User as UserType } from '@/types';
 
 function ProfilePage() {
   const currentUser = useAuthStore((s) => s.user);
+  const [showFollowModal, setShowFollowModal] = useState(false);
+  const [followModalTab, setFollowModalTab] = useState<'followers' | 'following'>('followers');
 
-  const { data: userData, isLoading } = useSWR<UserType>(
-    currentUser ? `/users/${currentUser.id_user}` : null,
+  const { data: profileData, isLoading, mutate } = useSWR<UserType>(
+    currentUser ? `/users/${currentUser.id_user}/profile` : null,
     fetcher
   );
 
-  const { data: playlists } = useSWR<Playlist[]>('/playlists', fetcher);
+  if (isLoading) return <UserProfileSkeleton />;
 
-  if (isLoading) return <ProfileSkeleton />;
-
-  const user = userData || currentUser;
+  const user = profileData || currentUser;
   if (!user) return null;
 
-  // Filter playlists owned by user
-  const userPlaylists = playlists?.filter((p) => p.id_user === user.id_user) || [];
+  const userPlaylists = profileData?.user_playlists || [];
+  const userPodcasts = profileData?.podcasts || [];
+  const recentArtists = profileData?.recent_artists || [];
+  const followersCount = profileData?.followers_count ?? profileData?.followers?.length ?? 0;
+  const followingUsers = profileData?.following || [];
+  const followingArtists = profileData?.followed_artists || [];
+  const followingCount = (profileData?.following_count ?? followingUsers.length) + followingArtists.length;
+  const followers = profileData?.followers || [];
+
+  const openFollowModal = (tab: 'followers' | 'following') => {
+    setFollowModalTab(tab);
+    setShowFollowModal(true);
+  };
+
+  const handleFollowChange = () => {
+    mutate();
+    useAuthStore.getState().refreshUser();
+  };
 
   return (
     <>
@@ -57,7 +76,7 @@ function ProfilePage() {
               />
             ) : (
               <div className="w-full h-full bg-spotify-card flex items-center justify-center group-hover:bg-spotify-hover transition-colors duration-300">
-                <User className="w-16 sm:w-20 h-16 sm:h-20 text-spotify-muted" />
+                <UserIcon className="w-16 sm:w-20 h-16 sm:h-20 text-spotify-muted" />
               </div>
             )}
             <div className="absolute inset-0 bg-black/45 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center gap-1.5 text-white">
@@ -81,25 +100,29 @@ function ProfilePage() {
                   {userPlaylists.length} playlists
                 </span>
               )}
-              {user.following && user.following.length > 0 && (
-                <span className="flex items-center gap-1">
-                  <Users className="w-4 h-4" />
-                  {user.following.length} following
-                </span>
-              )}
-              {user.followers && user.followers.length > 0 && (
-                <span className="flex items-center gap-1">
-                  <Users className="w-4 h-4" />
-                  {user.followers.length} followers
-                </span>
-              )}
+              {/* Clickable Followers */}
+              <button
+                onClick={() => openFollowModal('followers')}
+                className="flex items-center gap-1 hover:text-white hover:underline transition-colors cursor-pointer"
+              >
+                <Users className="w-4 h-4" />
+                {followersCount} followers
+              </button>
+              {/* Clickable Following */}
+              <button
+                onClick={() => openFollowModal('following')}
+                className="flex items-center gap-1 hover:text-white hover:underline transition-colors cursor-pointer"
+              >
+                <Users className="w-4 h-4" />
+                {followingCount} following
+              </button>
             </div>
           </div>
         </div>
 
         {/* Content */}
         <div className="px-4 sm:px-8 py-6 sm:py-8">
-          {/* User Details */}
+          {/* About */}
           <section className="mb-8 sm:mb-10">
             <div className="flex items-center justify-between mb-4 sm:mb-5">
               <h2 className="text-xl sm:text-2xl font-bold text-white">About</h2>
@@ -155,21 +178,70 @@ function ProfilePage() {
             </section>
           )}
 
-          {/* Followed Playlists */}
-          {user.followed_playlists && user.followed_playlists.length > 0 && (
+          {/* User Podcasts */}
+          {userPodcasts.length > 0 && (
             <section className="mb-8 sm:mb-10">
-              <h2 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-5">
-                Followed Playlists
+              <h2 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-5 flex items-center gap-2">
+                <Mic2 className="w-5 h-5 text-spotify-green" />
+                Your Podcasts
               </h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
-                {user.followed_playlists.map((playlist) => (
-                  <PlaylistCard key={playlist.id_playlist} playlist={playlist} />
+                {userPodcasts.map((podcast) => (
+                  <PodcastCard key={podcast.id_podcast} podcast={podcast} />
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* Recent Played Artists */}
+          {recentArtists.length > 0 && (
+            <section className="mb-8 sm:mb-10">
+              <h2 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-5">
+                Recently Played Artists
+              </h2>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
+                {recentArtists.map((artist) => (
+                  <Link
+                    key={artist.id_artist}
+                    href={`/artist/${artist.id_artist}`}
+                    className="block bg-spotify-card/60 hover:bg-spotify-hover rounded-lg p-4 transition-all duration-300 hover:shadow-xl hover:shadow-black/20 group"
+                  >
+                    <div className="relative aspect-square mb-4 rounded-full overflow-hidden bg-spotify-dark shadow-xl mx-auto">
+                      {artist.profile_picture ? (
+                        <img
+                          src={artist.profile_picture}
+                          alt={artist.name}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <UserIcon className="w-12 h-12 text-spotify-muted" />
+                        </div>
+                      )}
+                    </div>
+                    <p className="text-sm font-bold text-white truncate text-center mb-1">
+                      {artist.name}
+                    </p>
+                    <p className="text-xs text-spotify-muted text-center">Artist</p>
+                  </Link>
                 ))}
               </div>
             </section>
           )}
         </div>
       </div>
+
+      {/* Followers/Following Modal */}
+      <FollowersModal
+        isOpen={showFollowModal}
+        onClose={() => setShowFollowModal(false)}
+        initialTab={followModalTab}
+        followers={followers}
+        followingUsers={followingUsers}
+        followingArtists={followingArtists}
+        onFollowChange={handleFollowChange}
+      />
     </>
   );
 }

@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 import { Mic2 } from 'lucide-react';
 import type { Podcast } from '@/types';
 
@@ -7,6 +8,19 @@ interface PodcastCardProps {
 }
 
 export default function PodcastCard({ podcast }: PodcastCardProps) {
+  const router = useRouter();
+
+  const creatorName = podcast.creator?.name || 'Unknown';
+  const creatorId = podcast.creator?.id_user || podcast.id_user;
+
+  const handleCreatorClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (creatorId) {
+      router.push(`/profile/${creatorId}`);
+    }
+  };
+
   return (
     <Link
       href={`/podcast/${podcast.id_podcast}`}
@@ -33,7 +47,18 @@ export default function PodcastCard({ podcast }: PodcastCardProps) {
         {podcast.name}
       </h3>
       <p className="text-xs text-spotify-muted line-clamp-2 leading-relaxed">
-        {podcast.about || podcast.creator?.name || 'Podcast'}
+        {podcast.about || (
+          <>
+            By{' '}
+            <span
+              onClick={handleCreatorClick}
+              className="hover:text-white hover:underline transition-colors cursor-pointer"
+              role="link"
+            >
+              {creatorName}
+            </span>
+          </>
+        )}
       </p>
     </Link>
   );

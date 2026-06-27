@@ -4,16 +4,18 @@ import useSWR from 'swr';
 import { Search as SearchIcon } from 'lucide-react';
 import { fetcher } from '@/lib/fetcher';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
+import { useAuthStore } from '@/stores/useAuthStore';
 import SongRow from '@/components/song/SongRow';
 import ArtistCard from '@/components/artist/ArtistCard';
 import AlbumCard from '@/components/album/AlbumCard';
 import PlaylistCard from '@/components/playlist/PlaylistCard';
 import PodcastCard from '@/components/podcast/PodcastCard';
-import { GridSkeleton, SongRowSkeleton } from '@/components/ui/SkeletonCard';
-import type { Song, Artist, Album, Playlist, Podcast } from '@/types';
+import UserCard from '@/components/social/UserCard';
+import { GridSkeleton, SongRowSkeleton, ArtistCardSkeleton } from '@/components/ui/SkeletonCard';
+import type { Song, Artist, Album, Playlist, Podcast, User } from '@/types';
 import { cn } from '@/lib/utils';
 
-type TabKey = 'all' | 'songs' | 'artists' | 'albums' | 'playlists' | 'podcasts';
+type TabKey = 'all' | 'songs' | 'artists' | 'albums' | 'playlists' | 'podcasts' | 'users';
 
 const tabs: { key: TabKey; label: string }[] = [
   { key: 'all', label: 'All' },
@@ -22,6 +24,7 @@ const tabs: { key: TabKey; label: string }[] = [
   { key: 'albums', label: 'Albums' },
   { key: 'playlists', label: 'Playlists' },
   { key: 'podcasts', label: 'Podcasts' },
+  { key: 'users', label: 'Users' },
 ];
 
 export default function SearchPage() {
@@ -29,12 +32,22 @@ export default function SearchPage() {
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const [activeTab, setActiveTab] = useState<TabKey>('all');
   const debounceRef = useRef<NodeJS.Timeout>();
+  const currentUser = useAuthStore((s) => s.user);
 
   const { data: songs, isLoading: songsLoading } = useSWR<Song[]>('/songs', fetcher);
   const { data: artists, isLoading: artistsLoading } = useSWR<Artist[]>('/artists', fetcher);
   const { data: albums } = useSWR<Album[]>('/albums', fetcher);
   const { data: playlists } = useSWR<Playlist[]>('/playlists', fetcher);
   const { data: podcasts } = useSWR<Podcast[]>('/podcasts', fetcher);
+
+  // Search users from API (server-side search)
+  const { data: searchedUsers, isLoading: usersLoading, mutate: mutateUsers } = useSWR<User[]>(
+    debouncedQuery ? `/users/search?q=${encodeURIComponent(debouncedQuery)}` : null,
+    fetcher
+  );
+
+  // Also fetch local users list as fallback for following check
+  const { data: allUsers } = useSWR<User[]>('/users', fetcher);
 
   // Debounce search — 400ms
   useEffect(() => {
@@ -87,25 +100,39 @@ export default function SearchPage() {
     );
   }, [debouncedQuery, podcasts]);
 
+  // Users from API search — already filtered server-side, exclude current user
+  const filteredUsers = useMemo(() => {
+    if (!searchedUsers) return [];
+    return searchedUsers.filter((u) => u.id_user !== currentUser?.id_user);
+  }, [searchedUsers, currentUser]);
+
   const isLoading = songsLoading || artistsLoading;
   const hasResults =
     filteredSongs.length > 0 ||
     filteredArtists.length > 0 ||
     filteredAlbums.length > 0 ||
     filteredPlaylists.length > 0 ||
-    filteredPodcasts.length > 0;
+    filteredPodcasts.length > 0 ||
+    filteredUsers.length > 0;
 
   const showSongs = (activeTab === 'all' || activeTab === 'songs') && filteredSongs.length > 0;
   const showArtists = (activeTab === 'all' || activeTab === 'artists') && filteredArtists.length > 0;
   const showAlbums = (activeTab === 'all' || activeTab === 'albums') && filteredAlbums.length > 0;
   const showPlaylists = (activeTab === 'all' || activeTab === 'playlists') && filteredPlaylists.length > 0;
   const showPodcasts = (activeTab === 'all' || activeTab === 'podcasts') && filteredPodcasts.length > 0;
+  const showUsers = (activeTab === 'all' || activeTab === 'users') && filteredUsers.length > 0;
+
+  const handleFollowChange = () => {
+    // Re-fetch user search results and refresh auth user
+    mutateUsers();
+    useAuthStore.getState().refreshUser();
+  };
 
   return (
     <>
       <Head>
         <title>Search — Spotify Clone</title>
-        <meta name="description" content="Search for songs, artists, albums, playlists, and podcasts" />
+        <meta name="description" content="Search for songs, artists, albums, playlists, podcasts, and users" />
       </Head>
 
       <div className="px-4 sm:px-6 pb-8">
@@ -164,13 +191,13 @@ export default function SearchPage() {
             <SearchIcon className="w-16 h-16 text-spotify-muted/30 mb-4" />
             <h2 className="text-xl font-bold text-white mb-2">Search Spotify</h2>
             <p className="text-sm text-spotify-muted">
-              Find your favorite songs, artists, albums, playlists, and podcasts
+              Find your favorite songs, artists, albums, playlists, podcasts, and users
             </p>
           </div>
         )}
 
         {/* No results */}
-        {debouncedQuery && !hasResults && !isLoading && (
+        {debouncedQuery && !hasResults && !isLoading && !usersLoading && (
           <div className="flex flex-col items-center justify-center min-h-[40vh]">
             <h2 className="text-xl font-bold text-white mb-2">
               No results found for &quot;{debouncedQuery}&quot;
@@ -182,14 +209,42 @@ export default function SearchPage() {
         )}
 
         {/* Results */}
-        {hasResults && (
+        {(hasResults || usersLoading) && (
           <div className="space-y-10 mt-4">
+            {/* Users */}
+            {showUsers && (
+              <section>
+                <h2 className="text-2xl font-bold text-white mb-5">Users</h2>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+                  {filteredUsers.slice(0, activeTab === 'all' ? 6 : undefined).map((user) => (
+                    <UserCard
+                      key={user.id_user}
+                      user={user}
+                      onFollowChange={handleFollowChange}
+                    />
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* Users loading skeleton */}
+            {usersLoading && (activeTab === 'all' || activeTab === 'users') && (
+              <section>
+                <div className="h-7 w-20 bg-spotify-card/80 rounded animate-pulse mb-5" />
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+                  {Array.from({ length: 4 }).map((_, i) => (
+                    <ArtistCardSkeleton key={i} />
+                  ))}
+                </div>
+              </section>
+            )}
+
             {/* Artists */}
             {showArtists && (
               <section>
                 <h2 className="text-2xl font-bold text-white mb-5">Artists</h2>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-                  {filteredArtists.slice(0, 6).map((artist) => (
+                  {filteredArtists.slice(0, activeTab === 'all' ? 6 : undefined).map((artist) => (
                     <ArtistCard key={artist.id_artist} artist={artist} />
                   ))}
                 </div>
@@ -201,7 +256,7 @@ export default function SearchPage() {
               <section>
                 <h2 className="text-2xl font-bold text-white mb-5">Songs</h2>
                 <div className="max-w-4xl">
-                  {filteredSongs.slice(0, 20).map((song, idx) => (
+                  {filteredSongs.slice(0, activeTab === 'all' ? 20 : undefined).map((song, idx) => (
                     <SongRow
                       key={song.id_song}
                       song={song}
@@ -218,7 +273,7 @@ export default function SearchPage() {
               <section>
                 <h2 className="text-2xl font-bold text-white mb-5">Albums</h2>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-                  {filteredAlbums.slice(0, 6).map((album) => (
+                  {filteredAlbums.slice(0, activeTab === 'all' ? 6 : undefined).map((album) => (
                     <AlbumCard key={album.id_album} album={album} />
                   ))}
                 </div>
@@ -230,7 +285,7 @@ export default function SearchPage() {
               <section>
                 <h2 className="text-2xl font-bold text-white mb-5">Playlists</h2>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-                  {filteredPlaylists.slice(0, 6).map((playlist) => (
+                  {filteredPlaylists.slice(0, activeTab === 'all' ? 6 : undefined).map((playlist) => (
                     <PlaylistCard key={playlist.id_playlist} playlist={playlist} />
                   ))}
                 </div>
@@ -242,7 +297,7 @@ export default function SearchPage() {
               <section>
                 <h2 className="text-2xl font-bold text-white mb-5">Podcasts</h2>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-                  {filteredPodcasts.slice(0, 6).map((podcast) => (
+                  {filteredPodcasts.slice(0, activeTab === 'all' ? 6 : undefined).map((podcast) => (
                     <PodcastCard key={podcast.id_podcast} podcast={podcast} />
                   ))}
                 </div>
