@@ -17,11 +17,14 @@ import {
   ChevronLeft,
   ChevronRight,
   LayoutGrid,
+  ChevronDown,
+  ListMusic,
+  Users,
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
 import { cn } from '@/lib/utils';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useUIStore } from '@/stores/useUIStore';
 
 const mainNavItems = [
@@ -40,6 +43,10 @@ export default function Sidebar() {
 
   const isCollapsed = useUIStore((s) => s.isSidebarCollapsed);
   const setSidebarCollapsed = useUIStore((s) => s.setSidebarCollapsed);
+
+  const [isCreatedOpen, setIsCreatedOpen] = useState(true);
+  const [isCollabOpen, setIsCollabOpen] = useState(true);
+  const [isFollowedOpen, setIsFollowedOpen] = useState(true);
 
   useEffect(() => {
     const saved = localStorage.getItem('sidebar-collapsed');
@@ -214,23 +221,185 @@ export default function Sidebar() {
               <p className="px-4 py-2 text-xs text-spotify-muted uppercase tracking-wider font-semibold">
                 Playlists
               </p>
-              <div className="space-y-0.5">
-                {user.followed_playlists && user.followed_playlists.length > 0 ? (
-                  user.followed_playlists.map((playlist) => (
-                    <Link
-                      key={playlist.id_playlist}
-                      href={`/playlist/${playlist.id_playlist}`}
-                      className="block px-4 py-1.5 text-sm text-spotify-muted hover:text-white transition-colors truncate"
-                    >
-                      {playlist.name}
-                    </Link>
-                  ))
-                ) : (
-                  <p className="px-4 py-2 text-xs text-spotify-muted/60">
-                    Your playlists will appear here
-                  </p>
-                )}
-              </div>
+              
+              {(() => {
+                const allCollaborative = user.collaborative_playlists || [];
+                const createdPlaylists = allCollaborative.filter((p) => p.pivot?.role === 'Owner');
+                const collaborativePlaylists = allCollaborative.filter((p) => p.pivot?.role === 'Editor');
+                const followedPlaylists = user.followed_playlists || [];
+
+                const hasPlaylists =
+                  createdPlaylists.length > 0 ||
+                  collaborativePlaylists.length > 0 ||
+                  followedPlaylists.length > 0;
+
+                const getPlaylistOwnerName = (playlist: any) => {
+                  const owner = playlist.collaborators?.find((c: any) => c.pivot?.role === 'Owner');
+                  if (!owner) return 'Spotify';
+                  return owner.id_user === user.id_user ? 'Anda' : owner.name;
+                };
+
+                if (!hasPlaylists) {
+                  return (
+                    <div className="space-y-0.5">
+                      <p className="px-4 py-2 text-xs text-spotify-muted/60">
+                        Your playlists will appear here
+                      </p>
+                    </div>
+                  );
+                }
+
+                return (
+                  <div className="space-y-4">
+                    {/* Created Playlists */}
+                    {createdPlaylists.length > 0 && (
+                      <div className="space-y-1">
+                        <button
+                          onClick={() => setIsCreatedOpen(!isCreatedOpen)}
+                          className="flex items-center justify-between w-full px-4 py-1 text-xs font-bold text-spotify-muted hover:text-white uppercase tracking-wider transition-colors text-left group"
+                        >
+                          <span>Created ({createdPlaylists.length})</span>
+                          {isCreatedOpen ? (
+                            <ChevronDown className="w-3.5 h-3.5 text-spotify-muted group-hover:text-white transition-colors shrink-0" />
+                          ) : (
+                            <ChevronRight className="w-3.5 h-3.5 text-spotify-muted group-hover:text-white transition-colors shrink-0" />
+                          )}
+                        </button>
+                        
+                        {isCreatedOpen && (
+                          <div className="space-y-0.5 pl-1">
+                            {createdPlaylists.map((playlist) => (
+                              <Link
+                                key={playlist.id_playlist}
+                                href={`/playlist/${playlist.id_playlist}`}
+                                className="flex items-center gap-3 px-3 py-1.5 text-sm text-spotify-muted hover:text-white hover:bg-spotify-card/40 rounded-md transition-colors group"
+                              >
+                                <div className="w-6 h-6 rounded bg-spotify-card flex items-center justify-center overflow-hidden shrink-0">
+                                  {playlist.cover_image ? (
+                                    <img
+                                      src={playlist.cover_image}
+                                      alt={playlist.name}
+                                      className="w-full h-full object-cover"
+                                    />
+                                  ) : (
+                                    <ListMusic className="w-3.5 h-3.5 text-spotify-muted group-hover:text-white transition-colors" />
+                                  )}
+                                </div>
+                                <div className="flex flex-col min-w-0 flex-1">
+                                  <span className="font-medium text-sm truncate text-white/95 group-hover:text-white transition-colors">
+                                    {playlist.name}
+                                  </span>
+                                  <span className="text-[11px] text-spotify-muted truncate font-normal">
+                                    Playlist • Anda
+                                  </span>
+                                </div>
+                              </Link>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Collaborative Playlists */}
+                    {collaborativePlaylists.length > 0 && (
+                      <div className="space-y-1">
+                        <button
+                          onClick={() => setIsCollabOpen(!isCollabOpen)}
+                          className="flex items-center justify-between w-full px-4 py-1 text-xs font-bold text-spotify-muted hover:text-white uppercase tracking-wider transition-colors text-left group"
+                        >
+                          <span>Collaborating ({collaborativePlaylists.length})</span>
+                          {isCollabOpen ? (
+                            <ChevronDown className="w-3.5 h-3.5 text-spotify-muted group-hover:text-white transition-colors shrink-0" />
+                          ) : (
+                            <ChevronRight className="w-3.5 h-3.5 text-spotify-muted group-hover:text-white transition-colors shrink-0" />
+                          )}
+                        </button>
+
+                        {isCollabOpen && (
+                          <div className="space-y-0.5 pl-1">
+                            {collaborativePlaylists.map((playlist) => (
+                              <Link
+                                key={playlist.id_playlist}
+                                href={`/playlist/${playlist.id_playlist}`}
+                                className="flex items-center gap-3 px-3 py-1.5 text-sm text-spotify-muted hover:text-white hover:bg-spotify-card/40 rounded-md transition-colors group"
+                              >
+                                <div className="w-6 h-6 rounded bg-spotify-card flex items-center justify-center overflow-hidden shrink-0">
+                                  {playlist.cover_image ? (
+                                    <img
+                                      src={playlist.cover_image}
+                                      alt={playlist.name}
+                                      className="w-full h-full object-cover"
+                                    />
+                                  ) : (
+                                    <Users className="w-3.5 h-3.5 text-spotify-muted group-hover:text-white transition-colors" />
+                                  )}
+                                </div>
+                                <div className="flex flex-col min-w-0 flex-1">
+                                  <span className="font-medium text-sm truncate text-white/95 group-hover:text-white transition-colors">
+                                    {playlist.name}
+                                  </span>
+                                  <span className="text-[11px] text-spotify-muted truncate font-normal">
+                                    Kolaboratif • {getPlaylistOwnerName(playlist)}
+                                  </span>
+                                </div>
+                              </Link>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Followed Playlists */}
+                    {followedPlaylists.length > 0 && (
+                      <div className="space-y-1">
+                        <button
+                          onClick={() => setIsFollowedOpen(!isFollowedOpen)}
+                          className="flex items-center justify-between w-full px-4 py-1 text-xs font-bold text-spotify-muted hover:text-white uppercase tracking-wider transition-colors text-left group"
+                        >
+                          <span>Followed ({followedPlaylists.length})</span>
+                          {isFollowedOpen ? (
+                            <ChevronDown className="w-3.5 h-3.5 text-spotify-muted group-hover:text-white transition-colors shrink-0" />
+                          ) : (
+                            <ChevronRight className="w-3.5 h-3.5 text-spotify-muted group-hover:text-white transition-colors shrink-0" />
+                          )}
+                        </button>
+
+                        {isFollowedOpen && (
+                          <div className="space-y-0.5 pl-1">
+                            {followedPlaylists.map((playlist) => (
+                              <Link
+                                key={playlist.id_playlist}
+                                href={`/playlist/${playlist.id_playlist}`}
+                                className="flex items-center gap-3 px-3 py-1.5 text-sm text-spotify-muted hover:text-white hover:bg-spotify-card/40 rounded-md transition-colors group"
+                              >
+                                <div className="w-6 h-6 rounded bg-spotify-card flex items-center justify-center overflow-hidden shrink-0">
+                                  {playlist.cover_image ? (
+                                    <img
+                                      src={playlist.cover_image}
+                                      alt={playlist.name}
+                                      className="w-full h-full object-cover"
+                                    />
+                                  ) : (
+                                    <ListMusic className="w-3.5 h-3.5 text-spotify-muted group-hover:text-white transition-colors" />
+                                  )}
+                                </div>
+                                <div className="flex flex-col min-w-0 flex-1">
+                                  <span className="font-medium text-sm truncate text-white/95 group-hover:text-white transition-colors">
+                                    {playlist.name}
+                                  </span>
+                                  <span className="text-[11px] text-spotify-muted truncate font-normal">
+                                    Playlist • {getPlaylistOwnerName(playlist)}
+                                  </span>
+                                </div>
+                              </Link>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
             </div>
           )}
           {isCollapsed && <div className="flex-1" />}

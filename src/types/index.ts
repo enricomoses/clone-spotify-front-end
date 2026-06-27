@@ -50,6 +50,7 @@ export interface Artist {
   songs?: Song[]; // Many-to-Many via song_artist
   concerts?: Concert[]; // Many-to-Many via artist_concert
   galleries?: ArtistGallery[];
+  followers?: User[];
   created_at?: string;
   updated_at?: string;
 }
@@ -112,6 +113,11 @@ export interface Playlist {
   owner?: User;
   created_at?: string;
   updated_at?: string;
+  pivot?: {
+    id_playlist: string;
+    id_user: string;
+    role: 'Owner' | 'Editor' | 'Viewer';
+  };
 }
 
 export interface PlaylistCollaborator {
