@@ -40,14 +40,8 @@ export default function SearchPage() {
   const { data: playlists } = useSWR<Playlist[]>('/playlists', fetcher);
   const { data: podcasts } = useSWR<Podcast[]>('/podcasts', fetcher);
 
-  // Search users from API (server-side search)
-  const { data: searchedUsers, isLoading: usersLoading, mutate: mutateUsers } = useSWR<User[]>(
-    debouncedQuery ? `/users/search?q=${encodeURIComponent(debouncedQuery)}` : null,
-    fetcher
-  );
-
-  // Also fetch local users list as fallback for following check
-  const { data: allUsers } = useSWR<User[]>('/users', fetcher);
+  // Fetch users list for client-side search
+  const { data: allUsers, isLoading: usersLoading, mutate: mutateUsers } = useSWR<User[]>('/users', fetcher);
 
   // Debounce search — 400ms
   useEffect(() => {
@@ -100,11 +94,16 @@ export default function SearchPage() {
     );
   }, [debouncedQuery, podcasts]);
 
-  // Users from API search — already filtered server-side, exclude current user
+  // Filter users in memory (case-insensitive)
   const filteredUsers = useMemo(() => {
-    if (!searchedUsers) return [];
-    return searchedUsers.filter((u) => u.id_user !== currentUser?.id_user);
-  }, [searchedUsers, currentUser]);
+    if (!debouncedQuery || !allUsers) return [];
+    const q = debouncedQuery.toLowerCase();
+    return allUsers.filter(
+      (u) =>
+        u.name.toLowerCase().includes(q) &&
+        u.id_user !== currentUser?.id_user
+    );
+  }, [debouncedQuery, allUsers, currentUser]);
 
   const isLoading = songsLoading || artistsLoading;
   const hasResults =
