@@ -30,11 +30,18 @@ export default function UserProfilePage() {
     fetcher
   );
 
+  // Refresh logged-in user's profile on mount to sync follow status
+  useEffect(() => {
+    if (currentUser) {
+      useAuthStore.getState().refreshUser();
+    }
+  }, [id, currentUser?.id_user]);
+
   if (isLoading || !profileData) return <UserProfileSkeleton />;
 
   // Check if the current user follows this user
   const isFollowing = currentUser?.following?.some(
-    (u) => u.id_user === profileData.id_user
+    (u) => u.id_user === profileData?.id_user
   ) ?? false;
 
   const handleFollow = async () => {
@@ -48,7 +55,9 @@ export default function UserProfilePage() {
 
   const handleUnfollow = async () => {
     if (!currentUser) return;
-    await api.delete(`/users/${currentUser.id_user}/unfollow-user/${profileData.id_user}`);
+    await api.post(`/users/${currentUser.id_user}/unfollow-user/${profileData.id_user}`, {
+      _method: 'DELETE',
+    });
     mutate();
     useAuthStore.getState().refreshUser();
   };

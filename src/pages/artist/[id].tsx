@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import useSWR from 'swr';
@@ -53,6 +53,13 @@ export default function ArtistProfilePage() {
     id ? `/artists/${id}/concerts` : null,
     fetcher,
   );
+
+  // Refresh logged-in user profile on mount to sync followed artists
+  useEffect(() => {
+    if (user) {
+      refreshUser();
+    }
+  }, [id, user?.id_user]);
 
   if (isLoading || !artist) return <BannerSkeleton />;
 

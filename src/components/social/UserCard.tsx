@@ -29,7 +29,9 @@ export default function UserCard({ user, onFollowChange }: UserCardProps) {
 
   const handleUnfollow = async () => {
     if (!currentUser) return;
-    await api.delete(`/users/${currentUser.id_user}/unfollow-user/${user.id_user}`);
+    await api.post(`/users/${currentUser.id_user}/unfollow-user/${user.id_user}`, {
+      _method: 'DELETE',
+    });
     onFollowChange?.();
   };
 

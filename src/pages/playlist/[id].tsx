@@ -22,7 +22,7 @@ import { BannerSkeleton } from '@/components/ui/SkeletonCard';
 import { useToastStore } from '@/components/ui/Toast';
 import type { Playlist } from '@/types';
 import api from '@/lib/axios';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import AddSongToPlaylistModal from '@/components/playlist/AddSongToPlaylistModal';
 import AddCollaboratorModal from '@/components/playlist/AddCollaboratorModal';
@@ -45,6 +45,13 @@ export default function PlaylistDetailPage() {
     id ? `/playlists/${id}` : null,
     fetcher,
   );
+
+  // Refresh logged-in user profile on mount to sync followed playlists
+  useEffect(() => {
+    if (user) {
+      refreshUser();
+    }
+  }, [id, user?.id_user]);
 
   if (isLoading || !playlist) return <BannerSkeleton />;
 

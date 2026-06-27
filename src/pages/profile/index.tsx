@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { withAuth } from '@/utils/withAuth';
@@ -21,6 +21,13 @@ function ProfilePage() {
     currentUser ? `/users/${currentUser.id_user}/profile` : null,
     fetcher
   );
+
+  // Refresh logged-in user profile on mount to sync all stats
+  useEffect(() => {
+    if (currentUser) {
+      useAuthStore.getState().refreshUser();
+    }
+  }, [currentUser?.id_user]);
 
   if (isLoading) return <UserProfileSkeleton />;
 

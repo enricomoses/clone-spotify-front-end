@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import useSWR from 'swr';
@@ -24,6 +25,13 @@ function PodcastDetailPage() {
     id ? `/podcasts/${id}` : null,
     fetcher
   );
+
+  // Refresh logged-in user profile on mount to sync followed podcasts
+  useEffect(() => {
+    if (user) {
+      refreshUser();
+    }
+  }, [id, user?.id_user]);
 
   if (isLoading || !podcast) return <PodcastDetailSkeleton />;
 

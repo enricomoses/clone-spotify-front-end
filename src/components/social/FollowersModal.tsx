@@ -94,7 +94,9 @@ export default function FollowersModal({
 
   const handleUnfollowUser = async (targetId: string) => {
     if (!currentUser) return;
-    await api.delete(`/users/${currentUser.id_user}/unfollow-user/${targetId}`);
+    await api.post(`/users/${currentUser.id_user}/unfollow-user/${targetId}`, {
+      _method: 'DELETE',
+    });
     onFollowChange?.();
   };
 
