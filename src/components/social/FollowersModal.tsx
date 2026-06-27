@@ -5,6 +5,7 @@ import Modal from '@/components/ui/Modal';
 import FollowButton from '@/components/social/FollowButton';
 import { useAuthStore } from '@/stores/useAuthStore';
 import api from '@/lib/axios';
+import { useToastStore } from '@/components/ui/Toast';
 import type { User, Artist } from '@/types';
 
 type TabKey = 'followers' | 'following';
@@ -84,24 +85,70 @@ export default function FollowersModal({
     return followingList.filter((item) => item.name.toLowerCase().includes(q));
   }, [followingList, searchQuery]);
 
+  const addToast = useToastStore((s) => s.addToast);
+
   const handleFollowUser = async (targetId: string) => {
     if (!currentUser) return;
-    await api.post(`/users/${currentUser.id_user}/follow-user`, {
-      target_id: targetId,
-    });
-    onFollowChange?.();
+    try {
+      await api.post(`/users/${currentUser.id_user}/follow-user`, {
+        target_id: targetId,
+      });
+      addToast('Successfully followed user', 'success');
+      onFollowChange?.();
+    } catch (e) {
+      console.error('Failed to follow user', e);
+      addToast('Failed to follow user', 'error');
+    }
   };
 
   const handleUnfollowUser = async (targetId: string) => {
     if (!currentUser) return;
-    await api.post(`/users/${currentUser.id_user}/unfollow-user/${targetId}`, {
-      _method: 'DELETE',
-    });
-    onFollowChange?.();
+    try {
+      await api.post(`/users/${currentUser.id_user}/unfollow-user/${targetId}`, {
+        _method: 'DELETE',
+      });
+      addToast('Unfollowed user successfully', 'success');
+      onFollowChange?.();
+    } catch (e) {
+      console.error('Failed to unfollow user', e);
+      addToast('Failed to unfollow user', 'error');
+    }
+  };
+
+  const handleFollowArtist = async (artistId: string) => {
+    if (!currentUser) return;
+    try {
+      await api.post(`/users/${currentUser.id_user}/follow-artist`, {
+        artist_id: artistId,
+      });
+      addToast('Successfully followed artist', 'success');
+      onFollowChange?.();
+    } catch (e) {
+      console.error('Failed to follow artist', e);
+      addToast('Failed to follow artist', 'error');
+    }
+  };
+
+  const handleUnfollowArtist = async (artistId: string) => {
+    if (!currentUser) return;
+    try {
+      await api.post(`/users/${currentUser.id_user}/unfollow-artist/${artistId}`, {
+        _method: 'DELETE',
+      });
+      addToast('Unfollowed artist successfully', 'success');
+      onFollowChange?.();
+    } catch (e) {
+      console.error('Failed to unfollow artist', e);
+      addToast('Failed to unfollow artist', 'error');
+    }
   };
 
   const isFollowingUser = (userId: string) => {
     return currentUser?.following?.some((u) => u.id_user === userId) ?? false;
+  };
+
+  const isFollowingArtist = (artistId: string) => {
+    return currentUser?.followed_artists?.some((a) => a.id_artist === artistId) ?? false;
   };
 
   return (
@@ -201,9 +248,9 @@ export default function FollowersModal({
                   type={item.type}
                   href={item.href}
                   isSelf={item.type === 'user' && item.id === currentUser?.id_user}
-                  isFollowing={item.type === 'user' ? isFollowingUser(item.id) : true}
-                  onFollow={item.type === 'user' ? () => handleFollowUser(item.id) : undefined}
-                  onUnfollow={item.type === 'user' ? () => handleUnfollowUser(item.id) : undefined}
+                  isFollowing={item.type === 'user' ? isFollowingUser(item.id) : isFollowingArtist(item.id)}
+                  onFollow={item.type === 'user' ? () => handleFollowUser(item.id) : () => handleFollowArtist(item.id)}
+                  onUnfollow={item.type === 'user' ? () => handleUnfollowUser(item.id) : () => handleUnfollowArtist(item.id)}
                   onClose={onClose}
                   showTypeLabel
                 />
@@ -277,8 +324,8 @@ function FollowListItem({
         )}
       </Link>
 
-      {/* Follow button (not for self, not for artists in following tab) */}
-      {!isSelf && type === 'user' && onFollow && onUnfollow && (
+      {/* Follow button (not for self) */}
+      {!isSelf && onFollow && onUnfollow && (
         <FollowButton
           isFollowing={isFollowing}
           onFollow={onFollow}

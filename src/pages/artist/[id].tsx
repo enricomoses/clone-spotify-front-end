@@ -39,7 +39,7 @@ export default function ArtistProfilePage() {
   const [activeTab, setActiveTab] = useState<ArtistTab>('songs');
   const [isBioModalOpen, setIsBioModalOpen] = useState(false);
 
-  const { data: artist, isLoading } = useSWR<Artist>(
+  const { data: artist, isLoading, mutate } = useSWR<Artist>(
     id ? `/artists/${id}` : null,
     fetcher,
   );
@@ -80,6 +80,7 @@ export default function ArtistProfilePage() {
   // Check if current user follows this artist
   const isFollowing =
     user?.followed_artists?.some((a) => a.id_artist === artist.id_artist) ||
+    artist?.followers?.some((u) => u.id_user === user?.id_user) ||
     false;
 
   const handleFollow = async () => {
@@ -88,6 +89,7 @@ export default function ArtistProfilePage() {
       await api.post(`/users/${user.id_user}/follow-artist`, {
         artist_id: artist.id_artist,
       });
+      mutate();
       await refreshUser();
       addToast('Successfully followed artist', 'success');
     } catch (e) {
@@ -106,6 +108,7 @@ export default function ArtistProfilePage() {
           _method: 'DELETE',
         },
       );
+      mutate();
       await refreshUser();
       addToast('Unfollowed artist successfully', 'success');
     } catch (e) {

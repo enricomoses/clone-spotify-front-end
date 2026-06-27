@@ -68,8 +68,11 @@ export const useAuthStore = create<AuthState>()(
           const response = await api.get(`/users/${user.id_user}`);
           const userData = response.data.data ?? response.data;
           set({ user: userData });
-        } catch (e) {
+        } catch (e: any) {
           console.error('Failed to refresh user profile', e);
+          if (e.response?.status === 404 || e.response?.status === 401) {
+            get().logout();
+          }
         }
       },
     }),

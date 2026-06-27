@@ -11,6 +11,7 @@ import PlaylistCard from '@/components/playlist/PlaylistCard';
 import PodcastCard from '@/components/podcast/PodcastCard';
 import { UserProfileSkeleton } from '@/components/ui/SkeletonCard';
 import api from '@/lib/axios';
+import { useToastStore } from '@/components/ui/Toast';
 import type { User as UserType } from '@/types';
 
 export default function UserProfilePage() {
@@ -39,27 +40,44 @@ export default function UserProfilePage() {
 
   if (isLoading || !profileData) return <UserProfileSkeleton />;
 
+  const addToast = useToastStore((s) => s.addToast);
+
   // Check if the current user follows this user
-  const isFollowing = currentUser?.following?.some(
-    (u) => u.id_user === profileData?.id_user
-  ) ?? false;
+  const isFollowing =
+    currentUser?.following?.some((u) => u.id_user === profileData?.id_user) ||
+    profileData?.followers?.some((u) => u.id_user === currentUser?.id_user) ||
+    false;
 
   const handleFollow = async () => {
     if (!currentUser) return;
-    await api.post(`/users/${currentUser.id_user}/follow-user`, {
-      target_id: profileData.id_user,
-    });
-    mutate();
-    useAuthStore.getState().refreshUser();
+    try {
+      await api.post(`/users/${currentUser.id_user}/follow-user`, {
+        target_id: profileData.id_user,
+      });
+      mutate();
+      await useAuthStore.getState().refreshUser();
+      addToast('Successfully followed user', 'success');
+    } catch (e) {
+      console.error('Failed to follow user', e);
+      addToast('Failed to follow user', 'error');
+      throw e;
+    }
   };
 
   const handleUnfollow = async () => {
     if (!currentUser) return;
-    await api.post(`/users/${currentUser.id_user}/unfollow-user/${profileData.id_user}`, {
-      _method: 'DELETE',
-    });
-    mutate();
-    useAuthStore.getState().refreshUser();
+    try {
+      await api.post(`/users/${currentUser.id_user}/unfollow-user/${profileData.id_user}`, {
+        _method: 'DELETE',
+      });
+      mutate();
+      await useAuthStore.getState().refreshUser();
+      addToast('Unfollowed user successfully', 'success');
+    } catch (e) {
+      console.error('Failed to unfollow user', e);
+      addToast('Failed to unfollow user', 'error');
+      throw e;
+    }
   };
 
   const userPlaylists = profileData.user_playlists || [];
@@ -144,6 +162,7 @@ export default function UserProfilePage() {
             {/* Follow button */}
             <div className="mb-8">
               <FollowButton
+                key={`${profileData.id_user}-${isFollowing}`}
                 isFollowing={isFollowing}
                 onFollow={handleFollow}
                 onUnfollow={handleUnfollow}
