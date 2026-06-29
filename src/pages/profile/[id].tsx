@@ -38,9 +38,9 @@ export default function UserProfilePage() {
     }
   }, [id, currentUser?.id_user]);
 
-  if (isLoading || !profileData) return <UserProfileSkeleton />;
-
   const addToast = useToastStore((s) => s.addToast);
+
+  if (isLoading || !profileData) return <UserProfileSkeleton />;
 
   // Check if the current user follows this user
   const isFollowing =
