@@ -1,14 +1,17 @@
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
-import useSWR from 'swr';
-import { Mic2 } from 'lucide-react';
+import useSWR, { mutate } from 'swr';
+import { Mic2, Edit3, Trash2 } from 'lucide-react';
 import { fetcher } from '@/lib/fetcher';
 import { withAuth } from '@/utils/withAuth';
 import FollowButton from '@/components/social/FollowButton';
 import EpisodeRow from '@/components/podcast/EpisodeRow';
 import { PodcastDetailSkeleton } from '@/components/ui/SkeletonCard';
-import type { Podcast } from '@/types';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import EditPodcastModal from '@/components/podcast/EditPodcastModal';
+import EditEpisodeModal from '@/components/podcast/EditEpisodeModal';
+import type { Podcast, Episode } from '@/types';
 import Link from 'next/link';
 import { useAuthStore } from '@/stores/useAuthStore';
 import api from '@/lib/axios';
@@ -20,6 +23,21 @@ function PodcastDetailPage() {
   const user = useAuthStore((s) => s.user);
   const refreshUser = useAuthStore((s) => s.refreshUser);
   const addToast = useToastStore((s) => s.addToast);
+
+  // Edit podcast modal state
+  const [showEditPodcast, setShowEditPodcast] = useState(false);
+
+  // Delete podcast modal state
+  const [showDeletePodcast, setShowDeletePodcast] = useState(false);
+  const [isDeletingPodcast, setIsDeletingPodcast] = useState(false);
+
+  // Edit episode modal state
+  const [editEpisode, setEditEpisode] = useState<Episode | null>(null);
+
+  // Delete episode modal state
+  const [deleteEpisode, setDeleteEpisode] = useState<Episode | null>(null);
+  const [isDeletingEpisode, setIsDeletingEpisode] = useState(false);
+  const [deletingEpisodeId, setDeletingEpisodeId] = useState<string | null>(null);
 
   const { data: podcast, isLoading } = useSWR<Podcast>(
     id ? `/podcasts/${id}` : null,
@@ -69,6 +87,116 @@ function PodcastDetailPage() {
       console.error('Failed to unfollow podcast', e);
       addToast('Failed to unfollow podcast', 'error');
       throw e;
+    }
+  };
+
+  // --- Podcast CRUD handlers ---
+  const handleEditPodcastSuccess = () => {
+    mutate(`/podcasts/${id}`);
+    mutate('/podcasts');
+    addToast('Podcast updated successfully!', 'success');
+  };
+
+  const handleDeletePodcastConfirm = async () => {
+    setIsDeletingPodcast(true);
+    try {
+      // Clean up Cloudinary assets
+      if (podcast.cover_image) {
+        try {
+          await api.post('/media/delete', {
+            image_url: podcast.cover_image,
+            _method: 'DELETE',
+          });
+        } catch (err) {
+          console.warn('Failed to delete podcast cover from Cloudinary:', err);
+        }
+      }
+      if (podcast.episodes && podcast.episodes.length > 0) {
+        for (const ep of podcast.episodes) {
+          if (ep.thumbnail_image) {
+            try {
+              await api.post('/media/delete', {
+                image_url: ep.thumbnail_image,
+                _method: 'DELETE',
+              });
+            } catch (err) {
+              console.warn('Failed to delete episode thumbnail from Cloudinary:', err);
+            }
+          }
+        }
+      }
+
+      await api.post(`/podcasts/${podcast.id_podcast}`, { _method: 'DELETE' });
+      mutate('/podcasts');
+      addToast('Podcast deleted successfully!', 'success');
+      router.push('/my-podcasts');
+    } catch (e: any) {
+      console.error('Failed to delete podcast', e);
+      addToast(e.response?.data?.message || 'Failed to delete podcast.', 'error');
+    } finally {
+      setIsDeletingPodcast(false);
+      setShowDeletePodcast(false);
+    }
+  };
+
+  // --- Episode CRUD handlers ---
+  const handleEditEpisodeSuccess = () => {
+    mutate(`/podcasts/${id}`);
+    addToast('Episode updated successfully!', 'success');
+  };
+
+  const handleDeleteEpisodeConfirm = async () => {
+    if (!deleteEpisode) return;
+    const episodeId = deleteEpisode.id_episode;
+    setIsDeletingEpisode(true);
+    setDeletingEpisodeId(episodeId);
+
+    try {
+      // Clean up Cloudinary assets
+      if (deleteEpisode.thumbnail_image) {
+        try {
+          await api.post('/media/delete', {
+            image_url: deleteEpisode.thumbnail_image,
+            _method: 'DELETE',
+          });
+        } catch (err) {
+          console.warn('Failed to delete episode thumbnail from Cloudinary:', err);
+        }
+      }
+      if (deleteEpisode.video_url) {
+        try {
+          await api.post('/media/video/delete', {
+            video_url: deleteEpisode.video_url,
+            _method: 'DELETE',
+          });
+        } catch (e) {
+          console.warn('Failed to delete episode video from Cloudinary:', e);
+        }
+      }
+      if (deleteEpisode.audio_url && deleteEpisode.audio_url !== deleteEpisode.video_url) {
+        try {
+          await api.post('/media/audio/delete', {
+            audio_url: deleteEpisode.audio_url,
+            _method: 'DELETE',
+          });
+        } catch (e) {
+          console.warn('Failed to delete episode audio from Cloudinary:', e);
+        }
+      }
+
+      await api.post(`/episodes/${episodeId}`, {
+        _method: 'DELETE',
+        id_user: user?.id_user,
+      });
+      mutate(`/podcasts/${id}`);
+      addToast('Episode deleted successfully!', 'success');
+      setDeleteEpisode(null);
+    } catch (e: any) {
+      console.error('Failed to delete episode', e);
+      addToast(e.response?.data?.message || 'Failed to delete episode.', 'error');
+    } finally {
+      setIsDeletingEpisode(false);
+      setDeletingEpisodeId(null);
     }
   };
 
@@ -155,12 +283,28 @@ function PodcastDetailPage() {
                 size="md"
               />
               {isCreator && (
-                <Link
-                  href={`/podcast/${id}/episode/create`}
-                  className="btn-outline text-sm py-1.5 px-6"
-                >
-                  + Add Episode
-                </Link>
+                <>
+                  <Link
+                    href={`/podcast/${id}/episode/create`}
+                    className="btn-outline text-sm py-1.5 px-6"
+                  >
+                    + Add Episode
+                  </Link>
+                  <button
+                    onClick={() => setShowEditPodcast(true)}
+                    className="flex items-center gap-1.5 text-sm py-1.5 px-5 text-white border border-spotify-border rounded-full hover:border-white hover:bg-white/5 transition-colors"
+                  >
+                    <Edit3 className="w-3.5 h-3.5" />
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => setShowDeletePodcast(true)}
+                    className="flex items-center gap-1.5 text-sm py-1.5 px-5 text-red-400 border border-red-500/30 rounded-full hover:border-red-400 hover:bg-red-500/10 transition-colors"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    Delete
+                  </button>
+                </>
               )}
             </div>
 
@@ -172,7 +316,14 @@ function PodcastDetailPage() {
               {podcast.episodes && podcast.episodes.length > 0 ? (
                 <div className="space-y-1">
                   {podcast.episodes.map((episode) => (
-                    <EpisodeRow key={episode.id_episode} episode={episode} />
+                    <EpisodeRow
+                      key={episode.id_episode}
+                      episode={episode}
+                      isCreator={isCreator}
+                      onEdit={(ep) => setEditEpisode(ep)}
+                      onDelete={(ep) => setDeleteEpisode(ep)}
+                      isDeleting={deletingEpisodeId === episode.id_episode}
+                    />
                   ))}
                 </div>
               ) : (
@@ -187,6 +338,51 @@ function PodcastDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* Edit Podcast Modal */}
+      {showEditPodcast && (
+        <EditPodcastModal
+          isOpen={showEditPodcast}
+          onClose={() => setShowEditPodcast(false)}
+          podcast={podcast}
+          onSuccess={handleEditPodcastSuccess}
+        />
+      )}
+
+      {/* Delete Podcast Confirmation */}
+      <ConfirmDialog
+        isOpen={showDeletePodcast}
+        onClose={() => setShowDeletePodcast(false)}
+        onConfirm={handleDeletePodcastConfirm}
+        title="Delete Podcast"
+        description={`Are you sure you want to delete "${podcast.name}"? All episodes will also be deleted. This action cannot be undone.`}
+        confirmText="Delete"
+        variant="danger"
+        isLoading={isDeletingPodcast}
+      />
+
+      {/* Edit Episode Modal */}
+      {editEpisode && (
+        <EditEpisodeModal
+          isOpen={!!editEpisode}
+          onClose={() => setEditEpisode(null)}
+          episode={editEpisode}
+          onSuccess={handleEditEpisodeSuccess}
+          userId={user?.id_user}
+        />
+      )}
+
+      {/* Delete Episode Confirmation */}
+      <ConfirmDialog
+        isOpen={!!deleteEpisode}
+        onClose={() => setDeleteEpisode(null)}
+        onConfirm={handleDeleteEpisodeConfirm}
+        title="Delete Episode"
+        description={`Are you sure you want to delete "${deleteEpisode?.title}"? This action cannot be undone.`}
+        confirmText="Delete"
+        variant="danger"
+        isLoading={isDeletingEpisode}
+      />
     </>
   );
 }

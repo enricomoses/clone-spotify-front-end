@@ -6,20 +6,33 @@ import { Mic, Plus, Edit3, Trash2, Eye, Loader2 } from 'lucide-react';
 import { fetcher } from '@/lib/fetcher';
 import { withAuth } from '@/utils/withAuth';
 import { useAuthStore } from '@/stores/useAuthStore';
+import { useToastStore } from '@/components/ui/Toast';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import EditPodcastModal from '@/components/podcast/EditPodcastModal';
 import type { Podcast } from '@/types';
 import api from '@/lib/axios';
 
 function MyPodcastsPage() {
   const user = useAuthStore((s) => s.user);
+  const addToast = useToastStore((s) => s.addToast);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  // Delete confirmation modal state
+  const [deleteTarget, setDeleteTarget] = useState<Podcast | null>(null);
+  const [isDeleteLoading, setIsDeleteLoading] = useState(false);
+
+  // Edit modal state
+  const [editTarget, setEditTarget] = useState<Podcast | null>(null);
 
   const { data: allPodcasts, isLoading } = useSWR<Podcast[]>('/podcasts', fetcher);
 
   // Filter podcasts owned by current user
   const myPodcasts = allPodcasts?.filter((p) => p.id_user === user?.id_user) || [];
 
-  const handleDelete = async (podcastId: string) => {
-    if (!confirm('Delete this podcast? All episodes will also be deleted.')) return;
+  const handleDeleteConfirm = async () => {
+    if (!deleteTarget) return;
+    const podcastId = deleteTarget.id_podcast;
+    setIsDeleteLoading(true);
     setDeletingId(podcastId);
     try {
       const podcast = myPodcasts.find((p) => p.id_podcast === podcastId);
@@ -52,12 +65,20 @@ function MyPodcastsPage() {
 
       await api.post(`/podcasts/${podcastId}`, { _method: 'DELETE' });
       mutate('/podcasts');
-    } catch (e) {
+      addToast('Podcast deleted successfully!', 'success');
+      setDeleteTarget(null);
+    } catch (e: any) {
       console.error('Failed to delete podcast', e);
-      alert('Failed to delete podcast.');
+      addToast(e.response?.data?.message || 'Failed to delete podcast.', 'error');
     } finally {
       setDeletingId(null);
+      setIsDeleteLoading(false);
     }
+  };
+
+  const handleEditSuccess = () => {
+    mutate('/podcasts');
+    addToast('Podcast updated successfully!', 'success');
   };
 
   if (isLoading) return (
@@ -187,14 +208,14 @@ function MyPodcastsPage() {
                     <Eye className="w-3.5 h-3.5" />
                     Episodes
                   </Link>
-                  <Link
-                    href={`/podcast/${podcast.id_podcast}`}
+                  <button
+                    onClick={() => setEditTarget(podcast)}
                     className="flex items-center justify-center gap-1.5 px-3 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-xs font-medium text-white transition-colors"
                   >
                     <Edit3 className="w-3.5 h-3.5" />
-                  </Link>
+                  </button>
                   <button
-                    onClick={() => handleDelete(podcast.id_podcast)}
+                    onClick={() => setDeleteTarget(podcast)}
                     disabled={deletingId === podcast.id_podcast}
                     className="flex items-center justify-center px-3 py-2 bg-red-500/10 hover:bg-red-500/20 rounded-lg text-xs font-medium text-red-400 transition-colors disabled:opacity-50"
                   >
@@ -226,6 +247,28 @@ function MyPodcastsPage() {
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmDialog
+        isOpen={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Podcast"
+        description={`Are you sure you want to delete "${deleteTarget?.name}"? All episodes will also be deleted. This action cannot be undone.`}
+        confirmText="Delete"
+        variant="danger"
+        isLoading={isDeleteLoading}
+      />
+
+      {/* Edit Podcast Modal */}
+      {editTarget && (
+        <EditPodcastModal
+          isOpen={!!editTarget}
+          onClose={() => setEditTarget(null)}
+          podcast={editTarget}
+          onSuccess={handleEditSuccess}
+        />
+      )}
     </>
   );
 }

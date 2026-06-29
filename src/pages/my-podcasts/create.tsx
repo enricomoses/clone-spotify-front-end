@@ -9,6 +9,7 @@ import { Mic, Loader2, ArrowLeft } from 'lucide-react';
 import { fetcher } from '@/lib/fetcher';
 import { withAuth } from '@/utils/withAuth';
 import { useAuthStore } from '@/stores/useAuthStore';
+import { useToastStore } from '@/components/ui/Toast';
 import type { PodcastCategory } from '@/types';
 import api from '@/lib/axios';
 import Link from 'next/link';
@@ -26,6 +27,7 @@ type CreatePodcastForm = z.infer<typeof createPodcastSchema>;
 function CreatePodcastPage() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
+  const addToast = useToastStore((s) => s.addToast);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -59,12 +61,15 @@ function CreatePodcastPage() {
         id_podcast_category: data.id_podcast_category || null,
         id_user: user.id_user,
       });
+      addToast('Podcast created successfully!', 'success');
       router.push('/my-podcasts');
     } catch (err: any) {
       if (err.response?.status === 422) {
         setError('Invalid data. Please check your input.');
+        addToast('Invalid data. Please check your input.', 'error');
       } else {
         setError('Failed to create podcast. Try again.');
+        addToast('Failed to create podcast. Try again.', 'error');
       }
     } finally {
       setIsSubmitting(false);

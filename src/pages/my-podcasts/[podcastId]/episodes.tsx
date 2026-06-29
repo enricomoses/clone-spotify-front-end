@@ -16,6 +16,7 @@ import ImageUpload from '@/components/ui/ImageUpload';
 import AudioUpload from '@/components/ui/AudioUpload';
 import VideoUpload from '@/components/ui/VideoUpload';
 import { useToastStore } from '@/components/ui/Toast';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useAuthStore } from '@/stores/useAuthStore';
 
 const episodeSchema = z.object({
@@ -37,6 +38,10 @@ function PodcastEpisodesPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [error, setError] = useState('');
+
+  // Delete confirmation modal state
+  const [deleteTarget, setDeleteTarget] = useState<Episode | null>(null);
+  const [isDeleteLoading, setIsDeleteLoading] = useState(false);
 
   // Editing state
   const [editingEpisode, setEditingEpisode] = useState<Episode | null>(null);
@@ -195,8 +200,14 @@ function PodcastEpisodesPage() {
     }
   };
 
-  const handleDelete = async (episodeId: string) => {
-    if (!confirm('Delete this episode?')) return;
+  const handleDelete = async (episode: Episode) => {
+    setDeleteTarget(episode);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteTarget) return;
+    const episodeId = deleteTarget.id_episode;
+    setIsDeleteLoading(true);
     setDeletingId(episodeId);
     try {
       const episode = episodes.find((e) => e.id_episode === episodeId);
@@ -240,11 +251,13 @@ function PodcastEpisodesPage() {
       });
       addToast('Episode deleted successfully!', 'success');
       mutate(`/podcasts/${podcastId}`);
+      setDeleteTarget(null);
     } catch (e: any) {
       console.error('Failed to delete episode', e);
       addToast(e.response?.data?.message || 'Failed to delete episode. Please try again.', 'error');
     } finally {
       setDeletingId(null);
+      setIsDeleteLoading(false);
     }
   };
 
@@ -522,7 +535,7 @@ function PodcastEpisodesPage() {
                     <Edit3 className="w-4 h-4" />
                   </button>
                   <button
-                    onClick={() => handleDelete(episode.id_episode)}
+                    onClick={() => handleDelete(episode)}
                     disabled={deletingId === episode.id_episode}
                     className="p-2 text-spotify-muted hover:text-red-400 transition-colors"
                     title="Delete Episode"
@@ -544,6 +557,17 @@ function PodcastEpisodesPage() {
           </div>
         )}
       </div>
+      {/* Delete Confirmation Modal */}
+      <ConfirmDialog
+        isOpen={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Episode"
+        description={`Are you sure you want to delete "${deleteTarget?.title}"? This action cannot be undone.`}
+        confirmText="Delete"
+        variant="danger"
+        isLoading={isDeleteLoading}
+      />
     </>
   );
 }

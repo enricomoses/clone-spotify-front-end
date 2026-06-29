@@ -1,4 +1,4 @@
-import { Play, Pause, Calendar, Clock, Video } from 'lucide-react';
+import { Play, Pause, Calendar, Clock, Video, Edit3, Trash2, Loader2 } from 'lucide-react';
 import { formatDuration, formatDate } from '@/utils/formatDuration';
 import { usePlayerStore } from '@/stores/usePlayerStore';
 import { cn } from '@/lib/utils';
@@ -6,9 +6,19 @@ import type { Episode } from '@/types';
 
 interface EpisodeRowProps {
   episode: Episode;
+  isCreator?: boolean;
+  onEdit?: (episode: Episode) => void;
+  onDelete?: (episode: Episode) => void;
+  isDeleting?: boolean;
 }
 
-export default function EpisodeRow({ episode }: EpisodeRowProps) {
+export default function EpisodeRow({
+  episode,
+  isCreator = false,
+  onEdit,
+  onDelete,
+  isDeleting = false,
+}: EpisodeRowProps) {
   const currentEpisode = usePlayerStore((s) => s.currentEpisode);
   const isPlaying = usePlayerStore((s) => s.isPlaying);
   const playEpisode = usePlayerStore((s) => s.playEpisode);
@@ -100,6 +110,35 @@ export default function EpisodeRow({ episode }: EpisodeRowProps) {
               </span>
             )}
           </div>
+
+          {/* Creator Actions */}
+          {isCreator && (
+            <div className="flex items-center gap-1 ml-auto">
+              {onEdit && (
+                <button
+                  onClick={() => onEdit(episode)}
+                  className="p-2 text-spotify-muted hover:text-spotify-green transition-colors rounded-full hover:bg-white/10"
+                  title="Edit Episode"
+                >
+                  <Edit3 className="w-4 h-4" />
+                </button>
+              )}
+              {onDelete && (
+                <button
+                  onClick={() => onDelete(episode)}
+                  disabled={isDeleting}
+                  className="p-2 text-spotify-muted hover:text-red-400 transition-colors rounded-full hover:bg-white/10 disabled:opacity-50"
+                  title="Delete Episode"
+                >
+                  {isDeleting ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Trash2 className="w-4 h-4" />
+                  )}
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>
