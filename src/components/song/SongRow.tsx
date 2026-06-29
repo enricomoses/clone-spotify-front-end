@@ -133,7 +133,7 @@ export default function SongRow({
 
         {/* Actions (Like + Add to Playlist) */}
         <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity w-[48px] justify-end">
-          <LikeButton songId={song.id_song} isLiked={isLiked} size="sm" />
+          <LikeButton songId={song.id_song} isLiked={isLiked} size="sm" song={song} />
           <button
             onClick={(e) => {
               e.stopPropagation();

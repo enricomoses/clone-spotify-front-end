@@ -368,6 +368,7 @@ export default function PlayerBar() {
               songId={currentSong.id_song}
               isLiked={user?.liked_songs?.some((s) => s.id_song === currentSong.id_song) || false}
               size="sm"
+              song={currentSong}
             />
           )}
         </div>
@@ -598,6 +599,7 @@ export default function PlayerBar() {
               isLiked={user?.liked_songs?.some((s) => s.id_song === currentSong.id_song) || false}
               size="md"
               className="p-1"
+              song={currentSong}
             />
           </div>
         )}

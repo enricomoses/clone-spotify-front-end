@@ -5,12 +5,14 @@ import { useAuthStore } from '@/stores/useAuthStore';
 import { cn } from '@/lib/utils';
 import api from '@/lib/axios';
 import Spinner from '@/components/ui/Spinner';
+import type { Song } from '@/types';
 
 interface LikeButtonProps {
   songId: string;
   isLiked?: boolean;
   size?: 'sm' | 'md';
   className?: string;
+  song?: Song;
 }
 
 export default function LikeButton({
@@ -18,6 +20,7 @@ export default function LikeButton({
   isLiked: initialLiked = false,
   size = 'sm',
   className,
+  song,
 }: LikeButtonProps) {
   const [isLiked, setIsLiked] = useState(initialLiked);
   const [isLoading, setIsLoading] = useState(false);
@@ -37,10 +40,33 @@ export default function LikeButton({
           await api.post(`/users/${user.id_user}/unlike-song/${songId}`, {
             _method: 'DELETE',
           });
+          // Optimistically update the Zustand store
+          const updatedLikedSongs = user.liked_songs?.filter((s) => s.id_song !== songId) || [];
+          useAuthStore.setState({
+            user: {
+              ...user,
+              liked_songs: updatedLikedSongs,
+            },
+          });
           setIsLiked(false);
         } else {
           await api.post(`/users/${user.id_user}/like-song`, {
             song_id: songId,
+          });
+          // Optimistically update the Zustand store
+          const updatedLikedSongs = [...(user.liked_songs || [])];
+          if (!updatedLikedSongs.some((s) => s.id_song === songId)) {
+            if (song) {
+              updatedLikedSongs.push(song);
+            } else {
+              updatedLikedSongs.push({ id_song: songId } as Song);
+            }
+          }
+          useAuthStore.setState({
+            user: {
+              ...user,
+              liked_songs: updatedLikedSongs,
+            },
           });
           setIsLiked(true);
         }
