@@ -121,11 +121,7 @@ export default function SearchPage() {
   const showPodcasts = (activeTab === 'all' || activeTab === 'podcasts') && filteredPodcasts.length > 0;
   const showUsers = (activeTab === 'all' || activeTab === 'users') && filteredUsers.length > 0;
 
-  const handleFollowChange = () => {
-    // Re-fetch user search results and refresh auth user
-    mutateUsers();
-    useAuthStore.getState().refreshUser();
-  };
+
 
   return (
     <>
@@ -219,7 +215,6 @@ export default function SearchPage() {
                     <UserCard
                       key={user.id_user}
                       user={user}
-                      onFollowChange={handleFollowChange}
                     />
                   ))}
                 </div>

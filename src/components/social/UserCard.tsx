@@ -1,39 +1,15 @@
 import Link from 'next/link';
 import { User as UserIcon } from 'lucide-react';
 import { useAuthStore } from '@/stores/useAuthStore';
-import FollowButton from '@/components/social/FollowButton';
-import api from '@/lib/axios';
 import type { User } from '@/types';
 
 interface UserCardProps {
   user: User;
-  onFollowChange?: () => void;
 }
 
-export default function UserCard({ user, onFollowChange }: UserCardProps) {
+export default function UserCard({ user }: UserCardProps) {
   const currentUser = useAuthStore((s) => s.user);
   const isSelf = currentUser?.id_user === user.id_user;
-
-  // Check if current user follows this user
-  const isFollowing = currentUser?.following?.some(
-    (u) => u.id_user === user.id_user
-  ) ?? false;
-
-  const handleFollow = async () => {
-    if (!currentUser) return;
-    await api.post(`/users/${currentUser.id_user}/follow-user`, {
-      target_id: user.id_user,
-    });
-    onFollowChange?.();
-  };
-
-  const handleUnfollow = async () => {
-    if (!currentUser) return;
-    await api.post(`/users/${currentUser.id_user}/unfollow-user/${user.id_user}`, {
-      _method: 'DELETE',
-    });
-    onFollowChange?.();
-  };
 
   return (
     <div className="group bg-spotify-card/60 hover:bg-spotify-hover rounded-lg p-4 transition-all duration-300 hover:shadow-xl hover:shadow-black/20 relative">
@@ -64,18 +40,6 @@ export default function UserCard({ user, onFollowChange }: UserCardProps) {
             : 'Profile'}
         </p>
       </Link>
-
-      {/* Follow button — only show for other users when logged in */}
-      {!isSelf && currentUser && (
-        <div className="mt-3 flex justify-center">
-          <FollowButton
-            isFollowing={isFollowing}
-            onFollow={handleFollow}
-            onUnfollow={handleUnfollow}
-            size="sm"
-          />
-        </div>
-      )}
     </div>
   );
 }
