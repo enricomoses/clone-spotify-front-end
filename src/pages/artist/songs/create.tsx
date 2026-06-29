@@ -82,7 +82,7 @@ function CreateSongPage() {
       const payload = {
         title: data.title,
         duration: Math.round(audioDuration),
-        id_album: data.id_album || undefined,
+        id_album: data.id_album || null,
         audio_url: audioUrl,
         artist_ids: collabArtists.map((a) => a.id_artist),
       };
