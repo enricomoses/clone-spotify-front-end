@@ -19,8 +19,6 @@ function ArtistGalleryPage() {
     fetcher,
   );
 
-  console.log(gallery);
-
   const [showAddForm, setShowAddForm] = useState(false);
   const [imageUrl, setImageUrl] = useState('');
   const [description, setDescription] = useState('');
