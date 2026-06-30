@@ -7,14 +7,15 @@ import SongList from '@/components/song/SongList';
 import { BannerSkeleton } from '@/components/ui/SkeletonCard';
 import useSWR from 'swr';
 import { fetcher } from '@/lib/fetcher';
-import type { User } from '@/types';
+import type { Song } from '@/types';
 
 function LikedSongsPage() {
   const currentUser = useAuthStore((s) => s.user);
   const playSong = usePlayerStore((s) => s.playSong);
 
-  const { data: userData, isLoading } = useSWR<User>(
-    currentUser ? `/users/${currentUser.id_user}` : null,
+  // Fetch liked songs directly from the optimized endpoint
+  const { data: likedSongsData, isLoading } = useSWR<Song[]>(
+    currentUser ? `/users/${currentUser.id_user}/liked-songs` : null,
     fetcher
   );
 
@@ -22,7 +23,7 @@ function LikedSongsPage() {
 
   if (isLoading) return <BannerSkeleton />;
 
-  const likedSongs = userData?.liked_songs || currentUser?.liked_songs || [];
+  const likedSongs = likedSongsData || [];
 
   const handlePlayAll = () => {
     if (likedSongs.length > 0) {

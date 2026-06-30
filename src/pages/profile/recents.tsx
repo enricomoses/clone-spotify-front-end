@@ -1,5 +1,4 @@
 import Head from 'next/head';
-import { useMemo } from 'react';
 import useSWR from 'swr';
 import { History, Play, Clock, Music } from 'lucide-react';
 import { withAuth } from '@/utils/withAuth';
@@ -7,64 +6,26 @@ import { useAuthStore } from '@/stores/useAuthStore';
 import { usePlayerStore } from '@/stores/usePlayerStore';
 import SongList from '@/components/song/SongList';
 import { BannerSkeleton } from '@/components/ui/SkeletonCard';
-import { fetcher } from '@/lib/fetcher';
+import { fetcher, rawFetcher } from '@/lib/fetcher';
 import { formatRelativeTime } from '@/utils/formatDuration';
-import type { SongStreamingHistory, Song } from '@/types';
+import type { Song } from '@/types';
 
 function RecentsPage() {
   const currentUser = useAuthStore((s) => s.user);
   const playSong = usePlayerStore((s) => s.playSong);
 
-  // Fetch streaming history for the current user
-  const { data: historyData, isLoading: historyLoading } = useSWR<SongStreamingHistory[]>(
-    currentUser ? `/song-streaming?id_user=${currentUser.id_user}` : null,
-    fetcher
+  // Fetch recently played songs — server does deduplication and joins
+  const { data: recentData, isLoading } = useSWR<{ data: Song[]; total_plays: number }>(
+    currentUser ? `/users/${currentUser.id_user}/recent-songs` : null,
+    (url: string) => rawFetcher(url)
   );
-
-  // Fetch all songs to resolve full details (album, artists)
-  const { data: allSongs, isLoading: songsLoading } = useSWR<Song[]>(
-    '/songs',
-    fetcher
-  );
-
-  const isLoading = historyLoading || songsLoading;
-
-  // Process: sort by played_at descending, deduplicate songs (keep latest play)
-  const recentSongs = useMemo(() => {
-    if (!historyData || historyData.length === 0 || !allSongs || allSongs.length === 0) return [];
-
-    // Create a map for fast lookup of full song details
-    const songMap = new Map<string, Song>();
-    allSongs.forEach((s) => {
-      songMap.set(s.id_song, s);
-    });
-
-    // Sort by played_at descending (most recent first)
-    const sorted = [...historyData].sort(
-      (a, b) => new Date(b.played_at).getTime() - new Date(a.played_at).getTime()
-    );
-
-    // Deduplicate: keep only the first (most recent) occurrence of each song
-    const seen = new Set<string>();
-    const uniqueSongs: Song[] = [];
-
-    for (const entry of sorted) {
-      const fullSong = songMap.get(entry.id_song);
-      if (fullSong && !seen.has(entry.id_song)) {
-        seen.add(entry.id_song);
-        uniqueSongs.push({
-          ...fullSong,
-          last_played_at: entry.played_at,
-        });
-      }
-    }
-
-    return uniqueSongs;
-  }, [historyData, allSongs]);
 
   if (!currentUser) return null;
 
   if (isLoading) return <BannerSkeleton />;
+
+  const recentSongs: Song[] = recentData?.data || [];
+  const totalPlays = recentData?.total_plays || 0;
 
   const handlePlayAll = () => {
     if (recentSongs.length > 0) {
@@ -72,14 +33,9 @@ function RecentsPage() {
     }
   };
 
-  // Get the total count and last played time
-  const totalPlays = historyData?.length || 0;
-  const lastPlayed = historyData && historyData.length > 0
-    ? formatRelativeTime(
-        [...historyData].sort(
-          (a, b) => new Date(b.played_at).getTime() - new Date(a.played_at).getTime()
-        )[0].played_at
-      )
+  // Get last played time from the first song (most recent)
+  const lastPlayed = recentSongs.length > 0 && recentSongs[0].last_played_at
+    ? formatRelativeTime(recentSongs[0].last_played_at)
     : null;
 
   return (

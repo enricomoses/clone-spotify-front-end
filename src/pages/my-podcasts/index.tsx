@@ -24,10 +24,10 @@ function MyPodcastsPage() {
   // Edit modal state
   const [editTarget, setEditTarget] = useState<Podcast | null>(null);
 
-  const { data: allPodcasts, isLoading } = useSWR<Podcast[]>('/podcasts', fetcher);
-
-  // Filter podcasts owned by current user
-  const myPodcasts = allPodcasts?.filter((p) => p.id_user === user?.id_user) || [];
+  const { data: myPodcasts, isLoading } = useSWR<Podcast[]>(
+    user ? `/users/${user.id_user}/podcasts` : null,
+    fetcher
+  );
 
   const handleDeleteConfirm = async () => {
     if (!deleteTarget) return;
@@ -35,7 +35,7 @@ function MyPodcastsPage() {
     setIsDeleteLoading(true);
     setDeletingId(podcastId);
     try {
-      const podcast = myPodcasts.find((p) => p.id_podcast === podcastId);
+      const podcast = (myPodcasts || []).find((p) => p.id_podcast === podcastId);
       if (podcast) {
         if (podcast.cover_image) {
           try {
@@ -64,7 +64,7 @@ function MyPodcastsPage() {
       }
 
       await api.post(`/podcasts/${podcastId}`, { _method: 'DELETE' });
-      mutate('/podcasts');
+      mutate(`/users/${user?.id_user}/podcasts`);
       addToast('Podcast deleted successfully!', 'success');
       setDeleteTarget(null);
     } catch (e: any) {
@@ -77,7 +77,7 @@ function MyPodcastsPage() {
   };
 
   const handleEditSuccess = () => {
-    mutate('/podcasts');
+    mutate(`/users/${user?.id_user}/podcasts`);
     addToast('Podcast updated successfully!', 'success');
   };
 
@@ -157,7 +157,7 @@ function MyPodcastsPage() {
           </Link>
         </div>
 
-        {myPodcasts.length > 0 ? (
+        {myPodcasts && myPodcasts.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {myPodcasts.map((podcast) => (
               <div

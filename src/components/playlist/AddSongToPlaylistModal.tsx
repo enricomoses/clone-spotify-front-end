@@ -44,18 +44,17 @@ export default function AddSongToPlaylistModal({
     }
   }, [isOpen]);
 
-  const { data: allSongs } = useSWR<Song[]>(isOpen ? '/songs' : null, fetcher);
+  // Server-side search: only fetch when user types a query
+  const { data: searchedSongs } = useSWR<Song[]>(
+    isOpen && debouncedQuery ? `/songs/search?q=${encodeURIComponent(debouncedQuery)}` : null,
+    fetcher
+  );
 
-  // Filter songs
-  const filteredSongs = (allSongs || []).filter((song) => {
+  // Filter out songs already in playlist or just added
+  const filteredSongs = (searchedSongs || []).filter((song) => {
     if (existingSongIds.includes(song.id_song)) return false;
     if (addedIds.has(song.id_song)) return false;
-    if (!debouncedQuery) return false; // Only show results when searching
-    const q = debouncedQuery.toLowerCase();
-    return (
-      song.title.toLowerCase().includes(q) ||
-      song.artists?.some((a) => a.name.toLowerCase().includes(q))
-    );
+    return true;
   });
 
   const handleAddSong = useCallback(

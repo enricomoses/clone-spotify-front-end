@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Head from 'next/head';
 import useSWR from 'swr';
 import { Search as SearchIcon } from 'lucide-react';
@@ -27,21 +27,21 @@ const tabs: { key: TabKey; label: string }[] = [
   { key: 'users', label: 'Users' },
 ];
 
+interface SearchResults {
+  songs: Song[];
+  artists: Artist[];
+  albums: Album[];
+  playlists: Playlist[];
+  podcasts: Podcast[];
+  users: User[];
+}
+
 export default function SearchPage() {
   const [query, setQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const [activeTab, setActiveTab] = useState<TabKey>('all');
   const debounceRef = useRef<NodeJS.Timeout>();
   const currentUser = useAuthStore((s) => s.user);
-
-  const { data: songs, isLoading: songsLoading } = useSWR<Song[]>('/songs', fetcher);
-  const { data: artists, isLoading: artistsLoading } = useSWR<Artist[]>('/artists', fetcher);
-  const { data: albums } = useSWR<Album[]>('/albums', fetcher);
-  const { data: playlists } = useSWR<Playlist[]>('/playlists', fetcher);
-  const { data: podcasts } = useSWR<Podcast[]>('/podcasts', fetcher);
-
-  // Fetch users list for client-side search
-  const { data: allUsers, isLoading: usersLoading, mutate: mutateUsers } = useSWR<User[]>('/users', fetcher);
 
   // Debounce search — 400ms
   useEffect(() => {
@@ -51,61 +51,22 @@ export default function SearchPage() {
     return () => clearTimeout(debounceRef.current);
   }, [query]);
 
-  // Filter results
-  const filteredSongs = useMemo(() => {
-    if (!debouncedQuery || !songs) return [];
-    const q = debouncedQuery.toLowerCase();
-    return songs.filter(
-      (s) =>
-        s.title.toLowerCase().includes(q) ||
-        s.artists?.some((a) => a.name.toLowerCase().includes(q))
-    );
-  }, [debouncedQuery, songs]);
+  // Server-side search: single endpoint returns all filtered results
+  const { data: searchResults, isLoading } = useSWR<SearchResults>(
+    debouncedQuery ? `/search?q=${encodeURIComponent(debouncedQuery)}` : null,
+    fetcher
+  );
 
-  const filteredArtists = useMemo(() => {
-    if (!debouncedQuery || !artists) return [];
-    const q = debouncedQuery.toLowerCase();
-    return artists.filter((a) => a.name.toLowerCase().includes(q));
-  }, [debouncedQuery, artists]);
+  const filteredSongs = searchResults?.songs || [];
+  const filteredArtists = searchResults?.artists || [];
+  const filteredAlbums = searchResults?.albums || [];
+  const filteredPlaylists = searchResults?.playlists || [];
+  const filteredPodcasts = searchResults?.podcasts || [];
+  // Filter out the current user from user results
+  const filteredUsers = (searchResults?.users || []).filter(
+    (u) => u.id_user !== currentUser?.id_user
+  );
 
-  const filteredAlbums = useMemo(() => {
-    if (!debouncedQuery || !albums) return [];
-    const q = debouncedQuery.toLowerCase();
-    return albums.filter(
-      (a) =>
-        a.title.toLowerCase().includes(q) ||
-        a.artists?.some((ar) => ar.name.toLowerCase().includes(q))
-    );
-  }, [debouncedQuery, albums]);
-
-  const filteredPlaylists = useMemo(() => {
-    if (!debouncedQuery || !playlists) return [];
-    const q = debouncedQuery.toLowerCase();
-    return playlists.filter((p) => p.name.toLowerCase().includes(q));
-  }, [debouncedQuery, playlists]);
-
-  const filteredPodcasts = useMemo(() => {
-    if (!debouncedQuery || !podcasts) return [];
-    const q = debouncedQuery.toLowerCase();
-    return podcasts.filter(
-      (p) =>
-        p.name.toLowerCase().includes(q) ||
-        p.about?.toLowerCase().includes(q)
-    );
-  }, [debouncedQuery, podcasts]);
-
-  // Filter users in memory (case-insensitive)
-  const filteredUsers = useMemo(() => {
-    if (!debouncedQuery || !allUsers) return [];
-    const q = debouncedQuery.toLowerCase();
-    return allUsers.filter(
-      (u) =>
-        u.name.toLowerCase().includes(q) &&
-        u.id_user !== currentUser?.id_user
-    );
-  }, [debouncedQuery, allUsers, currentUser]);
-
-  const isLoading = songsLoading || artistsLoading;
   const hasResults =
     filteredSongs.length > 0 ||
     filteredArtists.length > 0 ||
@@ -167,7 +128,7 @@ export default function SearchPage() {
           )}
         </div>
 
-        {isLoading && (
+        {isLoading && debouncedQuery && (
           <div className="space-y-8 mt-4">
             <div>
               <div className="h-7 w-32 bg-spotify-card/80 rounded animate-pulse mb-5" />
@@ -192,7 +153,7 @@ export default function SearchPage() {
         )}
 
         {/* No results */}
-        {debouncedQuery && !hasResults && !isLoading && !usersLoading && (
+        {debouncedQuery && !hasResults && !isLoading && (
           <div className="flex flex-col items-center justify-center min-h-[40vh]">
             <h2 className="text-xl font-bold text-white mb-2">
               No results found for &quot;{debouncedQuery}&quot;
@@ -204,7 +165,7 @@ export default function SearchPage() {
         )}
 
         {/* Results */}
-        {(hasResults || usersLoading) && (
+        {hasResults && (
           <div className="space-y-10 mt-4">
             {/* Users */}
             {showUsers && (
@@ -216,18 +177,6 @@ export default function SearchPage() {
                       key={user.id_user}
                       user={user}
                     />
-                  ))}
-                </div>
-              </section>
-            )}
-
-            {/* Users loading skeleton */}
-            {usersLoading && (activeTab === 'all' || activeTab === 'users') && (
-              <section>
-                <div className="h-7 w-20 bg-spotify-card/80 rounded animate-pulse mb-5" />
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-                  {Array.from({ length: 4 }).map((_, i) => (
-                    <ArtistCardSkeleton key={i} />
                   ))}
                 </div>
               </section>

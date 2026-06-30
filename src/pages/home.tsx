@@ -19,23 +19,22 @@ export default function HomePage() {
   const { requireAuth } = useRequireAuth();
   const playSong = usePlayerStore((s) => s.playSong);
 
-  const { data: albums, isLoading: albumsLoading } = useSWR<Album[]>('/albums', fetcher);
-  const { data: artists, isLoading: artistsLoading } = useSWR<Artist[]>('/artists', fetcher);
-  const { data: playlists, isLoading: playlistsLoading } = useSWR<Playlist[]>('/playlists', fetcher);
-  const { data: podcasts } = useSWR<Podcast[]>('/podcasts', fetcher);
+  // Optimized: fetch only what the home page needs with limits applied server-side
+  const { data: albums, isLoading: albumsLoading } = useSWR<Album[]>('/home/popular-albums?limit=12', fetcher);
+  const { data: artists, isLoading: artistsLoading } = useSWR<Artist[]>('/home/popular-artists?limit=12', fetcher);
+  const { data: playlists, isLoading: playlistsLoading } = useSWR<Playlist[]>('/home/featured-playlists?limit=12', fetcher);
+  const { data: podcasts } = useSWR<Podcast[]>('/home/popular-podcasts?limit=6', fetcher);
   const { data: discoverSongs } = useSWR<Song[]>('/songs/discover-weekly', fetcher);
+
+  // User-specific playlists — only fetch when logged in
+  const { data: userPlaylists } = useSWR<Playlist[]>(
+    user ? `/home/user-playlists?user_id=${user.id_user}&limit=6` : null,
+    fetcher
+  );
 
   const isLoading = albumsLoading || artistsLoading || playlistsLoading;
 
   if (isLoading) return <HomePageSkeleton />;
-
-  // Filter user-specific data
-  const userPlaylists = user && playlists
-    ? playlists.filter((p) =>
-        p.collaborators?.some((c) => c.id_user === user.id_user) ||
-        p.id_user === user.id_user
-      )
-    : [];
 
   return (
     <>
@@ -201,7 +200,7 @@ export default function HomePage() {
         )}
 
         {/* Logged-in user sections */}
-        {user && userPlaylists.length > 0 && (
+        {user && userPlaylists && userPlaylists.length > 0 && (
           <section className="mb-8 sm:mb-10">
             <div className="flex items-center justify-between mb-4 sm:mb-5">
               <h2 className="text-xl sm:text-2xl font-bold text-white">Playlist Anda</h2>

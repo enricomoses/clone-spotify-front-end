@@ -22,7 +22,7 @@ export default function AddToPlaylistModal({
   const [addedTo, setAddedTo] = useState<Set<string>>(new Set());
 
   const { data: allPlaylists } = useSWR<Playlist[]>(
-    isOpen ? '/playlists' : null,
+    isOpen && user ? `/users/${user.id_user}/playlists` : null,
     fetcher
   );
 
