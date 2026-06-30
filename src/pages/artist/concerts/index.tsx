@@ -22,6 +22,7 @@ import type { Concert, Artist } from '@/types';
 import api from '@/lib/axios';
 import ArtistAutocomplete from '@/components/ui/ArtistAutocomplete';
 import { useToastStore } from '@/components/ui/Toast';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 
 const concertSchema = z.object({
   location: z.string().min(1, 'Lokasi wajib diisi'),
@@ -39,6 +40,8 @@ function ArtistConcertsPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [error, setError] = useState('');
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [concertToDelete, setConcertToDelete] = useState<string | null>(null);
 
   // Collaborating artists for concert creation
   const [collabArtists, setCollabArtists] = useState<Artist[]>(() =>
@@ -90,14 +93,15 @@ function ArtistConcertsPage() {
     }
   };
 
-  const handleDelete = async (concertId: string) => {
-    if (!artist) return;
-    if (!confirm('Delete this concert?')) return;
-    setDeletingId(concertId);
+  const handleConfirmDelete = async () => {
+    if (!artist || !concertToDelete) return;
+    setDeletingId(concertToDelete);
     try {
-      await api.post(`/concerts/${concertId}`, { _method: 'DELETE' });
+      await api.post(`/concerts/${concertToDelete}`, { _method: 'DELETE' });
       mutate(`/artists/${artist.id_artist}/concerts`);
       addToast('Concert deleted successfully!', 'success');
+      setDeleteConfirmOpen(false);
+      setConcertToDelete(null);
     } catch (e) {
       console.error('Failed to delete concert', e);
       addToast('Failed to delete concert. Please try again.', 'error');
@@ -118,6 +122,23 @@ function ArtistConcertsPage() {
       <Head>
         <title>Concerts — Spotify for Artists</title>
       </Head>
+
+      <ConfirmDialog
+        isOpen={deleteConfirmOpen}
+        onClose={() => {
+          if (deletingId === null) {
+            setDeleteConfirmOpen(false);
+            setConcertToDelete(null);
+          }
+        }}
+        onConfirm={handleConfirmDelete}
+        title="Delete Concert"
+        description="Are you sure you want to delete this concert? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+        isLoading={deletingId !== null}
+      />
 
       <div>
         <div className="flex items-center justify-between mb-8">
@@ -272,7 +293,10 @@ function ArtistConcertsPage() {
                         <ExternalLink className="w-4 h-4" />
                       </a>
                       <button
-                        onClick={() => handleDelete(concert.id_concert)}
+                        onClick={() => {
+                          setConcertToDelete(concert.id_concert);
+                          setDeleteConfirmOpen(true);
+                        }}
                         disabled={deletingId === concert.id_concert}
                         className="p-2 text-spotify-muted hover:text-red-400 transition-colors"
                       >
