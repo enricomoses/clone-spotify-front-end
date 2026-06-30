@@ -741,4 +741,98 @@ export function UserProfileSkeleton() {
   );
 }
 
+// Song form skeleton (for add/edit song pages)
+export function SongFormSkeleton() {
+  return (
+    <div className="max-w-2xl animate-pulse">
+      {/* Title */}
+      <Skeleton className="h-8 w-40 mb-6" />
+
+      <div className="space-y-5">
+        {/* Song Title Input */}
+        <div>
+          <Skeleton className="h-4 w-24 mb-2" />
+          <Skeleton className="h-12 w-full rounded-md" />
+        </div>
+
+        {/* Audio File Input */}
+        <div>
+          <Skeleton className="h-4 w-24 mb-2" />
+          <Skeleton className="h-24 w-full rounded-md" />
+        </div>
+
+        {/* Album Dropdown */}
+        <div>
+          <Skeleton className="h-4.5 w-16 mb-2" />
+          <Skeleton className="h-12 w-full rounded-md" />
+        </div>
+
+        {/* Collaborating Artists */}
+        <div>
+          <Skeleton className="h-4 w-36 mb-2" />
+          <div className="flex gap-2 mb-3">
+            <Skeleton className="h-8 w-28 rounded-full" />
+            <Skeleton className="h-8 w-24 rounded-full" />
+          </div>
+          <Skeleton className="h-12 w-full rounded-md" />
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex gap-4 pt-4">
+          <Skeleton className="h-10 w-24 rounded-md" />
+          <Skeleton className="h-10 w-32 rounded-md" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Album form skeleton (for add/edit album pages)
+export function AlbumFormSkeleton() {
+  return (
+    <div className="max-w-2xl animate-pulse">
+      {/* Title */}
+      <Skeleton className="h-8 w-40 mb-6" />
+
+      <div className="space-y-5">
+        {/* Album Title Input */}
+        <div>
+          <Skeleton className="h-4 w-24 mb-2" />
+          <Skeleton className="h-12 w-full rounded-md" />
+        </div>
+
+        {/* Release Date Input */}
+        <div>
+          <Skeleton className="h-4 w-24 mb-2" />
+          <Skeleton className="h-12 w-full rounded-md" />
+        </div>
+
+        {/* Cover Image Upload */}
+        <div>
+          <Skeleton className="h-4 w-24 mb-2" />
+          <Skeleton className="h-48 w-48 rounded-md" />
+        </div>
+
+        {/* Collaborating Artists */}
+        <div>
+          <Skeleton className="h-4 w-36 mb-2" />
+          <div className="flex gap-2 mb-3">
+            <Skeleton className="h-8 w-28 rounded-full" />
+            <Skeleton className="h-8 w-24 rounded-full" />
+          </div>
+          <Skeleton className="h-12 w-full rounded-md" />
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex gap-4 pt-4">
+          <Skeleton className="h-10 w-24 rounded-md" />
+          <Skeleton className="h-10 w-32 rounded-md" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default Skeleton;
+
+
