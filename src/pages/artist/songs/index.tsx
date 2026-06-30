@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import useSWR, { mutate } from 'swr';
@@ -15,20 +15,15 @@ import { useToastStore } from '@/components/ui/Toast';
 
 function ArtistSongsPage() {
   const artist = useArtistStore((s) => s.artist);
-  const { data: allSongs, isLoading } = useSWR<Song[]>('/songs', fetcher);
+
+  // Fetch only this artist's songs from the optimized endpoint
+  const { data: artistSongs, isLoading } = useSWR<Song[]>(
+    artist ? `/artists/${artist.id_artist}/songs` : null,
+    fetcher
+  );
   const addToast = useToastStore((s) => s.addToast);
   const [deleteTarget, setDeleteTarget] = useState<Song | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-
-  // Filter songs belonging to this artist
-  const artistSongs = useMemo(() => {
-    if (!allSongs || !artist) return [];
-    return allSongs.filter(
-      (s) =>
-        s.artists?.some((a) => a.id_artist === artist.id_artist) ||
-        s.album?.artists?.some((a) => a.id_artist === artist.id_artist)
-    );
-  }, [allSongs, artist]);
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
@@ -49,7 +44,7 @@ function ArtistSongsPage() {
       }
 
       await api.post(`/songs/${deleteTarget.id_song}`, { _method: 'DELETE' });
-      mutate('/songs');
+      mutate(`/artists/${artist?.id_artist}/songs`);
       addToast('Song deleted successfully!', 'success');
       setDeleteTarget(null);
     } catch (err) {
@@ -74,7 +69,7 @@ function ArtistSongsPage() {
           <div>
             <h1 className="text-2xl font-bold text-white">Your Songs</h1>
             <p className="text-sm text-spotify-muted mt-1">
-              {artistSongs.length} song{artistSongs.length !== 1 ? 's' : ''}
+            {(artistSongs?.length || 0)} song{(artistSongs?.length || 0) !== 1 ? 's' : ''}
             </p>
           </div>
           <Link href="/artist/songs/create" className="btn-spotify text-sm py-2.5 px-6 flex items-center gap-2">
@@ -84,7 +79,7 @@ function ArtistSongsPage() {
         </div>
 
         {/* Table Header */}
-        {artistSongs.length > 0 && (
+        {artistSongs && artistSongs.length > 0 && (
           <div className="grid grid-cols-[40px_1fr_180px_100px_120px] items-center gap-4 px-4 py-2 border-b border-spotify-border/30 mb-2">
             <span className="text-xs text-spotify-muted text-center">#</span>
             <span className="text-xs text-spotify-muted uppercase tracking-wider">Title</span>
@@ -95,7 +90,7 @@ function ArtistSongsPage() {
         )}
 
         {/* Song List */}
-        {artistSongs.length > 0 ? (
+        {artistSongs && artistSongs.length > 0 ? (
           <div className="space-y-0.5">
             {artistSongs.map((song, idx) => (
               <SongManageRow

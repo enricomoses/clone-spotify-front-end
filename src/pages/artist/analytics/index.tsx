@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import Head from 'next/head';
 import useSWR from 'swr';
 import { BarChart3, TrendingUp, Calendar, Clock } from 'lucide-react';
@@ -8,70 +7,34 @@ import { fetcher } from '@/lib/fetcher';
 import { formatDuration } from '@/utils/formatDuration';
 import AnalyticsChart from '@/components/artist-portal/AnalyticsChart';
 import { ArtistAnalyticsSkeleton } from '@/components/ui/SkeletonCard';
-import type { Song, StreamingHistory } from '@/types';
+import type { Song } from '@/types';
+
+interface AnalyticsData {
+  total_streams: number;
+  weekly_streams: number;
+  today_streams: number;
+  top_songs_by_stream: { id: string; title: string; count: number }[];
+  detailed_breakdown: { song: Song; total: number; weekly: number; today: number }[];
+}
 
 function ArtistAnalyticsPage() {
   const artist = useArtistStore((s) => s.artist);
 
-  const { data: allSongs, isLoading: songsLoading } = useSWR<Song[]>(
-    '/songs',
+  // Single optimized endpoint — all analytics computed server-side
+  const { data: analyticsData, isLoading } = useSWR<AnalyticsData>(
+    artist ? `/artists/${artist.id_artist}/analytics` : null,
     fetcher
   );
-  const { data: allHistory, isLoading: historyLoading } = useSWR<
-    StreamingHistory[]
-  >(artist ? `/artists/${artist.id_artist}/song-streaming` : null, fetcher);
-
-  const isLoading = songsLoading || historyLoading;
-
-  const artistSongs = useMemo(() => {
-    if (!allSongs || !artist) return [];
-    return allSongs.filter(
-      (s) =>
-        s.artists?.some((a) => a.id_artist === artist.id_artist) ||
-        s.album?.artists?.some((a) => a.id_artist === artist.id_artist)
-    );
-  }, [allSongs, artist]);
-
-  const artistHistory = useMemo(() => {
-    if (!allHistory || artistSongs.length === 0) return [];
-    const songIds = new Set(artistSongs.map((s) => s.id_song));
-    return allHistory.filter((h) => songIds.has(h.id_song));
-  }, [allHistory, artistSongs]);
-
-  // Table data: per-song stream counts
-  const tableData = useMemo(() => {
-    const countsAll: Record<string, number> = {};
-    const countsWeek: Record<string, number> = {};
-    const countsToday: Record<string, number> = {};
-
-    const now = new Date();
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    const todayStart = new Date(now);
-    todayStart.setHours(0, 0, 0, 0);
-
-    artistHistory.forEach((h) => {
-      const playedAt = new Date(h.played_at);
-      countsAll[h.id_song] = (countsAll[h.id_song] || 0) + 1;
-      if (playedAt >= sevenDaysAgo) {
-        countsWeek[h.id_song] = (countsWeek[h.id_song] || 0) + 1;
-      }
-      if (playedAt >= todayStart) {
-        countsToday[h.id_song] = (countsToday[h.id_song] || 0) + 1;
-      }
-    });
-
-    return artistSongs
-      .map((song) => ({
-        song,
-        total: countsAll[song.id_song] || 0,
-        weekly: countsWeek[song.id_song] || 0,
-        today: countsToday[song.id_song] || 0,
-      }))
-      .sort((a, b) => b.total - a.total);
-  }, [artistSongs, artistHistory]);
 
   if (isLoading) return <ArtistAnalyticsSkeleton />;
+
+  const data = analyticsData || {
+    total_streams: 0,
+    weekly_streams: 0,
+    today_streams: 0,
+    top_songs_by_stream: [],
+    detailed_breakdown: [],
+  };
 
   return (
     <>
@@ -89,21 +52,21 @@ function ArtistAnalyticsPage() {
           <div className="bg-spotify-card/40 border border-spotify-border/20 rounded-xl p-5">
             <TrendingUp className="w-5 h-5 text-spotify-green mb-2" />
             <p className="text-2xl font-bold text-white">
-              {artistHistory.length.toLocaleString()}
+              {data.total_streams.toLocaleString()}
             </p>
             <p className="text-xs text-spotify-muted">Total Streams</p>
           </div>
           <div className="bg-spotify-card/40 border border-spotify-border/20 rounded-xl p-5">
             <Calendar className="w-5 h-5 text-blue-400 mb-2" />
             <p className="text-2xl font-bold text-white">
-              {tableData.reduce((sum, d) => sum + d.weekly, 0).toLocaleString()}
+              {data.weekly_streams.toLocaleString()}
             </p>
             <p className="text-xs text-spotify-muted">This Week</p>
           </div>
           <div className="bg-spotify-card/40 border border-spotify-border/20 rounded-xl p-5">
             <Clock className="w-5 h-5 text-orange-400 mb-2" />
             <p className="text-2xl font-bold text-white">
-              {tableData.reduce((sum, d) => sum + d.today, 0).toLocaleString()}
+              {data.today_streams.toLocaleString()}
             </p>
             <p className="text-xs text-spotify-muted">Today</p>
           </div>
@@ -115,7 +78,7 @@ function ArtistAnalyticsPage() {
             <BarChart3 className="w-5 h-5 text-spotify-green" />
             Top Songs by Streams
           </h2>
-          <AnalyticsChart history={artistHistory} songs={artistSongs} />
+          <AnalyticsChart chartData={data.top_songs_by_stream} />
         </div>
 
         {/* Detailed Table */}
@@ -126,7 +89,7 @@ function ArtistAnalyticsPage() {
             </h2>
           </div>
 
-          {tableData.length > 0 ? (
+          {data.detailed_breakdown.length > 0 ? (
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
@@ -152,9 +115,9 @@ function ArtistAnalyticsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {tableData.map((row, idx) => (
+                  {data.detailed_breakdown.map((row, idx) => (
                     <tr
-                      key={row.song.id_song}
+                      key={row.song?.id_song || idx}
                       className="border-b border-spotify-border/10 hover:bg-white/5 transition-colors"
                     >
                       <td className="px-6 py-3 text-sm text-spotify-muted tabular-nums">
@@ -162,14 +125,14 @@ function ArtistAnalyticsPage() {
                       </td>
                       <td className="px-6 py-3">
                         <p className="text-sm font-medium text-white">
-                          {row.song.title}
+                          {row.song?.title || 'Unknown'}
                         </p>
                         <p className="text-xs text-spotify-muted">
-                          {row.song.album?.title || 'Single'}
+                          {row.song?.album?.title || 'Single'}
                         </p>
                       </td>
                       <td className="px-6 py-3 text-sm text-spotify-muted tabular-nums">
-                        {formatDuration(row.song.duration)}
+                        {row.song?.duration ? formatDuration(row.song.duration) : '-'}
                       </td>
                       <td className="px-6 py-3 text-sm text-white text-right font-semibold tabular-nums">
                         {row.total.toLocaleString()}

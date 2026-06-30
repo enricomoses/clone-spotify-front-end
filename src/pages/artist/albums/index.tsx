@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import useSWR, { mutate } from 'swr';
@@ -14,17 +14,15 @@ import { useToastStore } from '@/components/ui/Toast';
 
 function ArtistAlbumsPage() {
   const artist = useArtistStore((s) => s.artist);
-  const { data: allAlbums, isLoading } = useSWR<Album[]>('/albums', fetcher);
+
+  // Fetch only this artist's albums from the optimized endpoint
+  const { data: artistAlbums, isLoading } = useSWR<Album[]>(
+    artist ? `/artists/${artist.id_artist}/albums` : null,
+    fetcher
+  );
   const addToast = useToastStore((s) => s.addToast);
   const [deleteTarget, setDeleteTarget] = useState<Album | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-
-  const artistAlbums = useMemo(() => {
-    if (!allAlbums || !artist) return [];
-    return allAlbums.filter((a) =>
-      a.artists?.some((ar) => ar.id_artist === artist.id_artist)
-    );
-  }, [allAlbums, artist]);
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
@@ -45,7 +43,7 @@ function ArtistAlbumsPage() {
       await api.post(`/albums/${deleteTarget.id_album}`, {
         _method: 'DELETE',
       });
-      mutate('/albums');
+      mutate(`/artists/${artist?.id_artist}/albums`);
       addToast('Album deleted successfully!', 'success');
       setDeleteTarget(null);
     } catch (err) {
@@ -70,7 +68,7 @@ function ArtistAlbumsPage() {
           <div>
             <h1 className="text-2xl font-bold text-white">Your Albums</h1>
             <p className="text-sm text-spotify-muted mt-1">
-              {artistAlbums.length} album{artistAlbums.length !== 1 ? 's' : ''}
+              {(artistAlbums?.length || 0)} album{(artistAlbums?.length || 0) !== 1 ? 's' : ''}
             </p>
           </div>
           <Link href="/artist/albums/create" className="btn-spotify text-sm py-2.5 px-6 flex items-center gap-2">
@@ -80,7 +78,7 @@ function ArtistAlbumsPage() {
         </div>
 
         {/* Albums Grid */}
-        {artistAlbums.length > 0 ? (
+        {artistAlbums && artistAlbums.length > 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {artistAlbums.map((album) => (
               <div

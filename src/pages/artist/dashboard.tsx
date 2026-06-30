@@ -6,85 +6,37 @@ import { useArtistStore } from '@/stores/useArtistStore';
 import { fetcher } from '@/lib/fetcher';
 import { ArtistDashboardSkeleton } from '@/components/ui/SkeletonCard';
 import AnalyticsChart from '@/components/artist-portal/AnalyticsChart';
-import type { Song, StreamingHistory, Album } from '@/types';
-import { useMemo } from 'react';
+import type { Song } from '@/types';
 import Link from 'next/link';
+
+interface DashboardData {
+  total_songs: number;
+  total_albums: number;
+  total_streams: number;
+  weekly_streams: number;
+  top_5_songs: { song: Song; count: number }[];
+  stream_distribution: { id: string; title: string; count: number }[];
+}
 
 function ArtistDashboardPage() {
   const artist = useArtistStore((s) => s.artist);
 
-  const { data: allSongs, isLoading: songsLoading } = useSWR<Song[]>(
-    '/songs',
+  // Single optimized endpoint — all stats computed server-side
+  const { data: dashboardData, isLoading } = useSWR<DashboardData>(
+    artist ? `/artists/${artist.id_artist}/dashboard` : null,
     fetcher
   );
-  const { data: allAlbums } = useSWR<Album[]>('/albums', fetcher);
-  const { data: allHistory, isLoading: historyLoading } = useSWR<
-    StreamingHistory[]
-  >(artist ? `/artists/${artist.id_artist}/song-streaming` : null, fetcher);
-
-  const isLoading = songsLoading || historyLoading;
-
-  // Filter songs belonging to this artist
-  const artistSongs = useMemo(() => {
-    if (!allSongs || !artist) return [];
-    return allSongs.filter(
-      (s) =>
-        s.artists?.some((a) => a.id_artist === artist.id_artist) ||
-        s.album?.artists?.some((a) => a.id_artist === artist.id_artist)
-    );
-  }, [allSongs, artist]);
-
-  // Filter albums belonging to this artist
-  const artistAlbums = useMemo(() => {
-    if (!allAlbums || !artist) return [];
-    return allAlbums.filter((a) =>
-      a.artists?.some((ar) => ar.id_artist === artist?.id_artist)
-    );
-  }, [allAlbums, artist]);
-
-  // Filter streaming history for artist's songs
-  const artistHistory = useMemo(() => {
-    if (!allHistory || artistSongs.length === 0) return [];
-    const songIds = new Set(artistSongs.map((s) => s.id_song));
-    return allHistory.filter((h) => songIds.has(h.id_song));
-  }, [allHistory, artistSongs]);
-
-  // Stats
-  const totalStreams = artistHistory.length;
-
-  const weeklyStreams = useMemo(() => {
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    return artistHistory.filter(
-      (h) => new Date(h.played_at) >= sevenDaysAgo
-    ).length;
-  }, [artistHistory]);
-
-  const todayStreams = useMemo(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return artistHistory.filter(
-      (h) => new Date(h.played_at) >= today
-    ).length;
-  }, [artistHistory]);
-
-  // Top 5 songs
-  const topSongs = useMemo(() => {
-    const counts: Record<string, number> = {};
-    artistHistory.forEach((h) => {
-      counts[h.id_song] = (counts[h.id_song] || 0) + 1;
-    });
-    return Object.entries(counts)
-      .sort(([, a], [, b]) => b - a)
-      .slice(0, 5)
-      .map(([id, count]) => ({
-        song: artistSongs.find((s) => s.id_song === id),
-        count,
-      }))
-      .filter((item) => item.song);
-  }, [artistHistory, artistSongs]);
 
   if (isLoading) return <ArtistDashboardSkeleton />;
+
+  const data = dashboardData || {
+    total_songs: 0,
+    total_albums: 0,
+    total_streams: 0,
+    weekly_streams: 0,
+    top_5_songs: [],
+    stream_distribution: [],
+  };
 
   return (
     <>
@@ -112,7 +64,7 @@ function ArtistDashboardPage() {
               </div>
             </div>
             <p className="text-2xl font-bold text-white">
-              {artistSongs.length}
+              {data.total_songs}
             </p>
             <p className="text-xs text-spotify-muted mt-1">Total Songs</p>
           </div>
@@ -124,7 +76,7 @@ function ArtistDashboardPage() {
               </div>
             </div>
             <p className="text-2xl font-bold text-white">
-              {artistAlbums.length}
+              {data.total_albums}
             </p>
             <p className="text-xs text-spotify-muted mt-1">Total Albums</p>
           </div>
@@ -136,7 +88,7 @@ function ArtistDashboardPage() {
               </div>
             </div>
             <p className="text-2xl font-bold text-white">
-              {totalStreams.toLocaleString()}
+              {data.total_streams.toLocaleString()}
             </p>
             <p className="text-xs text-spotify-muted mt-1">
               Total Streams (All Time)
@@ -150,7 +102,7 @@ function ArtistDashboardPage() {
               </div>
             </div>
             <p className="text-2xl font-bold text-white">
-              {weeklyStreams.toLocaleString()}
+              {data.weekly_streams.toLocaleString()}
             </p>
             <p className="text-xs text-spotify-muted mt-1">
               Streams This Week
@@ -166,11 +118,11 @@ function ArtistDashboardPage() {
               <Play className="w-5 h-5 text-spotify-green" />
               Top 5 Songs
             </h2>
-            {topSongs.length > 0 ? (
+            {data.top_5_songs.length > 0 ? (
               <div className="space-y-3">
-                {topSongs.map((item, idx) => (
+                {data.top_5_songs.map((item, idx) => (
                   <div
-                    key={item.song!.id_song}
+                    key={item.song?.id_song || idx}
                     className="flex items-center gap-3 py-2"
                   >
                     <span className="w-6 text-center text-sm font-bold text-spotify-muted">
@@ -178,10 +130,10 @@ function ArtistDashboardPage() {
                     </span>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-white truncate">
-                        {item.song!.title}
+                        {item.song?.title || 'Unknown'}
                       </p>
                       <p className="text-xs text-spotify-muted">
-                        {item.song!.album?.title || 'Single'}
+                        {item.song?.album?.title || 'Single'}
                       </p>
                     </div>
                     <span className="text-sm text-spotify-green font-semibold tabular-nums">
@@ -203,10 +155,7 @@ function ArtistDashboardPage() {
               <BarChart3 className="w-5 h-5 text-purple-400" />
               Stream Distribution
             </h2>
-            <AnalyticsChart
-              history={artistHistory}
-              songs={artistSongs}
-            />
+            <AnalyticsChart chartData={data.stream_distribution} />
           </div>
         </div>
 

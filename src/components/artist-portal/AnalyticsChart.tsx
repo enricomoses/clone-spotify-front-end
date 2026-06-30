@@ -1,25 +1,40 @@
-import { useMemo } from 'react';
 import type { StreamingHistory, Song } from '@/types';
 
+interface ChartItem {
+  id: string;
+  title: string;
+  count: number;
+}
+
 interface AnalyticsChartProps {
-  history: StreamingHistory[];
-  songs: Song[];
+  /** Pre-computed chart data from the API */
+  chartData?: ChartItem[];
+  /** @deprecated Legacy: raw history + songs for client-side computation */
+  history?: StreamingHistory[];
+  /** @deprecated Legacy: raw songs for client-side computation */
+  songs?: Song[];
 }
 
 /**
  * Simple bar chart showing streams per song (top 10).
  * Pure CSS implementation — no charting library needed.
+ *
+ * Supports both pre-computed chartData (from API) and legacy history+songs props.
  */
-export default function AnalyticsChart({ history, songs }: AnalyticsChartProps) {
-  const chartData = useMemo(() => {
-    // Count streams per song
+export default function AnalyticsChart({ chartData: preComputed, history, songs }: AnalyticsChartProps) {
+  // Use pre-computed data if available, otherwise fall back to client-side computation
+  let chartData: ChartItem[] = [];
+
+  if (preComputed && preComputed.length > 0) {
+    chartData = preComputed.slice(0, 10);
+  } else if (history && songs) {
+    // Legacy fallback: compute on client
     const counts: Record<string, number> = {};
     history.forEach((h) => {
       counts[h.id_song] = (counts[h.id_song] || 0) + 1;
     });
 
-    // Map to song data and sort
-    return Object.entries(counts)
+    chartData = Object.entries(counts)
       .map(([id_song, count]) => {
         const song = songs.find((s) => s.id_song === id_song);
         return {
@@ -30,7 +45,7 @@ export default function AnalyticsChart({ history, songs }: AnalyticsChartProps) 
       })
       .sort((a, b) => b.count - a.count)
       .slice(0, 10);
-  }, [history, songs]);
+  }
 
   const maxCount = chartData.length > 0 ? chartData[0].count : 1;
 
