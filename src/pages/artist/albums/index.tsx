@@ -156,8 +156,9 @@ function ArtistAlbumsPage() {
           onConfirm={handleDelete}
           title="Delete Album"
           description={`Are you sure you want to delete "${deleteTarget?.title}"? This action cannot be undone.`}
-          confirmLabel={isDeleting ? 'Deleting...' : 'Delete'}
+          confirmLabel="Delete"
           variant="danger"
+          isLoading={isDeleting}
         />
       </div>
     </>
